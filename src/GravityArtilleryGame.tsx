@@ -189,6 +189,7 @@ const GravityArtilleryGame = () => {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     // Clear canvas
     ctx.fillStyle = '#000814';
