@@ -31,7 +31,7 @@ export const PlayersSetupPanel = ({
               disabled={player1Ready}
               className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-1 px-3 rounded"
             >
-              {'<' }
+              &uarr;
             </button>
             <div style={{ width: '32px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <input
@@ -53,7 +53,7 @@ export const PlayersSetupPanel = ({
               disabled={player1Ready}
               className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-1 px-3 rounded"
             >
-              {'>' }
+              &darr;
             </button>
           </div>
         </div>
@@ -79,7 +79,7 @@ export const PlayersSetupPanel = ({
               disabled={player2Ready}
               className="bg-red-700 hover:bg-red-800 disabled:bg-gray-600 text-white font-bold py-1 px-3 rounded"
             >
-              {'<' }
+              &uarr;
             </button>
             <div style={{ width: '32px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <input
@@ -101,7 +101,7 @@ export const PlayersSetupPanel = ({
               disabled={player2Ready}
               className="bg-red-700 hover:bg-red-800 disabled:bg-gray-600 text-white font-bold py-1 px-3 rounded"
             >
-              {'>' }
+              &darr;
             </button>
           </div>
         </div>
