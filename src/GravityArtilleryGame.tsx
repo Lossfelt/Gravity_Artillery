@@ -1,14 +1,44 @@
 import { useState, useEffect, useRef } from 'react';
 
+type GameState = 'setup' | 'firing' | 'gameover';
+
+type Planet = {
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+};
+
+type GravityBody = {
+  x: number;
+  y: number;
+  mass: number;
+  radius: number;
+  color: string;
+  type: 'star' | 'planet' | 'blackhole';
+};
+
+type TrailPoint = { x: number; y: number };
+
+type Projectile = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  trail: TrailPoint[];
+  player: 1 | 2;
+  active: boolean;
+};
+
 const GravityArtilleryGame = () => {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [player1Angle, setPlayer1Angle] = useState(0);
   const [player2Angle, setPlayer2Angle] = useState(180);
   const [player1Ready, setPlayer1Ready] = useState(false);
   const [player2Ready, setPlayer2Ready] = useState(false);
-  const [gameState, setGameState] = useState('setup'); // setup, firing, gameover
-  const [winner, setWinner] = useState(null);
-  const animationRef = useRef(null);
+  const [gameState, setGameState] = useState<GameState>('setup'); // setup, firing, gameover
+  const [winner, setWinner] = useState<1 | 2 | null>(null);
+  const animationRef = useRef<number | null>(null);
 
   const CANVAS_WIDTH = 1000;
   const CANVAS_HEIGHT = 600;
@@ -16,12 +46,12 @@ const GravityArtilleryGame = () => {
   const PROJECTILE_SPEED = 5;
 
   // Game objects
-  const [planets] = useState({
+  const [planets] = useState<{ player1: Planet; player2: Planet }>({
     player1: { x: 50, y: CANVAS_HEIGHT / 2, radius: PLANET_RADIUS, color: '#4287f5' },
     player2: { x: CANVAS_WIDTH - 50, y: CANVAS_HEIGHT / 2, radius: PLANET_RADIUS, color: '#f54242' }
   });
 
-  const [gravitationalBodies] = useState([
+  const [gravitationalBodies] = useState<GravityBody[]>([
     { x: 300, y: 200, mass: 8000, radius: 20, color: '#ffaa00', type: 'star' },
     { x: 500, y: 400, mass: 5000, radius: 15, color: '#aa88ff', type: 'planet' },
     { x: 700, y: 250, mass: 6000, radius: 18, color: '#88ff88', type: 'planet' },
@@ -29,9 +59,9 @@ const GravityArtilleryGame = () => {
     { x: 650, y: 100, mass: 4000, radius: 13, color: '#ffff88', type: 'planet' }
   ]);
 
-  const [projectiles, setProjectiles] = useState([]);
+  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
 
-  const calculateGravity = (px, py, bodies) => {
+  const calculateGravity = (px: number, py: number, bodies: GravityBody[]) => {
     let ax = 0;
     let ay = 0;
     
@@ -87,7 +117,7 @@ const GravityArtilleryGame = () => {
     }
   }, [player1Ready, player2Ready, gameState]);
 
-  const checkCollision = (proj, target, radius) => {
+  const checkCollision = (proj: { x: number; y: number }, target: { x: number; y: number }, radius: number) => {
     const dx = proj.x - target.x;
     const dy = proj.y - target.y;
     return Math.sqrt(dx * dx + dy * dy) < radius;
