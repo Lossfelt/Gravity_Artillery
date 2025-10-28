@@ -17,5 +17,5 @@
 - [ ] Ulike stjerner har ulik tyngde (blå, hvit, rød)
 
 ## Fullført
-- [ ] Flytte input-feltene til sidene av canvas
-- [ ] Fikse "hopping" av elementene på skjermen
+- [X] Flytte input-feltene til sidene av canvas
+- [X] Fikse "hopping" av elementene på skjermen

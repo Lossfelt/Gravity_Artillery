@@ -123,14 +123,19 @@ export const useGravityGame = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
+
+    // Reset angles to default only if someone won
+    if (winner !== null) {
+      setPlayer1Angle(0);
+      setPlayer2Angle(180);
+    }
+
     setGameState('setup');
     setWinner(null);
     setPlayer1Ready(false);
     setPlayer2Ready(false);
-    setPlayer1Angle(0);
-    setPlayer2Angle(180);
     resetProjectiles();
-  }, [resetProjectiles]);
+  }, [winner, resetProjectiles]);
 
   const forceWin = useCallback(
     (player: 1 | 2) => {
