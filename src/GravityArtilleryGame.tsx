@@ -41,29 +41,33 @@ const GravityArtilleryGame = () => {
   const togglePlayer2Ready = () => setPlayer2Ready(prev => !prev);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
-      <h1 className="text-4xl font-bold text-white mb-6">Gravity Artillery</h1>
+    <div className="flex flex-col items-center min-h-screen bg-gray-900 p-4 pt-8">
+      <h1 className="text-4xl font-bold text-white mb-8">Gravity Artillery</h1>
 
-      <div className="flex flex-row items-center gap-4">
-        {gameState === 'setup' && (
-          <Player1Setup
-            player1Angle={player1Angle}
-            setPlayer1Angle={setPlayer1Angle}
-            player1Ready={player1Ready}
-            togglePlayer1Ready={togglePlayer1Ready}
-          />
-        )}
+      <div className="flex flex-row items-center gap-4 min-h-[400px]">
+        <div className="w-64">
+          {gameState === 'setup' && (
+            <Player1Setup
+              player1Angle={player1Angle}
+              setPlayer1Angle={setPlayer1Angle}
+              player1Ready={player1Ready}
+              togglePlayer1Ready={togglePlayer1Ready}
+            />
+          )}
+        </div>
 
         <GameCanvas canvasRef={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />
 
-        {gameState === 'setup' && (
-          <Player2Setup
-            player2Angle={player2Angle}
-            setPlayer2Angle={setPlayer2Angle}
-            player2Ready={player2Ready}
-            togglePlayer2Ready={togglePlayer2Ready}
-          />
-        )}
+        <div className="w-64">
+          {gameState === 'setup' && (
+            <Player2Setup
+              player2Angle={player2Angle}
+              setPlayer2Angle={setPlayer2Angle}
+              player2Ready={player2Ready}
+              togglePlayer2Ready={togglePlayer2Ready}
+            />
+          )}
+        </div>
       </div>
 
       <div className="flex gap-3 mb-4 mt-4">
