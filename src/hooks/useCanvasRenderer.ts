@@ -1,6 +1,7 @@
-import { RefObject, useEffect } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 import { GameState, GravityBody, Planet, Projectile } from '../types/game';
 import { CANVAS_HEIGHT, CANVAS_WIDTH, PLANET_RADIUS } from '../constants/game';
+import starscapeImage from '../assets/images/Starscape.png';
 
 type Params = {
   canvasRef: RefObject<HTMLCanvasElement>;
@@ -21,6 +22,17 @@ export const useCanvasRenderer = ({
   player1Angle,
   player2Angle
 }: Params) => {
+  const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
+
+  // Load background image
+  useEffect(() => {
+    const img = new Image();
+    img.src = starscapeImage;
+    img.onload = () => {
+      setBackgroundImage(img);
+    };
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -28,14 +40,20 @@ export const useCanvasRenderer = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.fillStyle = '#000814';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Draw background image or fallback to solid color
+    if (backgroundImage) {
+      ctx.drawImage(backgroundImage, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    } else {
+      ctx.fillStyle = '#000814';
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    ctx.fillStyle = '#ffffff';
-    for (let i = 0; i < 100; i++) {
-      const x = (i * 117) % CANVAS_WIDTH;
-      const y = (i * 211) % CANVAS_HEIGHT;
-      ctx.fillRect(x, y, 1, 1);
+      // Draw simple stars as fallback while image loads
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 100; i++) {
+        const x = (i * 117) % CANVAS_WIDTH;
+        const y = (i * 211) % CANVAS_HEIGHT;
+        ctx.fillRect(x, y, 1, 1);
+      }
     }
 
     gravitationalBodies.forEach(body => {
@@ -111,5 +129,5 @@ export const useCanvasRenderer = ({
         ctx.fill();
       }
     });
-  }, [canvasRef, planets, gravitationalBodies, projectiles, gameState, player1Angle, player2Angle]);
+  }, [canvasRef, planets, gravitationalBodies, projectiles, gameState, player1Angle, player2Angle, backgroundImage]);
 };
