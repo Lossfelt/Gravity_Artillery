@@ -5,11 +5,11 @@ import {
   CANVAS_HEIGHT,
   PLANET_RADIUS,
   PROJECTILE_SPEED,
-  initialGravitationalBodies,
   initialPlanets
 } from '../constants/game';
 import { calculateGravity } from '../utils/calculateGravity';
 import { checkCollision } from '../utils/checkCollision';
+import { generateGravitationalBodies } from '../utils/generateGravitationalBodies';
 
 export const useGravityGame = () => {
   const [player1Angle, setPlayer1Angle] = useState(0);
@@ -21,7 +21,9 @@ export const useGravityGame = () => {
   const animationRef = useRef<number | null>(null);
 
   const [planets] = useState<{ player1: Planet; player2: Planet }>(initialPlanets);
-  const [gravitationalBodies] = useState<GravityBody[]>(initialGravitationalBodies);
+  const [gravitationalBodies, setGravitationalBodies] = useState<GravityBody[]>(() =>
+    generateGravitationalBodies(initialPlanets)
+  );
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
 
   const resetProjectiles = useCallback(() => setProjectiles([]), []);
@@ -124,10 +126,11 @@ export const useGravityGame = () => {
       cancelAnimationFrame(animationRef.current);
     }
 
-    // Reset angles to default only if someone won
+    // Reset angles and regenerate bodies only if someone won (new game)
     if (winner !== null) {
       setPlayer1Angle(0);
       setPlayer2Angle(180);
+      setGravitationalBodies(generateGravitationalBodies(planets));
     }
 
     setGameState('setup');
@@ -135,7 +138,7 @@ export const useGravityGame = () => {
     setPlayer1Ready(false);
     setPlayer2Ready(false);
     resetProjectiles();
-  }, [winner, resetProjectiles]);
+  }, [winner, planets, resetProjectiles]);
 
   const forceWin = useCallback(
     (player: 1 | 2) => {

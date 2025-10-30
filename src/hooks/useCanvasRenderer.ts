@@ -39,18 +39,15 @@ export const useCanvasRenderer = ({
     }
 
     gravitationalBodies.forEach(body => {
+      // Skip rendering black holes - they are invisible
+      if (body.type === 'blackhole') {
+        return;
+      }
+
       ctx.beginPath();
       ctx.arc(body.x, body.y, body.radius, 0, Math.PI * 2);
       ctx.fillStyle = body.color;
       ctx.fill();
-
-      if (body.type === 'blackhole') {
-        ctx.beginPath();
-        ctx.arc(body.x, body.y, body.radius + 5, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 0, 136, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
     });
 
     ctx.beginPath();
