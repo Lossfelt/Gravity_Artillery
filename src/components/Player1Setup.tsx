@@ -15,38 +15,35 @@ export const Player1Setup = ({
     <h2 className="text-xl font-bold text-white mb-3">Player 1 (Blue)</h2>
     <div className="mb-3">
       <label className="text-white block mb-2">Angle: {player1Angle}&deg;</label>
-      <div className="flex items-center gap-3">
-        <div className="flex flex-col items-center gap-2">
-          <button
-            onClick={() => setPlayer1Angle(Math.max(-90, player1Angle - 1))}
-            disabled={player1Ready}
-            className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-1 px-3 rounded"
-          >
-            &uarr;
-          </button>
-          <div style={{ width: '32px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <input
-              type="range"
-              min="-90"
-              max="90"
-              value={player1Angle}
-              onChange={(e) => setPlayer1Angle(Number(e.target.value))}
-              disabled={player1Ready}
-              style={{
-                width: '150px',
-                transform: 'rotate(90deg)',
-                transformOrigin: 'center center'
-              }}
-            />
-          </div>
-          <button
-            onClick={() => setPlayer1Angle(Math.min(90, player1Angle + 1))}
-            disabled={player1Ready}
-            className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-1 px-3 rounded"
-          >
-            &darr;
-          </button>
-        </div>
+      <div className="flex flex-col items-center gap-2">
+        <button
+          onClick={() => setPlayer1Angle(Math.max(-90, player1Angle - 5))}
+          disabled={player1Ready}
+          className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-2 px-6 rounded text-xl w-24"
+        >
+          ⏫
+        </button>
+        <button
+          onClick={() => setPlayer1Angle(Math.max(-90, player1Angle - 1))}
+          disabled={player1Ready}
+          className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-2 px-6 rounded text-lg w-24"
+        >
+          ▲
+        </button>
+        <button
+          onClick={() => setPlayer1Angle(Math.min(90, player1Angle + 1))}
+          disabled={player1Ready}
+          className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-2 px-6 rounded text-lg w-24"
+        >
+          ▼
+        </button>
+        <button
+          onClick={() => setPlayer1Angle(Math.min(90, player1Angle + 5))}
+          disabled={player1Ready}
+          className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-2 px-6 rounded text-xl w-24"
+        >
+          ⏬
+        </button>
       </div>
     </div>
     <button
