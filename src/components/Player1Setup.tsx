@@ -11,9 +11,9 @@ export const Player1Setup = ({
   player1Ready,
   togglePlayer1Ready
 }: Player1SetupProps) => (
-  <div className="bg-blue-900 p-6 rounded-lg">
-    <h2 className="text-xl font-bold text-white mb-3">Player 1 (Blue)</h2>
-    <div className="mb-3">
+  <div className="bg-blue-900 p-6 rounded-lg w-fit">
+    <h2 className="text-xl font-bold text-white mb-3">Player 1</h2>
+    <div className="mb-10">
       <label className="text-white block mb-2">Angle: {player1Angle}&deg;</label>
       <div className="flex flex-col items-center gap-2">
         <button

@@ -1,7 +1,6 @@
 # TODO - Gravity Artillery
 
 ## UI/Controls
-- [ ] Bare knapper, ikke slider. Ha en +1 og +5 knapp i hver retning
 
 ## Audio/Visual
 - [ ] Musikk og lyd
@@ -22,3 +21,4 @@
 - [X] Ulike stjerner har ulik tyngde (blå, hvit, rød)
 - [X] Randomisere plassering av planeter
 - [X] Bedre bakgrunnsbilde
+- [X] Bare knapper, ikke slider. Ha en +1 og +5 knapp i hver retning

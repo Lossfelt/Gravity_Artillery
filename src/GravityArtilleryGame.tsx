@@ -45,7 +45,7 @@ const GravityArtilleryGame = () => {
       <h1 className="text-4xl font-bold text-white mb-8">Gravity Artillery</h1>
 
       <div className="flex flex-row items-center gap-4 min-h-[400px]">
-        <div className="w-64">
+        <div>
           {gameState === 'setup' && (
             <Player1Setup
               player1Angle={player1Angle}
@@ -58,7 +58,7 @@ const GravityArtilleryGame = () => {
 
         <GameCanvas canvasRef={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />
 
-        <div className="w-64">
+        <div>
           {gameState === 'setup' && (
             <Player2Setup
               player2Angle={player2Angle}

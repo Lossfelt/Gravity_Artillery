@@ -10,11 +10,15 @@ export const Player2Setup = ({
   setPlayer2Angle,
   player2Ready,
   togglePlayer2Ready
-}: Player2SetupProps) => (
-  <div className="bg-red-900 p-6 rounded-lg">
-    <h2 className="text-xl font-bold text-white mb-3">Player 2 (Red)</h2>
-    <div className="mb-3">
-      <label className="text-white block mb-2">Angle: {player2Angle}&deg;</label>
+}: Player2SetupProps) => {
+  // Display angle as mirrored (180° = 0°, so it matches Player 1's perspective, and * -1 so that up is the same)
+  const displayAngle = (player2Angle - 180) * -1;
+
+  return (
+    <div className="bg-red-900 p-6 rounded-lg w-fit">
+      <h2 className="text-xl font-bold text-white mb-3">Player 2</h2>
+      <div className="mb-10">
+        <label className="text-white block mb-2">Angle: {displayAngle}&deg;</label>
       <div className="flex flex-col items-center gap-2">
         <button
           onClick={() => setPlayer2Angle(Math.min(270, player2Angle + 5))}
@@ -55,4 +59,5 @@ export const Player2Setup = ({
       {player2Ready ? 'Ready!' : 'Ready?'}
     </button>
   </div>
-);
+  );
+};
