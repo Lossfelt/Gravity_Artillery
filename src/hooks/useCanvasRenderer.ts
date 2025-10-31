@@ -1,5 +1,5 @@
 import { RefObject, useEffect, useState } from 'react';
-import { GameState, GravityBody, Planet, Projectile } from '../types/game';
+import { GameState, GravityBody, Planet, Projectile, ExplosionParticle, PlanetFragment } from '../types/game';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../constants/game';
 import starscapeImage from '../assets/images/Starscape.png';
 
@@ -8,6 +8,9 @@ type Params = {
   planets: { player1: Planet; player2: Planet };
   gravitationalBodies: GravityBody[];
   projectiles: Projectile[];
+  explosionParticles: ExplosionParticle[];
+  planetFragments: PlanetFragment[];
+  destroyedPlanets: Set<1 | 2>;
   gameState: GameState;
   player1Angle: number;
   player2Angle: number;
@@ -18,6 +21,9 @@ export const useCanvasRenderer = ({
   planets,
   gravitationalBodies,
   projectiles,
+  explosionParticles,
+  planetFragments,
+  destroyedPlanets,
   gameState,
   player1Angle,
   player2Angle
@@ -186,20 +192,34 @@ export const useCanvasRenderer = ({
     });
 
     // --- Draw player planets (without glow) ---
-    [planets.player1, planets.player2].forEach(planet => {
+    // Only draw planets that haven't been destroyed
+    if (!destroyedPlanets.has(1)) {
+      const planet = planets.player1;
       const sprite = planet.sprite ? spriteCache[planet.sprite] : null;
 
       if (sprite) {
-        // Draw sprite
         ctx.drawImage(sprite, planet.x - planet.radius, planet.y - planet.radius, planet.radius * 2, planet.radius * 2);
       } else {
-        // Fallback to drawing a circle
         ctx.beginPath();
         ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
         ctx.fillStyle = planet.color;
         ctx.fill();
       }
-    });
+    }
+
+    if (!destroyedPlanets.has(2)) {
+      const planet = planets.player2;
+      const sprite = planet.sprite ? spriteCache[planet.sprite] : null;
+
+      if (sprite) {
+        ctx.drawImage(sprite, planet.x - planet.radius, planet.y - planet.radius, planet.radius * 2, planet.radius * 2);
+      } else {
+        ctx.beginPath();
+        ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+        ctx.fillStyle = planet.color;
+        ctx.fill();
+      }
+    }
     
 
     // --- Draw aiming indicators ---
@@ -249,11 +269,64 @@ export const useCanvasRenderer = ({
         ctx.fill();
       }
     });
+
+    // --- Draw explosion particles ---
+    explosionParticles.forEach(particle => {
+      const alpha = particle.life / particle.maxLife;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      ctx.fillStyle = particle.color;
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // --- Draw planet fragments ---
+    planetFragments.forEach(fragment => {
+      const sprite = spriteCache[fragment.sprite];
+      if (!sprite) return;
+
+      ctx.save();
+      ctx.translate(fragment.x, fragment.y);
+      ctx.rotate(fragment.rotation);
+
+      // Create clipping path for irregular shape
+      ctx.beginPath();
+      fragment.clipPath.forEach((point, index) => {
+        if (index === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      });
+      ctx.closePath();
+      ctx.clip();
+
+      // Draw the specific part of the sprite for this fragment
+      // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      ctx.drawImage(
+        sprite,
+        fragment.sourceX,      // Source X in sprite
+        fragment.sourceY,      // Source Y in sprite
+        fragment.sourceWidth,  // Width to copy from sprite
+        fragment.sourceHeight, // Height to copy from sprite
+        -fragment.width / 2,   // Destination X (centered)
+        -fragment.height / 2,  // Destination Y (centered)
+        fragment.width,        // Destination width
+        fragment.height        // Destination height
+      );
+
+      ctx.restore();
+    });
   }, [
     canvasRef,
     planets,
     gravitationalBodies,
     projectiles,
+    explosionParticles,
+    planetFragments,
+    destroyedPlanets,
     gameState,
     player1Angle,
     player2Angle,

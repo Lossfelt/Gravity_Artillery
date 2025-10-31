@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GameState, Planet, GravityBody, Projectile } from '../types/game';
+import { GameState, Planet, GravityBody, Projectile, ExplosionParticle, PlanetFragment } from '../types/game';
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -10,6 +10,8 @@ import {
 import { calculateGravity } from '../utils/calculateGravity';
 import { checkCollision } from '../utils/checkCollision';
 import { generateGravitationalBodies } from '../utils/generateGravitationalBodies';
+import { createExplosion } from '../utils/createExplosion';
+import { createPlanetFragments } from '../utils/createPlanetFragments';
 
 type UseGravityGameProps = {
   onExplosion?: () => void;
@@ -29,6 +31,9 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     generateGravitationalBodies(initialPlanets)
   );
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
+  const [explosionParticles, setExplosionParticles] = useState<ExplosionParticle[]>([]);
+  const [planetFragments, setPlanetFragments] = useState<PlanetFragment[]>([]);
+  const [destroyedPlanets, setDestroyedPlanets] = useState<Set<1 | 2>>(new Set());
 
   const resetProjectiles = useCallback(() => setProjectiles([]), []);
 
@@ -67,12 +72,67 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     }
   }, [player1Ready, player2Ready, gameState, startGame]);
 
+  // Animate explosion particles
+  useEffect(() => {
+    if (explosionParticles.length === 0) return;
+
+    const animateParticles = () => {
+      setExplosionParticles(prevParticles => {
+        return prevParticles
+          .map(particle => ({
+            ...particle,
+            x: particle.x + particle.vx,
+            y: particle.y + particle.vy,
+            vy: particle.vy + 0.1, // Gravity effect
+            life: particle.life - 1
+          }))
+          .filter(particle => particle.life > 0);
+      });
+    };
+
+    const particleAnimRef = requestAnimationFrame(animateParticles);
+
+    return () => {
+      cancelAnimationFrame(particleAnimRef);
+    };
+  }, [explosionParticles]);
+
+  // Animate planet fragments
+  useEffect(() => {
+    if (planetFragments.length === 0) return;
+
+    const animateFragments = () => {
+      setPlanetFragments(prevFragments => {
+        return prevFragments
+          .map(fragment => ({
+            ...fragment,
+            x: fragment.x + fragment.vx,
+            y: fragment.y + fragment.vy,
+            rotation: fragment.rotation + fragment.rotationSpeed
+          }))
+          .filter(fragment => {
+            // Remove fragments that are far off screen
+            return fragment.x > -100 && fragment.x < CANVAS_WIDTH + 100 &&
+                   fragment.y > -100 && fragment.y < CANVAS_HEIGHT + 100;
+          });
+      });
+    };
+
+    const fragmentAnimRef = requestAnimationFrame(animateFragments);
+
+    return () => {
+      cancelAnimationFrame(fragmentAnimRef);
+    };
+  }, [planetFragments]);
+
   useEffect(() => {
     if (gameState !== 'firing') return;
 
     // Track which players have hit their targets (outside animate to persist)
     let player1Hit = false;
     let player2Hit = false;
+    // Track which planets have been destroyed in this animation cycle to prevent duplicates
+    const localDestroyedPlanets = new Set(destroyedPlanets);
 
     const animate = () => {
       setProjectiles(prevProjectiles => {
@@ -91,13 +151,25 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
           }
 
           const enemyPlanet = proj.player === 1 ? planets.player2 : planets.player1;
-          if (checkCollision({ x: newX, y: newY }, enemyPlanet, PLANET_RADIUS)) {
+          const enemyPlayerNumber = proj.player === 1 ? 2 : 1;
+
+          // Only create fragments if this planet hasn't been destroyed yet
+          if (!localDestroyedPlanets.has(enemyPlayerNumber as 1 | 2) &&
+              checkCollision({ x: newX, y: newY }, enemyPlanet, PLANET_RADIUS)) {
             // Mark that this player hit, but don't end the game yet
             if (proj.player === 1) player1Hit = true;
             if (proj.player === 2) player2Hit = true;
 
-            // Play explosion sound when a planet is hit
+            // Mark planet as destroyed locally to prevent duplicate fragments in same cycle
+            localDestroyedPlanets.add(enemyPlayerNumber as 1 | 2);
+
+            // Play explosion sound and create explosion particles
             onExplosion?.();
+            setExplosionParticles(prev => [...prev, ...createExplosion(enemyPlanet.x, enemyPlanet.y)]);
+
+            // Create planet fragments and mark planet as destroyed
+            setPlanetFragments(prev => [...prev, ...createPlanetFragments(enemyPlanet)]);
+            setDestroyedPlanets(prev => new Set(prev).add(enemyPlayerNumber as 1 | 2));
 
             return { ...proj, active: false };
           }
@@ -167,6 +239,9 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     setPlayer1Ready(false);
     setPlayer2Ready(false);
     resetProjectiles();
+    setExplosionParticles([]);
+    setPlanetFragments([]);
+    setDestroyedPlanets(new Set());
   }, [winner, planets, resetProjectiles]);
 
   const forceWin = useCallback(
@@ -194,6 +269,9 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     planets,
     gravitationalBodies,
     projectiles,
+    explosionParticles,
+    planetFragments,
+    destroyedPlanets,
     gameState,
     winner,
     resetGame,

@@ -32,3 +32,32 @@ export type Projectile = {
   player: 1 | 2;
   active: boolean;
 };
+
+export type ExplosionParticle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  color: string;
+  size: number;
+};
+
+export type PlanetFragment = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  rotation: number;
+  rotationSpeed: number;
+  width: number;
+  height: number;
+  sourceX: number;
+  sourceY: number;
+  sourceWidth: number;
+  sourceHeight: number;
+  sprite: string;
+  // Polygon points for irregular shape clipping (relative to fragment center)
+  clipPath: { x: number; y: number }[];
+};

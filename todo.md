@@ -1,11 +1,13 @@
 # TODO - Gravity Artillery
 
+## Responsivt design
+- [ ] Gjør at spillet ser bra ut på mobil også
+
 ## UI/Controls
 - [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
 
 ## Audio/Visual
-- [ ] Musikk og lyd
-- [ ] Eksplosjon når planeten blir truffet
+- [ ] Legg til kreditering for planeter og stjerner
 
 ## Gameplay
 - [ ] Hver spiller har tre liv
@@ -27,3 +29,6 @@
 - [X] Lagt til gravitational lensing der svarte hull er
 - [X] Runden stopper ikke når én spiller treffes, men når begge prosjektilene har truffet eller er ute av skjermen, slik at uavgjort er mulig
 - [X] Prosjektilbanen blir ikke forkortet
+- [X] Vurder å gjøre fragmentene enda mer hakkete
+- [X] Musikk og lyd
+- [X] Eksplosjon når planeten blir truffet
