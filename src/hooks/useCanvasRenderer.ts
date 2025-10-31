@@ -24,6 +24,18 @@ export const useCanvasRenderer = ({
 }: Params) => {
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
   const [spriteCache, setSpriteCache] = useState<Record<string, HTMLImageElement>>({});
+  const [animationTime, setAnimationTime] = useState(0);
+
+  // Animation loop for pulsing glow effect
+  useEffect(() => {
+    let animationFrameId: number;
+    const animate = () => {
+      setAnimationTime(prev => prev + 0.02);
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
 
   // Load background image
   useEffect(() => {
@@ -65,23 +77,49 @@ export const useCanvasRenderer = ({
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
 
-    // --- Draw all bodies (planets and gravitational) ---
-    const allBodies = [...Object.values(planets), ...gravitationalBodies];
+    // --- Draw gravitational bodies with glow effect ---
+    gravitationalBodies.forEach(body => {
+      if (body.type === 'blackhole') return; // Still don't render black holes
 
-    allBodies.forEach(body => {
-      if ('type' in body && body.type === 'blackhole') return; // Still don't render black holes
+      // Calculate pulsing glow intensity
+      const pulseValue = Math.sin(animationTime) * 0.3 + 0.7; // Oscillates between 0.4 and 1.0
+      const glowIntensity = body.radius * 1.5 * pulseValue;
+
+      ctx.save();
+
+      // Add glow effect
+      ctx.shadowBlur = glowIntensity;
+      ctx.shadowColor = body.color;
 
       const sprite = body.sprite ? spriteCache[body.sprite] : null;
 
       if (sprite) {
-        // Draw sprite
+        // Draw sprite with glow
         const radius = body.radius;
         ctx.drawImage(sprite, body.x - radius, body.y - radius, radius * 2, radius * 2);
       } else {
-        // Fallback to drawing a circle
+        // Fallback to drawing a circle with glow
         ctx.beginPath();
         ctx.arc(body.x, body.y, body.radius, 0, Math.PI * 2);
         ctx.fillStyle = body.color;
+        ctx.fill();
+      }
+
+      ctx.restore();
+    });
+
+    // --- Draw player planets (without glow) ---
+    [planets.player1, planets.player2].forEach(planet => {
+      const sprite = planet.sprite ? spriteCache[planet.sprite] : null;
+
+      if (sprite) {
+        // Draw sprite
+        ctx.drawImage(sprite, planet.x - planet.radius, planet.y - planet.radius, planet.radius * 2, planet.radius * 2);
+      } else {
+        // Fallback to drawing a circle
+        ctx.beginPath();
+        ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+        ctx.fillStyle = planet.color;
         ctx.fill();
       }
     });
@@ -143,6 +181,7 @@ export const useCanvasRenderer = ({
     player1Angle,
     player2Angle,
     backgroundImage,
-    spriteCache
+    spriteCache,
+    animationTime
   ]);
 };
