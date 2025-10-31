@@ -17,7 +17,7 @@ export const useGravityGame = () => {
   const [player1Ready, setPlayer1Ready] = useState(false);
   const [player2Ready, setPlayer2Ready] = useState(false);
   const [gameState, setGameState] = useState<GameState>('setup');
-  const [winner, setWinner] = useState<1 | 2 | null>(null);
+  const [winner, setWinner] = useState<1 | 2 | 'draw' | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const [planets] = useState<{ player1: Planet; player2: Planet }>(initialPlanets);
@@ -66,6 +66,10 @@ export const useGravityGame = () => {
   useEffect(() => {
     if (gameState !== 'firing') return;
 
+    // Track which players have hit their targets (outside animate to persist)
+    let player1Hit = false;
+    let player2Hit = false;
+
     const animate = () => {
       setProjectiles(prevProjectiles => {
         const updated = prevProjectiles.map(proj => {
@@ -84,8 +88,9 @@ export const useGravityGame = () => {
 
           const enemyPlanet = proj.player === 1 ? planets.player2 : planets.player1;
           if (checkCollision({ x: newX, y: newY }, enemyPlanet, PLANET_RADIUS)) {
-            setGameState('gameover');
-            setWinner(proj.player);
+            // Mark that this player hit, but don't end the game yet
+            if (proj.player === 1) player1Hit = true;
+            if (proj.player === 2) player2Hit = true;
             return { ...proj, active: false };
           }
 
@@ -102,8 +107,24 @@ export const useGravityGame = () => {
           };
         });
 
+        // Only end the game when both projectiles are inactive
         if (updated.every(p => !p.active)) {
           setGameState('gameover');
+
+          // Determine the winner based on who hit their target
+          if (player1Hit && player2Hit) {
+            // Both hit - it's a draw (new game)
+            setWinner('draw');
+          } else if (player1Hit) {
+            // Only player 1 hit
+            setWinner(1);
+          } else if (player2Hit) {
+            // Only player 2 hit
+            setWinner(2);
+          } else {
+            // Neither hit - both missed (retry with same setup)
+            setWinner(null);
+          }
         }
 
         return updated;
@@ -126,7 +147,8 @@ export const useGravityGame = () => {
       cancelAnimationFrame(animationRef.current);
     }
 
-    // Reset angles and regenerate bodies only if someone won (new game)
+    // Reset angles and regenerate bodies if someone won or both hit (new game)
+    // If both missed (winner === null), keep the same setup
     if (winner !== null) {
       setPlayer1Angle(0);
       setPlayer2Angle(180);
@@ -148,6 +170,11 @@ export const useGravityGame = () => {
     []
   );
 
+  const forceDraw = useCallback(() => {
+    setWinner('draw');
+    setGameState('gameover');
+  }, []);
+
   return {
     player1Angle,
     setPlayer1Angle,
@@ -163,6 +190,7 @@ export const useGravityGame = () => {
     gameState,
     winner,
     resetGame,
-    forceWin
+    forceWin,
+    forceDraw
   };
 };

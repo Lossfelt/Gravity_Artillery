@@ -24,7 +24,8 @@ const GravityArtilleryGame = () => {
     gameState,
     winner,
     resetGame,
-    forceWin
+    forceWin,
+    forceDraw
   } = useGravityGame();
 
   useCanvasRenderer({
@@ -82,6 +83,12 @@ const GravityArtilleryGame = () => {
           className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm"
         >
           TEST: Player 2 Wins
+        </button>
+        <button
+          onClick={forceDraw}
+          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm"
+        >
+          TEST: Draw (Both Hit)
         </button>
       </div>
 
