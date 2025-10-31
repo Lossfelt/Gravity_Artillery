@@ -23,3 +23,5 @@
 - [X] Bedre bakgrunnsbilde
 - [X] Bare knapper, ikke slider. Ha en +1 og +5 knapp i hver retning
 - [X] Gjøre planeter og grav-bodies litt penere
+- [X] Lagt til glød på stjernene
+- [X] Lagt til gravitational lensing der svarte hull er

@@ -77,6 +77,83 @@ export const useCanvasRenderer = ({
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
 
+    // --- Apply gravitational lensing effect for black holes ---
+    const blackHoles = gravitationalBodies.filter(body => body.type === 'blackhole');
+    blackHoles.forEach(blackHole => {
+      const lensRadius = blackHole.radius * 3; // Area of effect
+      const centerX = Math.round(blackHole.x);
+      const centerY = Math.round(blackHole.y);
+
+      // Calculate bounds for the affected area
+      const x = Math.max(0, centerX - lensRadius);
+      const y = Math.max(0, centerY - lensRadius);
+      const width = Math.min(CANVAS_WIDTH - x, lensRadius * 2);
+      const height = Math.min(CANVAS_HEIGHT - y, lensRadius * 2);
+
+      if (width <= 0 || height <= 0) return;
+
+      // Get the image data from the background
+      const imageData = ctx.getImageData(x, y, width, height);
+      const pixels = imageData.data;
+
+      // Create a new image data for the distorted result
+      const newImageData = ctx.createImageData(width, height);
+      const newPixels = newImageData.data;
+
+      // Apply radial displacement
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          // Calculate position relative to black hole center
+          const worldX = x + px;
+          const worldY = y + py;
+          const dx = worldX - centerX;
+          const dy = worldY - centerY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < lensRadius && distance > 0) {
+            // Calculate displacement - stronger near the center
+            const normalizedDist = distance / lensRadius;
+            const displacementStrength = (1 - normalizedDist) * blackHole.radius * 1.9;
+            const angle = Math.atan2(dy, dx);
+
+            // Calculate source pixel (where to sample from)
+            const sourceX = px + Math.cos(angle + Math.PI / 2) * displacementStrength;
+            const sourceY = py + Math.sin(angle + Math.PI / 2) * displacementStrength;
+
+            // Clamp and sample
+            const sx = Math.max(0, Math.min(width - 1, Math.floor(sourceX)));
+            const sy = Math.max(0, Math.min(height - 1, Math.floor(sourceY)));
+
+            const sourceIndex = (sy * width + sx) * 4;
+            const targetIndex = (py * width + px) * 4;
+
+            // Copy pixel data
+            newPixels[targetIndex] = pixels[sourceIndex];         // R
+            newPixels[targetIndex + 1] = pixels[sourceIndex + 1]; // G
+            newPixels[targetIndex + 2] = pixels[sourceIndex + 2]; // B
+            newPixels[targetIndex + 3] = pixels[sourceIndex + 3]; // A
+
+            // Darken pixels near the center
+            const darkenFactor = 1 - (1 - normalizedDist) * 0.2;
+            newPixels[targetIndex] *= darkenFactor;
+            newPixels[targetIndex + 1] *= darkenFactor;
+            newPixels[targetIndex + 2] *= darkenFactor;
+          } else {
+            // Outside lens radius, copy original
+            const sourceIndex = (py * width + px) * 4;
+            const targetIndex = (py * width + px) * 4;
+            newPixels[targetIndex] = pixels[sourceIndex];
+            newPixels[targetIndex + 1] = pixels[sourceIndex + 1];
+            newPixels[targetIndex + 2] = pixels[sourceIndex + 2];
+            newPixels[targetIndex + 3] = pixels[sourceIndex + 3];
+          }
+        }
+      }
+
+      // Put the distorted image back
+      ctx.putImageData(newImageData, x, y);
+    });
+
     // --- Draw gravitational bodies with glow effect ---
     gravitationalBodies.forEach(body => {
       if (body.type === 'blackhole') return; // Still don't render black holes
