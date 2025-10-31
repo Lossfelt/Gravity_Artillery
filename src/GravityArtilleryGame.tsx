@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useGravityGame } from './hooks/useGravityGame';
 import { useCanvasRenderer } from './hooks/useCanvasRenderer';
+import { useSoundEffects } from './hooks/useSoundEffects';
 import { GameCanvas } from './components/GameCanvas';
 import { GameOverPanel } from './components/GameOverPanel';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
@@ -9,6 +10,8 @@ import { Player2Setup } from './components/Player2Setup';
 
 const GravityArtilleryGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { playExplosion } = useSoundEffects();
+
   const {
     player1Angle,
     setPlayer1Angle,
@@ -26,7 +29,7 @@ const GravityArtilleryGame = () => {
     resetGame,
     forceWin,
     forceDraw
-  } = useGravityGame();
+  } = useGravityGame({ onExplosion: playExplosion });
 
   useCanvasRenderer({
     canvasRef,
@@ -98,6 +101,12 @@ const GravityArtilleryGame = () => {
         Set your launch angle and click Ready. When both players are ready, projectiles will fire simultaneously.
         Gravitational bodies will bend your projectile&apos;s path. Hit the enemy planet to win!
       </p>
+
+      <div className="text-gray-500 text-xs mt-6 text-center max-w-2xl">
+        <p className="font-semibold mb-1">Lydkrediteringer:</p>
+        <p>Musikk: www.purple-planet.com</p>
+        <p>Lydeffekt: by freesound_community via Pixabay</p>
+      </div>
     </div>
   );
 };

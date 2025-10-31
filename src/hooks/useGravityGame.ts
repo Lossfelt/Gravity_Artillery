@@ -11,7 +11,11 @@ import { calculateGravity } from '../utils/calculateGravity';
 import { checkCollision } from '../utils/checkCollision';
 import { generateGravitationalBodies } from '../utils/generateGravitationalBodies';
 
-export const useGravityGame = () => {
+type UseGravityGameProps = {
+  onExplosion?: () => void;
+};
+
+export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   const [player1Angle, setPlayer1Angle] = useState(0);
   const [player2Angle, setPlayer2Angle] = useState(180);
   const [player1Ready, setPlayer1Ready] = useState(false);
@@ -91,6 +95,10 @@ export const useGravityGame = () => {
             // Mark that this player hit, but don't end the game yet
             if (proj.player === 1) player1Hit = true;
             if (proj.player === 2) player2Hit = true;
+
+            // Play explosion sound when a planet is hit
+            onExplosion?.();
+
             return { ...proj, active: false };
           }
 
