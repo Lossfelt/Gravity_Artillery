@@ -95,7 +95,6 @@ export const useGravityGame = () => {
           }
 
           const newTrail = [...proj.trail, { x: proj.x, y: proj.y }];
-          if (newTrail.length > 50) newTrail.shift();
 
           return {
             ...proj,

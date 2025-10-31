@@ -25,3 +25,4 @@
 - [X] Lagt til glød på stjernene
 - [X] Lagt til gravitational lensing der svarte hull er
 - [X] Runden stopper ikke når én spiller treffes, men når begge prosjektilene har truffet eller er ute av skjermen, slik at uavgjort er mulig
+- [X] Prosjektilbanen blir ikke forkortet
