@@ -1,6 +1,7 @@
 # TODO - Gravity Artillery
 
 ## UI/Controls
+- [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
 
 ## Audio/Visual
 - [ ] Musikk og lyd
