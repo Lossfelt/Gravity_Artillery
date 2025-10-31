@@ -1,6 +1,6 @@
 import { RefObject, useEffect, useState } from 'react';
 import { GameState, GravityBody, Planet, Projectile } from '../types/game';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, PLANET_RADIUS } from '../constants/game';
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../constants/game';
 import starscapeImage from '../assets/images/Starscape.png';
 
 type Params = {
@@ -23,6 +23,7 @@ export const useCanvasRenderer = ({
   player2Angle
 }: Params) => {
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
+  const [spriteCache, setSpriteCache] = useState<Record<string, HTMLImageElement>>({});
 
   // Load background image
   useEffect(() => {
@@ -33,6 +34,22 @@ export const useCanvasRenderer = ({
     };
   }, []);
 
+  // Load all sprites for planets and gravitational bodies
+  useEffect(() => {
+    const allBodies = [...Object.values(planets), ...gravitationalBodies];
+    const uniqueSpritePaths = [...new Set(allBodies.map(body => body.sprite).filter(Boolean))] as string[];
+
+    uniqueSpritePaths.forEach(path => {
+      if (!spriteCache[path]) {
+        const img = new Image();
+        img.src = path;
+        img.onload = () => {
+          setSpriteCache(prevCache => ({ ...prevCache, [path]: img }));
+        };
+      }
+    });
+  }, [planets, gravitationalBodies]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -40,50 +57,37 @@ export const useCanvasRenderer = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Draw background image or fallback to solid color
+    // Draw background
     if (backgroundImage) {
       ctx.drawImage(backgroundImage, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     } else {
       ctx.fillStyle = '#000814';
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-      // Draw simple stars as fallback while image loads
-      ctx.fillStyle = '#ffffff';
-      for (let i = 0; i < 100; i++) {
-        const x = (i * 117) % CANVAS_WIDTH;
-        const y = (i * 211) % CANVAS_HEIGHT;
-        ctx.fillRect(x, y, 1, 1);
-      }
     }
 
-    gravitationalBodies.forEach(body => {
-      // Skip rendering black holes - they are invisible
-      if (body.type === 'blackhole') {
-        return;
+    // --- Draw all bodies (planets and gravitational) ---
+    const allBodies = [...Object.values(planets), ...gravitationalBodies];
+
+    allBodies.forEach(body => {
+      if ('type' in body && body.type === 'blackhole') return; // Still don't render black holes
+
+      const sprite = body.sprite ? spriteCache[body.sprite] : null;
+
+      if (sprite) {
+        // Draw sprite
+        const radius = body.radius;
+        ctx.drawImage(sprite, body.x - radius, body.y - radius, radius * 2, radius * 2);
+      } else {
+        // Fallback to drawing a circle
+        ctx.beginPath();
+        ctx.arc(body.x, body.y, body.radius, 0, Math.PI * 2);
+        ctx.fillStyle = body.color;
+        ctx.fill();
       }
-
-      ctx.beginPath();
-      ctx.arc(body.x, body.y, body.radius, 0, Math.PI * 2);
-      ctx.fillStyle = body.color;
-      ctx.fill();
     });
+    
 
-    ctx.beginPath();
-    ctx.arc(planets.player1.x, planets.player1.y, PLANET_RADIUS, 0, Math.PI * 2);
-    ctx.fillStyle = planets.player1.color;
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(planets.player2.x, planets.player2.y, PLANET_RADIUS, 0, Math.PI * 2);
-    ctx.fillStyle = planets.player2.color;
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
+    // --- Draw aiming indicators ---
     if (gameState === 'setup') {
       const lineLength = 40;
       const angleRad1 = (player1Angle * Math.PI) / 180;
@@ -109,6 +113,7 @@ export const useCanvasRenderer = ({
       ctx.stroke();
     }
 
+    // --- Draw projectiles ---
     projectiles.forEach(proj => {
       ctx.strokeStyle = proj.player === 1 ? 'rgba(66, 135, 245, 0.6)' : 'rgba(245, 66, 66, 0.6)';
       ctx.lineWidth = 2;
@@ -129,5 +134,15 @@ export const useCanvasRenderer = ({
         ctx.fill();
       }
     });
-  }, [canvasRef, planets, gravitationalBodies, projectiles, gameState, player1Angle, player2Angle, backgroundImage]);
+  }, [
+    canvasRef,
+    planets,
+    gravitationalBodies,
+    projectiles,
+    gameState,
+    player1Angle,
+    player2Angle,
+    backgroundImage,
+    spriteCache
+  ]);
 };

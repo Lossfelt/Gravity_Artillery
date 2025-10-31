@@ -105,7 +105,8 @@ export const generateGravitationalBodies = (
           mass: smallerBodyType.mass,
           radius: smallerBodyType.radius,
           color: smallerBodyType.color,
-          type: smallerBodyType.type
+          type: smallerBodyType.type,
+          sprite: smallerBodyType.sprite
         });
       } else {
         console.error(`Failed to place body ${i}`);
@@ -119,7 +120,8 @@ export const generateGravitationalBodies = (
       mass: bodyType.mass,
       radius: bodyType.radius,
       color: bodyType.color,
-      type: bodyType.type
+      type: bodyType.type,
+      sprite: bodyType.sprite
     });
   }
 

@@ -5,6 +5,7 @@ export type Planet = {
   y: number;
   radius: number;
   color: string;
+  sprite?: string;
 };
 
 export type GravityBody = {
@@ -14,6 +15,7 @@ export type GravityBody = {
   radius: number;
   color: string;
   type: 'star' | 'planet' | 'blackhole';
+  sprite?: string;
 };
 
 export type TrailPoint = {
