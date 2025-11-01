@@ -41,14 +41,14 @@ export const Player1Setup = ({
             disabled={player1Ready || gameState !== 'setup'}
             className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-1.5 md:py-2 px-4 md:px-6 rounded text-base md:text-lg w-20 md:w-24"
           >
-            ▲
+            🔼
           </button>
           <button
             onClick={() => setPlayer1Angle(Math.min(90, player1Angle + 1))}
             disabled={player1Ready || gameState !== 'setup'}
             className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 text-white font-bold py-1.5 md:py-2 px-4 md:px-6 rounded text-base md:text-lg w-20 md:w-24"
           >
-            ▼
+            🔽
           </button>
           <button
             onClick={() => setPlayer1Angle(Math.min(90, player1Angle + 5))}
