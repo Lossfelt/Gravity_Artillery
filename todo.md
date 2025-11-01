@@ -1,7 +1,6 @@
 # TODO - Gravity Artillery
 
 ## Responsivt design
-- [ ] Gjør at spillet ser bra ut på mobil også
 
 ## UI/Controls
 - [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
@@ -34,3 +33,4 @@
 - [X] Musikk og lyd
 - [X] Eksplosjon når planeten blir truffet
 - [X] ExplosionParticles har ingen feilaktig gravitasjonseffekt
+- [X] Gjør at spillet ser bra ut på mobil også
