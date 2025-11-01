@@ -6,7 +6,6 @@ import { useResponsiveCanvas } from './hooks/useResponsiveCanvas';
 import { useOrientation } from './hooks/useOrientation';
 import { useIsMobile } from './hooks/useIsMobile';
 import { GameCanvas } from './components/GameCanvas';
-import { GameOverPanel } from './components/GameOverPanel';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
 import { Player1Setup } from './components/Player1Setup';
 import { Player2Setup } from './components/Player2Setup';
@@ -34,8 +33,6 @@ const GravityArtilleryGame = () => {
     planetFragments,
     destroyedPlanets,
     gameState,
-    winner,
-    resetGame,
     forceWin,
     forceDraw
   } = useGravityGame({ onExplosion: playExplosion });
@@ -79,6 +76,7 @@ const GravityArtilleryGame = () => {
               setPlayer1Angle={setPlayer1Angle}
               player1Ready={player1Ready}
               togglePlayer1Ready={togglePlayer1Ready}
+              gameState={gameState}
             />
           </div>
         )}
@@ -94,7 +92,7 @@ const GravityArtilleryGame = () => {
           />
 
           {/* Mobile portrait only: both controls below canvas */}
-          {!controlsOnSides && gameState === 'setup' && (
+          {!controlsOnSides && (
             <div className="flex flex-row gap-4 w-full px-2">
               <div className="flex-1">
                 <Player1Setup
@@ -102,6 +100,7 @@ const GravityArtilleryGame = () => {
                   setPlayer1Angle={setPlayer1Angle}
                   player1Ready={player1Ready}
                   togglePlayer1Ready={togglePlayer1Ready}
+                  gameState={gameState}
                 />
               </div>
               <div className="flex-1">
@@ -110,6 +109,7 @@ const GravityArtilleryGame = () => {
                   setPlayer2Angle={setPlayer2Angle}
                   player2Ready={player2Ready}
                   togglePlayer2Ready={togglePlayer2Ready}
+                  gameState={gameState}
                 />
               </div>
             </div>
@@ -125,6 +125,7 @@ const GravityArtilleryGame = () => {
               setPlayer2Angle={setPlayer2Angle}
               player2Ready={player2Ready}
               togglePlayer2Ready={togglePlayer2Ready}
+              gameState={gameState}
             />
           </div>
         )}
@@ -150,8 +151,6 @@ const GravityArtilleryGame = () => {
           TEST: Draw (Both Hit)
         </button>
       </div>
-
-      {gameState === 'gameover' && <GameOverPanel winner={winner} onReset={resetGame} />}
 
       <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
         Set your launch angle and click Ready. When both players are ready, projectiles will fire simultaneously.

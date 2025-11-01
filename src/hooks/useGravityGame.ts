@@ -66,12 +66,6 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     setWinner(null);
   }, [planets, player1Angle, player2Angle]);
 
-  useEffect(() => {
-    if (player1Ready && player2Ready && gameState === 'setup') {
-      startGame();
-    }
-  }, [player1Ready, player2Ready, gameState, startGame]);
-
   // Animate explosion particles
   useEffect(() => {
     if (explosionParticles.length === 0) return;
@@ -189,6 +183,10 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
         if (updated.every(p => !p.active)) {
           setGameState('gameover');
 
+          // Reset ready status so players must click "Next Round" to continue
+          setPlayer1Ready(false);
+          setPlayer2Ready(false);
+
           // Determine the winner based on who hit their target
           if (player1Hit && player2Hit) {
             // Both hit - it's a draw (new game)
@@ -242,6 +240,17 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     setPlanetFragments([]);
     setDestroyedPlanets(new Set());
   }, [winner, planets, resetProjectiles]);
+
+  // Handle ready state transitions
+  useEffect(() => {
+    if (player1Ready && player2Ready) {
+      if (gameState === 'setup') {
+        startGame();
+      } else if (gameState === 'gameover') {
+        resetGame();
+      }
+    }
+  }, [player1Ready, player2Ready, gameState, startGame, resetGame]);
 
   const forceWin = useCallback(
     (player: 1 | 2) => {

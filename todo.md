@@ -11,6 +11,7 @@
 
 ## Gameplay
 - [ ] Hver spiller har tre liv
+- [ ] Prosjektilene beveger seg litt for fort på mobil
 
 ## Gravitational Bodies
 - [ ] Gjøre plasseringen litt mindre tilfeldig, slik at de hovedsakelig er i midten av skjermen?
