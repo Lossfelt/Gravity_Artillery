@@ -181,25 +181,33 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
 
         // Only end the game when both projectiles are inactive
         if (updated.every(p => !p.active)) {
-          setGameState('gameover');
-
-          // Reset ready status so players must click "Next Round" to continue
-          setPlayer1Ready(false);
-          setPlayer2Ready(false);
-
           // Determine the winner based on who hit their target
           if (player1Hit && player2Hit) {
             // Both hit - it's a draw (new game)
             setWinner('draw');
+            setGameState('gameover');
+            setPlayer1Ready(false);
+            setPlayer2Ready(false);
           } else if (player1Hit) {
             // Only player 1 hit
             setWinner(1);
+            setGameState('gameover');
+            setPlayer1Ready(false);
+            setPlayer2Ready(false);
           } else if (player2Hit) {
             // Only player 2 hit
             setWinner(2);
+            setGameState('gameover');
+            setPlayer1Ready(false);
+            setPlayer2Ready(false);
           } else {
             // Neither hit - both missed (retry with same setup)
+            // Return to setup immediately, keep trails visible until next fire
             setWinner(null);
+            setGameState('setup');
+            setPlayer1Ready(false);
+            setPlayer2Ready(false);
+            // Projectiles are kept to show trails from previous attempt
           }
         }
 
