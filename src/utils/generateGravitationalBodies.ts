@@ -121,7 +121,7 @@ export const generateGravitationalBodies = (
       radius: bodyType.radius,
       color: bodyType.color,
       type: bodyType.type,
-      sprite: bodyType.sprite
+      ...('sprite' in bodyType && { sprite: bodyType.sprite })
     });
   }
 

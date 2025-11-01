@@ -39,7 +39,6 @@ export const createPlanetFragments = (planet: Planet): PlanetFragment[] => {
 
     // Pick a random chunk from the sprite that represents this area
     // Use the angle to determine which part of the sprite to use
-    const spriteAngle = fragmentAngle / (Math.PI * 2); // Normalize to 0-1
     const spriteCenterX = halfSprite + Math.cos(fragmentAngle) * (halfSprite * 0.3);
     const spriteCenterY = halfSprite + Math.sin(fragmentAngle) * (halfSprite * 0.3);
 

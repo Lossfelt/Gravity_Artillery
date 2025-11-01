@@ -2,6 +2,9 @@ import { useRef } from 'react';
 import { useGravityGame } from './hooks/useGravityGame';
 import { useCanvasRenderer } from './hooks/useCanvasRenderer';
 import { useSoundEffects } from './hooks/useSoundEffects';
+import { useResponsiveCanvas } from './hooks/useResponsiveCanvas';
+import { useOrientation } from './hooks/useOrientation';
+import { useIsMobile } from './hooks/useIsMobile';
 import { GameCanvas } from './components/GameCanvas';
 import { GameOverPanel } from './components/GameOverPanel';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
@@ -11,6 +14,9 @@ import { Player2Setup } from './components/Player2Setup';
 const GravityArtilleryGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { playExplosion } = useSoundEffects();
+  const { width: displayWidth, height: displayHeight } = useResponsiveCanvas();
+  const orientation = useOrientation();
+  const isMobile = useIsMobile();
 
   const {
     player1Angle,
@@ -50,52 +56,94 @@ const GravityArtilleryGame = () => {
   const togglePlayer1Ready = () => setPlayer1Ready(prev => !prev);
   const togglePlayer2Ready = () => setPlayer2Ready(prev => !prev);
 
-  return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-900 p-4 pt-8">
-      <h1 className="text-4xl font-bold text-white mb-8">Gravity Artillery</h1>
+  // Determine layout: controls on sides for desktop and mobile landscape, below for mobile portrait
+  const controlsOnSides = !isMobile || orientation === 'landscape';
+  const isMobileLandscape = isMobile && orientation === 'landscape';
 
-      <div className="flex flex-row items-center gap-4 min-h-[400px]">
-        <div>
-          {gameState === 'setup' && (
+  return (
+    <div className="flex flex-col items-center min-h-screen bg-gray-900 p-4 pt-8 md:pt-8">
+      {/* Hide title in mobile landscape to save vertical space */}
+      {!isMobileLandscape && (
+        <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Gravity Artillery</h1>
+      )}
+
+      <div className={`flex ${controlsOnSides ? 'flex-row' : 'flex-col'} items-center justify-center gap-4 w-full`}>
+        {/* Player 1 controls on left side (desktop + mobile landscape) */}
+        {controlsOnSides && (
+          <div>
+            {/* Always show controls when on sides to prevent layout jumping */}
             <Player1Setup
               player1Angle={player1Angle}
               setPlayer1Angle={setPlayer1Angle}
               player1Ready={player1Ready}
               togglePlayer1Ready={togglePlayer1Ready}
             />
+          </div>
+        )}
+
+        {/* Canvas - shared between all layouts */}
+        <div className={`flex flex-col items-center gap-4 ${controlsOnSides ? 'w-auto' : 'w-full'}`}>
+          <GameCanvas
+            canvasRef={canvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            displayWidth={displayWidth}
+            displayHeight={displayHeight}
+          />
+
+          {/* Mobile portrait only: both controls below canvas */}
+          {!controlsOnSides && gameState === 'setup' && (
+            <div className="flex flex-row gap-4 w-full px-2">
+              <div className="flex-1">
+                <Player1Setup
+                  player1Angle={player1Angle}
+                  setPlayer1Angle={setPlayer1Angle}
+                  player1Ready={player1Ready}
+                  togglePlayer1Ready={togglePlayer1Ready}
+                />
+              </div>
+              <div className="flex-1">
+                <Player2Setup
+                  player2Angle={player2Angle}
+                  setPlayer2Angle={setPlayer2Angle}
+                  player2Ready={player2Ready}
+                  togglePlayer2Ready={togglePlayer2Ready}
+                />
+              </div>
+            </div>
           )}
         </div>
 
-        <GameCanvas canvasRef={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />
-
-        <div>
-          {gameState === 'setup' && (
+        {/* Player 2 controls on right side (desktop + mobile landscape) */}
+        {controlsOnSides && (
+          <div>
+            {/* Always show controls when on sides to prevent layout jumping */}
             <Player2Setup
               player2Angle={player2Angle}
               setPlayer2Angle={setPlayer2Angle}
               player2Ready={player2Ready}
               togglePlayer2Ready={togglePlayer2Ready}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      <div className="flex gap-3 mb-4 mt-4">
+      <div className="flex flex-wrap gap-2 md:gap-3 mb-4 mt-4 justify-center">
         <button
           onClick={() => forceWin(1)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm"
+          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 md:px-4 rounded text-xs md:text-sm"
         >
           TEST: Player 1 Wins
         </button>
         <button
           onClick={() => forceWin(2)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm"
+          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 md:px-4 rounded text-xs md:text-sm"
         >
           TEST: Player 2 Wins
         </button>
         <button
           onClick={forceDraw}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm"
+          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 md:px-4 rounded text-xs md:text-sm"
         >
           TEST: Draw (Both Hit)
         </button>
@@ -103,12 +151,12 @@ const GravityArtilleryGame = () => {
 
       {gameState === 'gameover' && <GameOverPanel winner={winner} onReset={resetGame} />}
 
-      <p className="text-gray-400 text-sm mt-4 max-w-2xl text-center">
+      <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
         Set your launch angle and click Ready. When both players are ready, projectiles will fire simultaneously.
         Gravitational bodies will bend your projectile&apos;s path. Hit the enemy planet to win!
       </p>
 
-      <div className="text-gray-500 text-xs mt-6 text-center max-w-2xl">
+      <div className="text-gray-500 text-xs mt-4 md:mt-6 text-center max-w-2xl px-4">
         <p className="font-semibold mb-1">Lydkrediteringer:</p>
         <p>Musikk: www.purple-planet.com</p>
         <p>Lydeffekt: by freesound_community via Pixabay</p>
