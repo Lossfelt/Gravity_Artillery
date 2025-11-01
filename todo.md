@@ -32,3 +32,4 @@
 - [X] Vurder å gjøre fragmentene enda mer hakkete
 - [X] Musikk og lyd
 - [X] Eksplosjon når planeten blir truffet
+- [X] ExplosionParticles har ingen feilaktig gravitasjonseffekt

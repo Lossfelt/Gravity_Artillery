@@ -83,7 +83,6 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
             ...particle,
             x: particle.x + particle.vx,
             y: particle.y + particle.vy,
-            vy: particle.vy + 0.1, // Gravity effect
             life: particle.life - 1
           }))
           .filter(particle => particle.life > 0);
