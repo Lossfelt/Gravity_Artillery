@@ -61,7 +61,9 @@ const GravityArtilleryGame = () => {
   const isMobileLandscape = isMobile && orientation === 'landscape';
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-900 p-4 pt-8 md:pt-8">
+    <div className={`flex flex-col items-center min-h-screen bg-gray-900 ${
+      isMobileLandscape ? 'p-2 pt-1' : 'p-4 pt-4 md:pt-8'
+    }`}>
       {/* Hide title in mobile landscape to save vertical space */}
       {!isMobileLandscape && (
         <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Gravity Artillery</h1>
