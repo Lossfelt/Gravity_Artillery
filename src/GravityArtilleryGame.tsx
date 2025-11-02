@@ -34,8 +34,7 @@ const GravityArtilleryGame = () => {
     destroyedPlanets,
     gameState,
     gameStats,
-    forceWin,
-    forceDraw
+    winner
   } = useGravityGame({ onExplosion: playExplosion });
 
   useCanvasRenderer({
@@ -88,13 +87,37 @@ const GravityArtilleryGame = () => {
 
         {/* Canvas - shared between all layouts */}
         <div className={`flex flex-col items-center gap-4 ${controlsOnSides ? 'w-auto' : 'w-full'}`}>
-          <GameCanvas
-            canvasRef={canvasRef}
-            width={CANVAS_WIDTH}
-            height={CANVAS_HEIGHT}
-            displayWidth={displayWidth}
-            displayHeight={displayHeight}
-          />
+          <div className="relative">
+            <GameCanvas
+              canvasRef={canvasRef}
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
+              displayWidth={displayWidth}
+              displayHeight={displayHeight}
+            />
+
+            {/* Game Over Overlay */}
+            {winner !== null && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
+                <div className="text-center px-6 py-8">
+                  <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
+                    {winner === 'draw' ? 'MUTUAL DESTRUCTION!' : winner === 1 ? 'PLAYER 1 WINS!' : 'PLAYER 2 WINS!'}
+                  </h2>
+                  <p className="text-lg md:text-xl text-gray-300 mb-6">
+                    {winner === 'draw'
+                      ? 'Planetary remnants scream silently through the uncaring void...'
+                      : `Their civilization continues, on the backs of desolated systems.`}
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
+                  >
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Mobile portrait only: both controls below canvas */}
           {!controlsOnSides && (
@@ -134,27 +157,6 @@ const GravityArtilleryGame = () => {
             />
           </div>
         )}
-      </div>
-
-      <div className="flex flex-wrap gap-2 md:gap-3 mb-4 mt-4 justify-center">
-        <button
-          onClick={() => forceWin(1)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 md:px-4 rounded text-xs md:text-sm"
-        >
-          TEST: Player 1 Wins
-        </button>
-        <button
-          onClick={() => forceWin(2)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 md:px-4 rounded text-xs md:text-sm"
-        >
-          TEST: Player 2 Wins
-        </button>
-        <button
-          onClick={forceDraw}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 md:px-4 rounded text-xs md:text-sm"
-        >
-          TEST: Draw (Both Hit)
-        </button>
       </div>
 
       <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">

@@ -1,14 +1,10 @@
 # TODO - Gravity Artillery
 
-## Responsivt design
+## Diverse
+- [ ] Rydd opp i prosjektet, unødendige filer, funksjoner, etc
 
 ## UI/Controls
 - [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
-
-## Audio/Visual
-
-## Gameplay
-- [ ] Når alle tre liv er borte kommer det en game over beskjed
 
 ## Gravitational Bodies
 - [ ] Gjøre plasseringen litt mindre tilfeldig, slik at de hovedsakelig er i midten av skjermen?
@@ -35,3 +31,4 @@
 - [X] Prosjektilene beveger seg litt for fort på mobil
 - [X] Hver spiller har tre liv
 - [X] Legg til kreditering for planeter og stjerner
+- [X] Når alle tre liv er borte kommer det en game over beskjed
