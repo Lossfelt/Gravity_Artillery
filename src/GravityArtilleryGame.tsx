@@ -65,7 +65,10 @@ const GravityArtilleryGame = () => {
     }`}>
       {/* Hide title in mobile landscape to save vertical space */}
       {!isMobileLandscape && (
-        <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Gravity Artillery</h1>
+        <div className="text-center mb-4 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-white mb-1">Gravity Artillery</h1>
+          <p className="text-xs md:text-sm text-gray-500 italic">a conflict in the Dark Forest</p>
+        </div>
       )}
 
       <div className={`flex ${controlsOnSides ? 'flex-row' : 'flex-col'} items-center justify-center gap-4 w-full`}>
