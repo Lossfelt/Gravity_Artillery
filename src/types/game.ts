@@ -61,3 +61,12 @@ export type PlanetFragment = {
   // Polygon points for irregular shape clipping (relative to fragment center)
   clipPath: { x: number; y: number }[];
 };
+
+export type PlayerStats = {
+  lives: number;
+};
+
+export type GameStats = {
+  player1: PlayerStats;
+  player2: PlayerStats;
+};

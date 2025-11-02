@@ -1,5 +1,5 @@
 import { RefObject, useEffect, useState } from 'react';
-import { GameState, GravityBody, Planet, Projectile, ExplosionParticle, PlanetFragment } from '../types/game';
+import { GameState, GravityBody, Planet, Projectile, ExplosionParticle, PlanetFragment, GameStats } from '../types/game';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../constants/game';
 import starscapeImage from '../assets/images/Starscape.png';
 
@@ -14,6 +14,7 @@ type Params = {
   gameState: GameState;
   player1Angle: number;
   player2Angle: number;
+  gameStats: GameStats;
 };
 
 export const useCanvasRenderer = ({
@@ -26,7 +27,8 @@ export const useCanvasRenderer = ({
   destroyedPlanets,
   gameState,
   player1Angle,
-  player2Angle
+  player2Angle,
+  gameStats
 }: Params) => {
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
   const [spriteCache, setSpriteCache] = useState<Record<string, HTMLImageElement>>({});
@@ -220,7 +222,41 @@ export const useCanvasRenderer = ({
         ctx.fill();
       }
     }
-    
+
+    // --- Draw hearts (lives) behind planets ---
+    const drawHearts = (planetY: number, lives: number, isPlayer1: boolean) => {
+      const heartSpacing = 15;
+      const heartX = isPlayer1 ? 15 : CANVAS_WIDTH - 15;
+      const startY = planetY - 15;
+
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let i = 0; i < 3; i++) {
+        const heartY = startY + i * heartSpacing;
+        if (i < lives) {
+          // Red filled heart
+          ctx.fillStyle = '#ff6b6b';
+          ctx.fillText('❤', heartX, heartY);
+        } else {
+          // Empty heart outline - using stroke instead of fill
+          ctx.strokeStyle = '#666666';
+          ctx.lineWidth = 0.75;
+          ctx.strokeText('❤', heartX, heartY);
+        }
+      }
+    };
+
+    // Draw hearts for player 1 (only if planet not destroyed)
+    if (!destroyedPlanets.has(1)) {
+      drawHearts(planets.player1.y, gameStats.player1.lives, true);
+    }
+
+    // Draw hearts for player 2 (only if planet not destroyed)
+    if (!destroyedPlanets.has(2)) {
+      drawHearts(planets.player2.y, gameStats.player2.lives, false);
+    }
 
     // --- Draw aiming indicators ---
     if (gameState === 'setup') {
@@ -330,6 +366,7 @@ export const useCanvasRenderer = ({
     gameState,
     player1Angle,
     player2Angle,
+    gameStats,
     backgroundImage,
     spriteCache,
     animationTime

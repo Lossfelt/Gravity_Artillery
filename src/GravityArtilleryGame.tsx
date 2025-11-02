@@ -33,6 +33,7 @@ const GravityArtilleryGame = () => {
     planetFragments,
     destroyedPlanets,
     gameState,
+    gameStats,
     forceWin,
     forceDraw
   } = useGravityGame({ onExplosion: playExplosion });
@@ -47,7 +48,8 @@ const GravityArtilleryGame = () => {
     destroyedPlanets,
     gameState,
     player1Angle,
-    player2Angle
+    player2Angle,
+    gameStats
   });
 
   const togglePlayer1Ready = () => setPlayer1Ready(prev => !prev);

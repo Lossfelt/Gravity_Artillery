@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GameState, Planet, GravityBody, Projectile, ExplosionParticle, PlanetFragment } from '../types/game';
+import { GameState, Planet, GravityBody, Projectile, ExplosionParticle, PlanetFragment, GameStats } from '../types/game';
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -24,6 +24,10 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   const [player2Ready, setPlayer2Ready] = useState(false);
   const [gameState, setGameState] = useState<GameState>('setup');
   const [winner, setWinner] = useState<1 | 2 | 'draw' | null>(null);
+  const [gameStats, setGameStats] = useState<GameStats>({
+    player1: { lives: 3 },
+    player2: { lives: 3 }
+  });
   const animationRef = useRef<number | null>(null);
 
   const [planets] = useState<{ player1: Planet; player2: Planet }>(initialPlanets);
@@ -183,20 +187,66 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
         if (updated.every(p => !p.active)) {
           // Determine the winner based on who hit their target
           if (player1Hit && player2Hit) {
-            // Both hit - it's a draw (new game)
-            setWinner('draw');
+            // Both hit - reduce both players' lives
+            setGameStats(prev => {
+              const newPlayer1Lives = prev.player1.lives - 1;
+              const newPlayer2Lives = prev.player2.lives - 1;
+
+              // Check if either player lost all lives
+              if (newPlayer1Lives <= 0 && newPlayer2Lives <= 0) {
+                setWinner('draw');
+              } else if (newPlayer1Lives <= 0) {
+                setWinner(2);
+              } else if (newPlayer2Lives <= 0) {
+                setWinner(1);
+              } else {
+                // Both still have lives, continue playing
+                setWinner(null);
+              }
+
+              return {
+                player1: { lives: Math.max(0, newPlayer1Lives) },
+                player2: { lives: Math.max(0, newPlayer2Lives) }
+              };
+            });
             setGameState('gameover');
             setPlayer1Ready(false);
             setPlayer2Ready(false);
           } else if (player1Hit) {
-            // Only player 1 hit
-            setWinner(1);
+            // Only player 1 hit - reduce player 2's lives
+            setGameStats(prev => {
+              const newPlayer2Lives = prev.player2.lives - 1;
+
+              if (newPlayer2Lives <= 0) {
+                setWinner(1); // Player 1 wins the match
+              } else {
+                setWinner(null); // Continue to next round
+              }
+
+              return {
+                ...prev,
+                player2: { lives: Math.max(0, newPlayer2Lives) }
+              };
+            });
             setGameState('gameover');
             setPlayer1Ready(false);
             setPlayer2Ready(false);
           } else if (player2Hit) {
-            // Only player 2 hit
-            setWinner(2);
+            // Only player 2 hit - reduce player 1's lives
+            setGameStats(prev => {
+              const newPlayer1Lives = prev.player1.lives - 1;
+
+              if (newPlayer1Lives <= 0) {
+                setWinner(2); // Player 2 wins the match
+              } else {
+                setWinner(null); // Continue to next round
+              }
+
+              return {
+                ...prev,
+                player1: { lives: Math.max(0, newPlayer1Lives) }
+              };
+            });
             setGameState('gameover');
             setPlayer1Ready(false);
             setPlayer2Ready(false);
@@ -231,13 +281,23 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
       cancelAnimationFrame(animationRef.current);
     }
 
-    // Reset angles and regenerate bodies if someone won or both hit (new game)
-    // If both missed (winner === null), keep the same setup
-    if (winner !== null) {
-      setPlayer1Angle(0);
-      setPlayer2Angle(180);
-      setGravitationalBodies(generateGravitationalBodies(planets));
-    }
+    // Always reset angles and regenerate bodies when coming from gameover
+    // (This function is only called from gameover state, which means someone hit)
+    setPlayer1Angle(0);
+    setPlayer2Angle(180);
+    setGravitationalBodies(generateGravitationalBodies(planets));
+
+    // Reset lives if someone won the match (not just a round)
+    setGameStats(prev => {
+      const shouldResetLives = prev.player1.lives <= 0 || prev.player2.lives <= 0;
+      if (shouldResetLives) {
+        return {
+          player1: { lives: 3 },
+          player2: { lives: 3 }
+        };
+      }
+      return prev;
+    });
 
     setGameState('setup');
     setWinner(null);
@@ -247,7 +307,7 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     setExplosionParticles([]);
     setPlanetFragments([]);
     setDestroyedPlanets(new Set());
-  }, [winner, planets, resetProjectiles]);
+  }, [planets, resetProjectiles]);
 
   // Handle ready state transitions
   useEffect(() => {
@@ -290,6 +350,7 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     destroyedPlanets,
     gameState,
     winner,
+    gameStats,
     resetGame,
     forceWin,
     forceDraw
