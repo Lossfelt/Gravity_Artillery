@@ -158,14 +158,16 @@ const GravityArtilleryGame = () => {
       </div>
 
       <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
-        Set your launch angle and click Ready. When both players are ready, projectiles will fire simultaneously.
-        Gravitational bodies will bend your projectile&apos;s path. Hit the enemy planet to win!
+        Set your launch angle and click Fire. When both players are ready, projectiles will fire simultaneously.
+        Gravitational bodies will bend your projectile's path. Hit the enemy planet three times to win!
       </p>
 
       <div className="text-gray-500 text-xs mt-4 md:mt-6 text-center max-w-2xl px-4">
-        <p className="font-semibold mb-1">Lydkrediteringer:</p>
-        <p>Musikk: www.purple-planet.com</p>
-        <p>Lydeffekt: by freesound_community via Pixabay</p>
+        <p className="font-semibold mb-1">Credits:</p>
+        <p>Music: www.purple-planet.com</p>
+        <p>Sound effect: by freesound_community via Pixabay</p>
+        <p>Planets: "2D Planets" by Rawdanitsu licensed Public Domain CC0: https://opengameart.org/content/2d-planets-0</p>
+        <p>Stars: "Planets and stars set (high-res)" by Rawdanitsu licensed Public Domain CC0: https://opengameart.org/content/planets-and-stars-set-high-res</p>
       </div>
     </div>
   );

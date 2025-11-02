@@ -6,7 +6,6 @@
 - [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
 
 ## Audio/Visual
-- [ ] Legg til kreditering for planeter og stjerner
 
 ## Gameplay
 - [ ] Når alle tre liv er borte kommer det en game over beskjed
@@ -35,3 +34,4 @@
 - [X] Gjør at spillet ser bra ut på mobil også
 - [X] Prosjektilene beveger seg litt for fort på mobil
 - [X] Hver spiller har tre liv
+- [X] Legg til kreditering for planeter og stjerner
