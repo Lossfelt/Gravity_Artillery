@@ -286,18 +286,22 @@ export const useCanvasRenderer = ({
 
     // --- Draw projectiles ---
     projectiles.forEach(proj => {
-      ctx.strokeStyle = proj.player === 1 ? 'rgba(66, 135, 245, 0.6)' : 'rgba(245, 66, 66, 0.6)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      proj.trail.forEach((point, index) => {
-        if (index === 0) {
-          ctx.moveTo(point.x, point.y);
-        } else {
-          ctx.lineTo(point.x, point.y);
-        }
-      });
-      ctx.stroke();
+      // Always draw trail (even for inactive projectiles that went off-screen)
+      if (proj.trail.length > 0) {
+        ctx.strokeStyle = proj.player === 1 ? 'rgba(66, 135, 245, 0.6)' : 'rgba(245, 66, 66, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        proj.trail.forEach((point, index) => {
+          if (index === 0) {
+            ctx.moveTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
+        });
+        ctx.stroke();
+      }
 
+      // Only draw the projectile itself if it's still active
       if (proj.active) {
         ctx.beginPath();
         ctx.arc(proj.x, proj.y, 4, 0, Math.PI * 2);
