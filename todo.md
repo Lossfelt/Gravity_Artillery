@@ -10,7 +10,7 @@
 
 ## Gameplay
 - [ ] Hver spiller har tre liv
-- [ ] Prosjektilene beveger seg litt for fort på mobil
+- [ ] Når alle tre liv er borte kommer det en game over beskjed
 
 ## Gravitational Bodies
 - [ ] Gjøre plasseringen litt mindre tilfeldig, slik at de hovedsakelig er i midten av skjermen?
@@ -34,3 +34,4 @@
 - [X] Eksplosjon når planeten blir truffet
 - [X] ExplosionParticles har ingen feilaktig gravitasjonseffekt
 - [X] Gjør at spillet ser bra ut på mobil også
+- [X] Prosjektilene beveger seg litt for fort på mobil

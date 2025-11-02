@@ -29,6 +29,9 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     player2: { lives: 3 }
   });
   const animationRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef<number | null>(null);
+  const lastParticleTimeRef = useRef<number>(0);
+  const lastFragmentTimeRef = useRef<number>(0);
 
   const [planets] = useState<{ player1: Planet; player2: Planet }>(initialPlanets);
   const [gravitationalBodies, setGravitationalBodies] = useState<GravityBody[]>(() =>
@@ -44,6 +47,11 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   const startGame = useCallback(() => {
     const angleRad1 = (player1Angle * Math.PI) / 180;
     const angleRad2 = (player2Angle * Math.PI) / 180;
+
+    // Reset delta time tracking for new game
+    lastFrameTimeRef.current = null;
+    lastParticleTimeRef.current = 0;
+    lastFragmentTimeRef.current = 0;
 
     setProjectiles([
       {
@@ -74,14 +82,19 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   useEffect(() => {
     if (explosionParticles.length === 0) return;
 
-    const animateParticles = () => {
+    const animateParticles = (currentTime: number) => {
+      const deltaTime = lastParticleTimeRef.current
+        ? Math.min((currentTime - lastParticleTimeRef.current) / 16.67, 2)
+        : 1;
+      lastParticleTimeRef.current = currentTime;
+
       setExplosionParticles(prevParticles => {
         return prevParticles
           .map(particle => ({
             ...particle,
-            x: particle.x + particle.vx,
-            y: particle.y + particle.vy,
-            life: particle.life - 1
+            x: particle.x + particle.vx * deltaTime,
+            y: particle.y + particle.vy * deltaTime,
+            life: particle.life - 1 * deltaTime
           }))
           .filter(particle => particle.life > 0);
       });
@@ -98,14 +111,19 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   useEffect(() => {
     if (planetFragments.length === 0) return;
 
-    const animateFragments = () => {
+    const animateFragments = (currentTime: number) => {
+      const deltaTime = lastFragmentTimeRef.current
+        ? Math.min((currentTime - lastFragmentTimeRef.current) / 16.67, 2)
+        : 1;
+      lastFragmentTimeRef.current = currentTime;
+
       setPlanetFragments(prevFragments => {
         return prevFragments
           .map(fragment => ({
             ...fragment,
-            x: fragment.x + fragment.vx,
-            y: fragment.y + fragment.vy,
-            rotation: fragment.rotation + fragment.rotationSpeed
+            x: fragment.x + fragment.vx * deltaTime,
+            y: fragment.y + fragment.vy * deltaTime,
+            rotation: fragment.rotation + fragment.rotationSpeed * deltaTime
           }))
           .filter(fragment => {
             // Remove fragments that are far off screen
@@ -131,17 +149,24 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     // Track which planets have been destroyed in this animation cycle to prevent duplicates
     const localDestroyedPlanets = new Set(destroyedPlanets);
 
-    const animate = () => {
+    const animate = (currentTime: number) => {
+      // Calculate delta time (time since last frame) in seconds
+      // Target 60 FPS as baseline (16.67ms per frame)
+      const deltaTime = lastFrameTimeRef.current
+        ? Math.min((currentTime - lastFrameTimeRef.current) / 16.67, 2) // Cap at 2x to prevent huge jumps
+        : 1;
+      lastFrameTimeRef.current = currentTime;
+
       setProjectiles(prevProjectiles => {
         const updated = prevProjectiles.map(proj => {
           if (!proj.active) return proj;
 
           const { ax, ay } = calculateGravity(proj.x, proj.y, gravitationalBodies);
 
-          const newVx = proj.vx + ax * 0.1;
-          const newVy = proj.vy + ay * 0.1;
-          const newX = proj.x + newVx;
-          const newY = proj.y + newVy;
+          const newVx = proj.vx + ax * 0.1 * deltaTime;
+          const newVy = proj.vy + ay * 0.1 * deltaTime;
+          const newX = proj.x + newVx * deltaTime;
+          const newY = proj.y + newVy * deltaTime;
 
           if (newX < 0 || newX > CANVAS_WIDTH || newY < 0 || newY > CANVAS_HEIGHT) {
             return { ...proj, active: false };
@@ -280,6 +305,11 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
+
+    // Reset delta time tracking
+    lastFrameTimeRef.current = null;
+    lastParticleTimeRef.current = 0;
+    lastFragmentTimeRef.current = 0;
 
     // Always reset angles and regenerate bodies when coming from gameover
     // (This function is only called from gameover state, which means someone hit)
