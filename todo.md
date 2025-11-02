@@ -9,7 +9,6 @@
 - [ ] Legg til kreditering for planeter og stjerner
 
 ## Gameplay
-- [ ] Hver spiller har tre liv
 - [ ] Når alle tre liv er borte kommer det en game over beskjed
 
 ## Gravitational Bodies
@@ -35,3 +34,4 @@
 - [X] ExplosionParticles har ingen feilaktig gravitasjonseffekt
 - [X] Gjør at spillet ser bra ut på mobil også
 - [X] Prosjektilene beveger seg litt for fort på mobil
+- [X] Hver spiller har tre liv
