@@ -2,7 +2,6 @@
 
 ## Diverse
 - [ ] Rydd opp i prosjektet, unødendige filer, funksjoner, etc
-- [ ] Legg til en knapp for å starte soundtrack, evt at det starter i det man trykke første knapp
 
 ## UI/Controls
 - [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
@@ -36,3 +35,4 @@
 - [X] Når alle tre liv er borte kommer det en game over beskjed
 - [X] Vent ett sekund med å vise game over skjermen
 - [X] Kula starter fra der pekeren er, ikke fronten av planeten
+- [X] Legg til en knapp for å starte soundtrack, evt at det starter i det man trykke første knapp

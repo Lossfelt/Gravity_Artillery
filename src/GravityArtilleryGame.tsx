@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useGravityGame } from './hooks/useGravityGame';
 import { useCanvasRenderer } from './hooks/useCanvasRenderer';
 import { useSoundEffects } from './hooks/useSoundEffects';
@@ -12,7 +12,7 @@ import { Player2Setup } from './components/Player2Setup';
 
 const GravityArtilleryGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { playExplosion } = useSoundEffects();
+  const { playExplosion, startMusic } = useSoundEffects();
   const { width: displayWidth, height: displayHeight } = useResponsiveCanvas();
   const orientation = useOrientation();
   const isMobile = useIsMobile();
@@ -50,6 +50,13 @@ const GravityArtilleryGame = () => {
     player2Angle,
     gameStats
   });
+
+  // Start music when both players are ready for the first time
+  useEffect(() => {
+    if (player1Ready && player2Ready) {
+      startMusic();
+    }
+  }, [player1Ready, player2Ready, startMusic]);
 
   const togglePlayer1Ready = () => setPlayer1Ready(prev => !prev);
   const togglePlayer2Ready = () => setPlayer2Ready(prev => !prev);

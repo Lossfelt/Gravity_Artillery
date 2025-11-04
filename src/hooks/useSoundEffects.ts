@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import backgroundMusic from '../assets/sounds/Space_Harmony.mp3';
 import explosionSound from '../assets/sounds/Spaceexplosion.mp3';
 
 export const useSoundEffects = () => {
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const explosionRef = useRef<HTMLAudioElement | null>(null);
+  const musicStartedRef = useRef(false);
 
   // Initialize audio elements
   useEffect(() => {
@@ -15,16 +16,7 @@ export const useSoundEffects = () => {
     explosionRef.current = new Audio(explosionSound);
     explosionRef.current.volume = 0.5; // Adjust volume as needed
 
-    // Start playing background music
-    const playMusic = async () => {
-      try {
-        await musicRef.current?.play();
-      } catch (error) {
-        console.log('Auto-play was prevented. User interaction required.');
-      }
-    };
-
-    playMusic();
+    // Don't auto-play music - wait for user interaction
 
     // Cleanup
     return () => {
@@ -38,6 +30,18 @@ export const useSoundEffects = () => {
     };
   }, []);
 
+  const startMusic = useCallback(async () => {
+    // Only start music once
+    if (musicStartedRef.current) return;
+
+    try {
+      await musicRef.current?.play();
+      musicStartedRef.current = true;
+    } catch (error) {
+      console.log('Could not start music:', error);
+    }
+  }, []);
+
   const playExplosion = () => {
     if (explosionRef.current) {
       explosionRef.current.currentTime = 0;
@@ -47,5 +51,5 @@ export const useSoundEffects = () => {
     }
   };
 
-  return { playExplosion };
+  return { playExplosion, startMusic };
 };
