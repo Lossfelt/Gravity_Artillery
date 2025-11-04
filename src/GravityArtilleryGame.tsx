@@ -89,6 +89,7 @@ const GravityArtilleryGame = () => {
               player1Ready={player1Ready}
               togglePlayer1Ready={togglePlayer1Ready}
               gameState={gameState}
+              compact={isMobileLandscape}
             />
           </div>
         )}
@@ -162,6 +163,7 @@ const GravityArtilleryGame = () => {
               player2Ready={player2Ready}
               togglePlayer2Ready={togglePlayer2Ready}
               gameState={gameState}
+              compact={isMobileLandscape}
             />
           </div>
         )}

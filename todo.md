@@ -5,7 +5,6 @@
 
 ## UI/Controls
 - [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
-- [ ] Landscape-modus er fortsatt ikke OK på alle mobiler
 
 ## Gravitational Bodies
 - [ ] Gjøre plasseringen litt mindre tilfeldig, slik at de hovedsakelig er i midten av skjermen?
@@ -36,3 +35,4 @@
 - [X] Vent ett sekund med å vise game over skjermen
 - [X] Kula starter fra der pekeren er, ikke fronten av planeten
 - [X] Legg til en knapp for å starte soundtrack, evt at det starter i det man trykke første knapp
+- [X] Landscape-modus er fortsatt ikke OK på alle mobiler
