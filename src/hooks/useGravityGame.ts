@@ -218,16 +218,19 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
               const newPlayer2Lives = prev.player2.lives - 1;
 
               // Check if either player lost all lives
-              if (newPlayer1Lives <= 0 && newPlayer2Lives <= 0) {
-                setWinner('draw');
-              } else if (newPlayer1Lives <= 0) {
-                setWinner(2);
-              } else if (newPlayer2Lives <= 0) {
-                setWinner(1);
-              } else {
-                // Both still have lives, continue playing
-                setWinner(null);
-              }
+              // Use setTimeout to delay showing game over screen by 2 seconds
+              setTimeout(() => {
+                if (newPlayer1Lives <= 0 && newPlayer2Lives <= 0) {
+                  setWinner('draw');
+                } else if (newPlayer1Lives <= 0) {
+                  setWinner(2);
+                } else if (newPlayer2Lives <= 0) {
+                  setWinner(1);
+                } else {
+                  // Both still have lives, continue playing
+                  setWinner(null);
+                }
+              }, 2000);
 
               return {
                 player1: { lives: Math.max(0, newPlayer1Lives) },
@@ -242,11 +245,14 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
             setGameStats(prev => {
               const newPlayer2Lives = prev.player2.lives - 1;
 
-              if (newPlayer2Lives <= 0) {
-                setWinner(1); // Player 1 wins the match
-              } else {
-                setWinner(null); // Continue to next round
-              }
+              // Use setTimeout to delay showing game over screen by 2 seconds
+              setTimeout(() => {
+                if (newPlayer2Lives <= 0) {
+                  setWinner(1); // Player 1 wins the match
+                } else {
+                  setWinner(null); // Continue to next round
+                }
+              }, 2000);
 
               return {
                 ...prev,
@@ -261,11 +267,14 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
             setGameStats(prev => {
               const newPlayer1Lives = prev.player1.lives - 1;
 
-              if (newPlayer1Lives <= 0) {
-                setWinner(2); // Player 2 wins the match
-              } else {
-                setWinner(null); // Continue to next round
-              }
+              // Use setTimeout to delay showing game over screen by 2 seconds
+              setTimeout(() => {
+                if (newPlayer1Lives <= 0) {
+                  setWinner(2); // Player 2 wins the match
+                } else {
+                  setWinner(null); // Continue to next round
+                }
+              }, 2000);
 
               return {
                 ...prev,

@@ -2,7 +2,6 @@
 
 ## Diverse
 - [ ] Rydd opp i prosjektet, unødendige filer, funksjoner, etc
-- [ ] Vent ett sekund med å vise game over skjermen
 - [ ] Kula starter fra der pekeren er, ikke fronten av planeten
 - [ ] Legg til en knapp for å starte soundtrack, evt at det starter i det man trykke første knapp
 
@@ -35,3 +34,4 @@
 - [X] Hver spiller har tre liv
 - [X] Legg til kreditering for planeter og stjerner
 - [X] Når alle tre liv er borte kommer det en game over beskjed
+- [X] Vent ett sekund med å vise game over skjermen
