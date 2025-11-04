@@ -55,8 +55,8 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
 
     setProjectiles([
       {
-        x: planets.player1.x + PLANET_RADIUS,
-        y: planets.player1.y,
+        x: planets.player1.x + Math.cos(angleRad1) * PLANET_RADIUS,
+        y: planets.player1.y + Math.sin(angleRad1) * PLANET_RADIUS,
         vx: Math.cos(angleRad1) * PROJECTILE_SPEED,
         vy: Math.sin(angleRad1) * PROJECTILE_SPEED,
         trail: [],
@@ -64,8 +64,8 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
         active: true
       },
       {
-        x: planets.player2.x - PLANET_RADIUS,
-        y: planets.player2.y,
+        x: planets.player2.x + Math.cos(angleRad2) * PLANET_RADIUS,
+        y: planets.player2.y + Math.sin(angleRad2) * PLANET_RADIUS,
         vx: Math.cos(angleRad2) * PROJECTILE_SPEED,
         vy: Math.sin(angleRad2) * PROJECTILE_SPEED,
         trail: [],
