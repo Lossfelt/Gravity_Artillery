@@ -34,7 +34,8 @@ const GravityArtilleryGame = () => {
     destroyedPlanets,
     gameState,
     gameStats,
-    winner
+    winner,
+    resetGame
   } = useGravityGame({ onExplosion: playExplosion });
 
   useCanvasRenderer({
@@ -116,7 +117,7 @@ const GravityArtilleryGame = () => {
                       : `Their civilization continues, on the backs of desolated systems.`}
                   </p>
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={resetGame}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
                   >
                     Play Again

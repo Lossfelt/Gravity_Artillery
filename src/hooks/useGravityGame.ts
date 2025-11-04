@@ -376,6 +376,7 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     destroyedPlanets,
     gameState,
     winner,
-    gameStats
+    gameStats,
+    resetGame
   };
 };
