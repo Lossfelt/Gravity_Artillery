@@ -1,0 +1,44 @@
+# CI: typesjekk og bygg (tsc -b && vite build) på hver PR og push til main,
+# pluss automatisk fletting av Dependabot-PR-er (minor/patch).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  # Fletter Dependabot-PR-er automatisk når CI er grønn, men bare minor- og
+  # patch-oppdateringer. Major-hopp (også sikkerhetsoppdateringer som er
+  # major) blir liggende for manuell testing, i tråd med dependabot.yml.
+  # Flettes direkte i stedet for med "gh pr merge --auto", slik at det ikke
+  # krever branch protection eller "Allow auto-merge" i repoet.
+  dependabot-fletting:
+    needs: ci
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v2
+      - if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge "$PR_URL" --squash --delete-branch
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
