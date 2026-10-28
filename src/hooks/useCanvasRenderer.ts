@@ -238,12 +238,12 @@ export const useCanvasRenderer = ({
         if (i < lives) {
           // Red filled heart
           ctx.fillStyle = '#ff6b6b';
-          ctx.fillText('?', heartX, heartY);
+          ctx.fillText('❤', heartX, heartY);
         } else {
           // Empty heart outline - using stroke instead of fill
           ctx.strokeStyle = '#666666';
           ctx.lineWidth = 0.75;
-          ctx.strokeText('?', heartX, heartY);
+          ctx.strokeText('❤', heartX, heartY);
         }
       }
     };

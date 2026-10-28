@@ -1,11 +1,11 @@
 # Dependabot-konfigurasjon.
 #
 # Minor- og patch-oppdateringer samles i grupperte PR-er slik at et repo
-# gir en h�ndfull PR-er i uka, ikke en per pakke.
+# gir en håndfull PR-er i uka, ikke en per pakke.
 #
 # Major-oppdateringer kommer normalt som en PR per pakke og krever manuell
-# testing. React, React DOM og typene deres er et unntak: de m� oppdateres
-# sammen for � unng� inkompatible peer-avhengigheter. Gruppen er fortsatt
+# testing. React, React DOM og typene deres er et unntak: de må oppdateres
+# sammen for å unngå inkompatible peer-avhengigheter. Gruppen er fortsatt
 # underlagt CI og regelen om manuell testing av major-hopp.
 version: 2
 updates:
