@@ -4,7 +4,7 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../constants/game';
 import starscapeImage from '../assets/images/Starscape.png';
 
 type Params = {
-  canvasRef: RefObject<HTMLCanvasElement>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   planets: { player1: Planet; player2: Planet };
   gravitationalBodies: GravityBody[];
   projectiles: Projectile[];
@@ -238,12 +238,12 @@ export const useCanvasRenderer = ({
         if (i < lives) {
           // Red filled heart
           ctx.fillStyle = '#ff6b6b';
-          ctx.fillText('❤', heartX, heartY);
+          ctx.fillText('?', heartX, heartY);
         } else {
           // Empty heart outline - using stroke instead of fill
           ctx.strokeStyle = '#666666';
           ctx.lineWidth = 0.75;
-          ctx.strokeText('❤', heartX, heartY);
+          ctx.strokeText('?', heartX, heartY);
         }
       }
     };
