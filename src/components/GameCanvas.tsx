@@ -1,7 +1,7 @@
 import { RefObject } from 'react';
 
 type GameCanvasProps = {
-  canvasRef: RefObject<HTMLCanvasElement>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   width: number;
   height: number;
   displayWidth?: number;

@@ -4,7 +4,7 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../constants/game';
 import starscapeImage from '../assets/images/Starscape.png';
 
 type Params = {
-  canvasRef: RefObject<HTMLCanvasElement>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   planets: { player1: Planet; player2: Planet };
   gravitationalBodies: GravityBody[];
   projectiles: Projectile[];
