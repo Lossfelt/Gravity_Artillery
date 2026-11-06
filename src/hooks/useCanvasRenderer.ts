@@ -5,14 +5,13 @@ import starscapeImage from '../assets/images/Starscape.webp';
 import { createStaticLayer } from '../utils/createStaticLayer';
 import {
   SpriteCache,
-  TrailPaths,
   drawAimLines,
   drawFragments,
   drawGravityBodies,
   drawParticles,
-  drawPlanets,
-  drawProjectiles
+  drawPlanets
 } from '../utils/drawScene';
+import { TrailPaths, drawProjectiles } from '../utils/drawProjectiles';
 
 type Params = {
   canvasRef: RefObject<HTMLCanvasElement | null>;

@@ -1,4 +1,4 @@
-import { ExplosionParticle, GravityBody, Planet, PlanetFragment, Projectile } from '../types/game';
+import { ExplosionParticle, GravityBody, Planet, PlanetFragment } from '../types/game';
 import { Aim, PlayerNumber } from '../game/gameReducer';
 import { CANVAS_WIDTH } from '../constants/game';
 import { drawGlowingSprite } from './glowSprites';
@@ -101,43 +101,6 @@ const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle, pow
 export const drawAimLines = (ctx: CanvasRenderingContext2D, planets: Planets, aims: Record<PlayerNumber, Aim>) => {
   drawAimLine(ctx, planets.player1, aims[1]);
   drawAimLine(ctx, planets.player2, aims[2]);
-};
-
-// Trails are never shortened, so they are built up incrementally in a Path2D
-// instead of walking every point again each frame.
-export type TrailPaths = WeakMap<Projectile, { path: Path2D; count: number }>;
-
-const trailPath = (proj: Projectile, cache: TrailPaths) => {
-  let entry = cache.get(proj);
-  if (!entry) {
-    entry = { path: new Path2D(), count: 0 };
-    cache.set(proj, entry);
-  }
-  for (let i = entry.count; i < proj.trail.length; i++) {
-    const point = proj.trail[i];
-    if (i === 0) entry.path.moveTo(point.x, point.y);
-    else entry.path.lineTo(point.x, point.y);
-  }
-  entry.count = proj.trail.length;
-  return entry.path;
-};
-
-export const drawProjectiles = (ctx: CanvasRenderingContext2D, projectiles: Projectile[], cache: TrailPaths) => {
-  projectiles.forEach(proj => {
-    // Always draw trail (even for inactive projectiles that went off-screen)
-    if (proj.trail.length > 0) {
-      ctx.strokeStyle = proj.player === 1 ? 'rgba(66, 135, 245, 0.6)' : 'rgba(245, 66, 66, 0.6)';
-      ctx.lineWidth = 2;
-      ctx.stroke(trailPath(proj, cache));
-    }
-
-    if (proj.active) {
-      ctx.beginPath();
-      ctx.arc(proj.x, proj.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = proj.player === 1 ? '#4287f5' : '#f54242';
-      ctx.fill();
-    }
-  });
 };
 
 export const drawParticles = (ctx: CanvasRenderingContext2D, particles: ExplosionParticle[]) => {
