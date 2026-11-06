@@ -1,4 +1,4 @@
-# CI: typesjekk og bygg (tsc -b && vite build) på hver PR og push til main,
+# CI: typesjekk, bygg og tester på hver PR og push til main,
 # pluss automatisk fletting av Dependabot-PR-er (minor/patch).
 name: CI
 
@@ -21,6 +21,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm test
 
   # Fletter Dependabot-PR-er automatisk når CI er grønn, men bare minor- og
   # patch-oppdateringer. Major-hopp (også sikkerhetsoppdateringer som er
