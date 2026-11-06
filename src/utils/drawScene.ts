@@ -1,4 +1,5 @@
-import { ExplosionParticle, GameStats, GravityBody, Planet, PlanetFragment, Projectile } from '../types/game';
+import { ExplosionParticle, GravityBody, Planet, PlanetFragment, Projectile } from '../types/game';
+import { PlayerNumber } from '../game/gameReducer';
 import { CANVAS_WIDTH } from '../constants/game';
 import { drawGlowingSprite } from './glowSprites';
 
@@ -71,17 +72,17 @@ const drawHearts = (ctx: CanvasRenderingContext2D, planetY: number, lives: numbe
 export const drawPlanets = (
   ctx: CanvasRenderingContext2D,
   planets: Planets,
-  destroyed: Set<1 | 2>,
+  destroyed: PlayerNumber[],
   sprites: SpriteCache,
-  stats: GameStats
+  lives: Record<PlayerNumber, number>
 ) => {
-  if (!destroyed.has(1)) {
+  if (!destroyed.includes(1)) {
     drawPlanet(ctx, planets.player1, sprites);
-    drawHearts(ctx, planets.player1.y, stats.player1.lives, true);
+    drawHearts(ctx, planets.player1.y, lives[1], true);
   }
-  if (!destroyed.has(2)) {
+  if (!destroyed.includes(2)) {
     drawPlanet(ctx, planets.player2, sprites);
-    drawHearts(ctx, planets.player2.y, stats.player2.lives, false);
+    drawHearts(ctx, planets.player2.y, lives[2], false);
   }
 };
 

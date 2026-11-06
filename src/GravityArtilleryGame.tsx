@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { useGravityGame } from './hooks/useGravityGame';
 import { useCanvasRenderer } from './hooks/useCanvasRenderer';
 import { useSoundEffects } from './hooks/useSoundEffects';
@@ -17,46 +17,32 @@ const GravityArtilleryGame = () => {
   const orientation = useOrientation();
   const isMobile = useIsMobile();
 
-  const {
-    player1Angle,
-    setPlayer1Angle,
-    player2Angle,
-    setPlayer2Angle,
-    player1Ready,
-    setPlayer1Ready,
-    player2Ready,
-    setPlayer2Ready,
-    planets,
-    gravitationalBodies,
-    simulationRef,
-    destroyedPlanets,
-    gameState,
-    gameStats,
-    winner,
-    resetGame
-  } = useGravityGame({ onExplosion: playExplosion });
+  const { model, planets, gravitationalBodies, simulationRef, setAngle, toggleReady, nextRound } =
+    useGravityGame({ onExplosion: playExplosion });
+  const { phase: gameState, winner } = model;
+  const player1Angle = model.players[1].angle;
+  const player2Angle = model.players[2].angle;
+  const player1Ready = model.players[1].ready;
+  const player2Ready = model.players[2].ready;
 
   useCanvasRenderer({
     canvasRef,
     planets,
     gravitationalBodies,
     simulationRef,
-    destroyedPlanets,
+    destroyed: model.destroyed,
     gameState,
     player1Angle,
     player2Angle,
-    gameStats
+    lives: { 1: model.players[1].lives, 2: model.players[2].lives }
   });
 
-  // Start music when both players are ready for the first time
-  useEffect(() => {
-    if (player1Ready && player2Ready) {
-      startMusic();
-    }
-  }, [player1Ready, player2Ready, startMusic]);
-
-  const togglePlayer1Ready = () => setPlayer1Ready(prev => !prev);
-  const togglePlayer2Ready = () => setPlayer2Ready(prev => !prev);
+  const setPlayer1Angle = (angle: number) => setAngle(1, angle);
+  const setPlayer2Angle = (angle: number) => setAngle(2, angle);
+  // Music starts on the first button press (a user gesture, which mobile browsers require)
+  const togglePlayer1Ready = () => { startMusic(); toggleReady(1); };
+  const togglePlayer2Ready = () => { startMusic(); toggleReady(2); };
+  const resetGame = nextRound;
 
   // Determine layout: controls on sides for desktop and mobile landscape, below for mobile portrait
   const controlsOnSides = !isMobile || orientation === 'landscape';

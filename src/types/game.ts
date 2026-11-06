@@ -69,12 +69,3 @@ export type Simulation = {
   explosionParticles: ExplosionParticle[];
   planetFragments: PlanetFragment[];
 };
-
-export type PlayerStats = {
-  lives: number;
-};
-
-export type GameStats = {
-  player1: PlayerStats;
-  player2: PlayerStats;
-};

@@ -1,5 +1,6 @@
 import { RefObject, useEffect, useRef } from 'react';
-import { GameState, GravityBody, Planet, GameStats, Simulation } from '../types/game';
+import { GameState, GravityBody, Planet, Simulation } from '../types/game';
+import { PlayerNumber } from '../game/gameReducer';
 import starscapeImage from '../assets/images/Starscape.png';
 import { createStaticLayer } from '../utils/createStaticLayer';
 import {
@@ -18,11 +19,11 @@ type Params = {
   planets: { player1: Planet; player2: Planet };
   gravitationalBodies: GravityBody[];
   simulationRef: RefObject<Simulation>;
-  destroyedPlanets: Set<1 | 2>;
+  destroyed: PlayerNumber[];
   gameState: GameState;
   player1Angle: number;
   player2Angle: number;
-  gameStats: GameStats;
+  lives: Record<PlayerNumber, number>;
 };
 
 // Star glow pulse speed in radians per second (was 0.02 per frame at 60 FPS)
@@ -85,7 +86,7 @@ export const useCanvasRenderer = (params: Params) => {
 
       const pulse = Math.sin((now / 1000) * PULSE_SPEED) * 0.3 + 0.7; // Oscillates between 0.4 and 1.0
       drawGravityBodies(ctx, p.gravitationalBodies, sprites, pulse);
-      drawPlanets(ctx, p.planets, p.destroyedPlanets, sprites, p.gameStats);
+      drawPlanets(ctx, p.planets, p.destroyed, sprites, p.lives);
       if (p.gameState === 'setup') drawAimLines(ctx, p.planets, p.player1Angle, p.player2Angle);
       drawProjectiles(ctx, simulation.projectiles, trailPaths);
       drawParticles(ctx, simulation.explosionParticles);
