@@ -1,4 +1,4 @@
-# CI: typesjekk, bygg og tester på hver PR og push til main,
+# CI: lint, typesjekk, bygg og tester på hver PR og push til main,
 # pluss automatisk fletting av Dependabot-PR-er (minor/patch).
 name: CI
 
@@ -20,6 +20,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm run build
       - run: npm test
 

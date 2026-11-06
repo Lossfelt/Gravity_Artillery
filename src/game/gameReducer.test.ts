@@ -91,3 +91,20 @@ describe('gameReducer', () => {
     expect(model.winner).toBe('draw');
   });
 });
+
+describe('adjustAngle', () => {
+  it('applies several quick adjustments on top of each other', () => {
+    const model = run(createInitialModel(1),
+      { type: 'adjustAngle', player: 2, delta: -5 },
+      { type: 'adjustAngle', player: 2, delta: -5 },
+      { type: 'adjustAngle', player: 2, delta: 1 });
+    // Player 2 faces left (180); up is a larger world angle
+    expect(model.players[2].angle).toBe(189);
+  });
+
+  it('clamps to the aim limit', () => {
+    let model = createInitialModel(1);
+    for (let i = 0; i < 30; i++) model = gameReducer(model, { type: 'adjustAngle', player: 1, delta: 5 });
+    expect(model.players[1].angle).toBe(90);
+  });
+});

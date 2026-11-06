@@ -6,9 +6,10 @@ import { useResponsiveCanvas } from './hooks/useResponsiveCanvas';
 import { useOrientation } from './hooks/useOrientation';
 import { useIsMobile } from './hooks/useIsMobile';
 import { GameCanvas } from './components/GameCanvas';
+import { GameOverOverlay } from './components/GameOverOverlay';
+import { PlayerControls } from './components/PlayerControls';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
-import { Player1Setup } from './components/Player1Setup';
-import { Player2Setup } from './components/Player2Setup';
+import { PlayerNumber } from './game/gameReducer';
 
 const GravityArtilleryGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -17,13 +18,9 @@ const GravityArtilleryGame = () => {
   const orientation = useOrientation();
   const isMobile = useIsMobile();
 
-  const { model, planets, gravitationalBodies, simulationRef, setAngle, toggleReady, nextRound } =
+  const { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound } =
     useGravityGame({ onExplosion: playExplosion });
-  const { phase: gameState, winner } = model;
-  const player1Angle = model.players[1].angle;
-  const player2Angle = model.players[2].angle;
-  const player1Ready = model.players[1].ready;
-  const player2Ready = model.players[2].ready;
+  const { phase: gameState, winner, players } = model;
 
   useCanvasRenderer({
     canvasRef,
@@ -32,21 +29,27 @@ const GravityArtilleryGame = () => {
     simulationRef,
     destroyed: model.destroyed,
     gameState,
-    player1Angle,
-    player2Angle,
-    lives: { 1: model.players[1].lives, 2: model.players[2].lives }
+    player1Angle: players[1].angle,
+    player2Angle: players[2].angle,
+    lives: { 1: players[1].lives, 2: players[2].lives }
   });
 
-  const setPlayer1Angle = (angle: number) => setAngle(1, angle);
-  const setPlayer2Angle = (angle: number) => setAngle(2, angle);
-  // Music starts on the first button press (a user gesture, which mobile browsers require)
-  const togglePlayer1Ready = () => { startMusic(); toggleReady(1); };
-  const togglePlayer2Ready = () => { startMusic(); toggleReady(2); };
-  const resetGame = nextRound;
-
-  // Determine layout: controls on sides for desktop and mobile landscape, below for mobile portrait
+  // Controls on sides for desktop and mobile landscape, below the canvas for mobile portrait
   const controlsOnSides = !isMobile || orientation === 'landscape';
   const isMobileLandscape = isMobile && orientation === 'landscape';
+
+  const controls = (player: PlayerNumber, compact = false) => (
+    <PlayerControls
+      player={player}
+      angle={players[player].angle}
+      adjustAngle={delta => adjustAngle(player, delta)}
+      ready={players[player].ready}
+      // Music starts on the first button press (a user gesture, which mobile browsers require)
+      toggleReady={() => { startMusic(); toggleReady(player); }}
+      gameState={gameState}
+      compact={compact}
+    />
+  );
 
   return (
     <div className={`flex flex-col items-center min-h-screen bg-gray-900 ${
@@ -61,22 +64,9 @@ const GravityArtilleryGame = () => {
       )}
 
       <div className={`flex ${controlsOnSides ? 'flex-row' : 'flex-col'} items-center justify-center gap-4 w-full`}>
-        {/* Player 1 controls on left side (desktop + mobile landscape) */}
-        {controlsOnSides && (
-          <div>
-            {/* Always show controls when on sides to prevent layout jumping */}
-            <Player1Setup
-              player1Angle={player1Angle}
-              setPlayer1Angle={setPlayer1Angle}
-              player1Ready={player1Ready}
-              togglePlayer1Ready={togglePlayer1Ready}
-              gameState={gameState}
-              compact={isMobileLandscape}
-            />
-          </div>
-        )}
+        {/* Always show side controls to prevent layout jumping */}
+        {controlsOnSides && <div>{controls(1, isMobileLandscape)}</div>}
 
-        {/* Canvas - shared between all layouts */}
         <div className={`flex flex-col items-center gap-4 ${controlsOnSides ? 'w-auto' : 'w-full'}`}>
           <div className="relative">
             <GameCanvas
@@ -86,69 +76,18 @@ const GravityArtilleryGame = () => {
               displayWidth={displayWidth}
               displayHeight={displayHeight}
             />
-
-            {/* Game Over Overlay */}
-            {winner !== null && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
-                <div className="text-center px-6 py-8">
-                  <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
-                    {winner === 'draw' ? 'MUTUAL DESTRUCTION!' : winner === 1 ? 'PLAYER 1 WINS!' : 'PLAYER 2 WINS!'}
-                  </h2>
-                  <p className="text-lg md:text-xl text-gray-300 mb-6">
-                    {winner === 'draw'
-                      ? 'Planetary remnants scream silently through the uncaring void...'
-                      : `Their civilization continues, on the backs of desolated systems.`}
-                  </p>
-                  <button
-                    onClick={resetGame}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
-                  >
-                    Play Again
-                  </button>
-                </div>
-              </div>
-            )}
+            {winner !== null && <GameOverOverlay winner={winner} onPlayAgain={nextRound} />}
           </div>
 
-          {/* Mobile portrait only: both controls below canvas */}
           {!controlsOnSides && (
             <div className="flex flex-row gap-4 w-full px-2">
-              <div className="flex-1">
-                <Player1Setup
-                  player1Angle={player1Angle}
-                  setPlayer1Angle={setPlayer1Angle}
-                  player1Ready={player1Ready}
-                  togglePlayer1Ready={togglePlayer1Ready}
-                  gameState={gameState}
-                />
-              </div>
-              <div className="flex-1">
-                <Player2Setup
-                  player2Angle={player2Angle}
-                  setPlayer2Angle={setPlayer2Angle}
-                  player2Ready={player2Ready}
-                  togglePlayer2Ready={togglePlayer2Ready}
-                  gameState={gameState}
-                />
-              </div>
+              <div className="flex-1">{controls(1)}</div>
+              <div className="flex-1">{controls(2)}</div>
             </div>
           )}
         </div>
 
-        {/* Player 2 controls on right side (desktop + mobile landscape) */}
-        {controlsOnSides && (
-          <div>
-            {/* Always show controls when on sides to prevent layout jumping */}
-            <Player2Setup
-              player2Angle={player2Angle}
-              setPlayer2Angle={setPlayer2Angle}
-              player2Ready={player2Ready}
-              togglePlayer2Ready={togglePlayer2Ready}
-              gameState={gameState}
-              compact={isMobileLandscape}
-            />
-          </div>
-        )}
+        {controlsOnSides && <div>{controls(2, isMobileLandscape)}</div>}
       </div>
 
       <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">

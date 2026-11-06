@@ -39,11 +39,11 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     return () => window.clearTimeout(timeoutId);
   }, [matchOver]);
 
-  const setAngle = useCallback((player: PlayerNumber, angle: number) =>
-    dispatch({ type: 'setAngle', player, angle }), []);
+  const adjustAngle = useCallback((player: PlayerNumber, delta: number) =>
+    dispatch({ type: 'adjustAngle', player, delta }), []);
   const toggleReady = useCallback((player: PlayerNumber) =>
     dispatch({ type: 'toggleReady', player, mapSeed: randomSeed() }), []);
   const nextRound = useCallback(() => dispatch({ type: 'nextRound', mapSeed: randomSeed() }), []);
 
-  return { model, planets, gravitationalBodies, simulationRef, setAngle, toggleReady, nextRound };
+  return { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound };
 };

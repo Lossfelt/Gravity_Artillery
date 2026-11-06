@@ -1,5 +1,6 @@
 import { GameState } from '../types/game';
 import { randomSeed } from '../utils/random';
+import { adjustAim } from './aim';
 
 export type PlayerNumber = 1 | 2;
 export type Winner = PlayerNumber | 'draw' | null;
@@ -25,6 +26,8 @@ export type GameModel = {
 
 export type GameAction =
   | { type: 'setAngle'; player: PlayerNumber; angle: number }
+  // Relative change in degrees (negative = up), applied to the current angle
+  | { type: 'adjustAngle'; player: PlayerNumber; delta: number }
   // mapSeed is used if this toggle starts the next round (keeps the reducer pure)
   | { type: 'toggleReady'; player: PlayerNumber; mapSeed: number }
   | { type: 'planetDestroyed'; player: PlayerNumber }
@@ -61,6 +64,12 @@ export const matchWinner = (model: GameModel): Winner => {
   if (p1Out) return 2;
   if (p2Out) return 1;
   return null;
+};
+
+// Aim can only change during setup, before the player has pressed Fire
+const updatePlayer = (model: GameModel, player: PlayerNumber, changes: Partial<PlayerState>): GameModel => {
+  if (model.phase !== 'setup' || model.players[player].ready) return model;
+  return { ...model, players: { ...model.players, [player]: { ...model.players[player], ...changes } } };
 };
 
 const startShot = (model: GameModel): GameModel =>
@@ -111,8 +120,11 @@ const endRound = (model: GameModel): GameModel => {
 export const gameReducer = (model: GameModel, action: GameAction): GameModel => {
   switch (action.type) {
     case 'setAngle':
-      if (model.phase !== 'setup' || model.players[action.player].ready) return model;
-      return { ...model, players: { ...model.players, [action.player]: { ...model.players[action.player], angle: action.angle } } };
+      return updatePlayer(model, action.player, { angle: action.angle });
+    case 'adjustAngle': {
+      const current = model.players[action.player].angle;
+      return updatePlayer(model, action.player, { angle: adjustAim(action.player, current, action.delta) });
+    }
     case 'toggleReady':
       return toggleReady(model, action.player, action.mapSeed);
     case 'planetDestroyed':

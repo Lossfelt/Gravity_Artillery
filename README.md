@@ -1,0 +1,43 @@
+# Gravity Artillery
+
+*A conflict in the Dark Forest.* To spillere skyter samtidig mot hverandres
+planet, og stjerner og usynlige svarte hull bøyer banene. Hver planet har tre
+liv. Et skudd kan også slynges tilbake og ødelegge sin egen planet.
+
+## Kom i gang
+
+Krever Node 24 (se `.nvmrc`).
+
+```bash
+npm ci
+npm run dev      # dev-server, også tilgjengelig på lokalnettet (--host)
+npm test         # Vitest
+npm run lint     # ESLint
+npm run build    # typesjekk og produksjonsbygg til dist/
+```
+
+## Struktur
+
+| Sted | Innhold |
+|---|---|
+| `src/game/gameReducer.ts` | Spillflyten som en ren tilstandsmaskin: oppsett, skyting, runde slutt, neste runde |
+| `src/game/aim.ts` | Sikting relativt til motstanderen (0 = rett frem, negativt = opp) |
+| `src/hooks/useSimulation.ts` | Fysikkløkka. Prosjektiler, partikler og fragmenter ligger i en ref, ikke i React-state |
+| `src/hooks/useCanvasRenderer.ts` | Tegneløkka, som leser simuleringen direkte hver frame |
+| `src/utils/stepSimulation.ts` | Ett fysikksteg for prosjektiler, partikler og fragmenter |
+| `src/utils/createStaticLayer.ts` | Bakgrunn og gravitasjonslinsing, tegnet én gang per runde |
+
+## Designvalg
+
+- **Fast tidssteg.** Fysikken går i steg på 1/60 s uavhengig av framerate
+  (`src/utils/fixedTimestep.ts`), så samme skudd gir samme bane på alle enheter.
+- **Seedet stjernekart.** Kartet lages fra et seed (`src/utils/random.ts`), så
+  det kan gjenskapes.
+- **Ingen React-rendering per frame.** Animasjonen kjører i egne
+  `requestAnimationFrame`-løkker. React rendrer bare ved knappetrykk og når
+  runden endrer tilstand. Dette var nødvendig for god ytelse på mobil.
+- **Hele prosjektilsporet beholdes** og bygges opp gradvis i en `Path2D`.
+
+## Kreditering
+
+Se bunnen av spillsiden for musikk, lyd og grafikk (alle CC0 eller fri bruk).
