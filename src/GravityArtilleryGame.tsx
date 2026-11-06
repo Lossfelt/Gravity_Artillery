@@ -8,6 +8,8 @@ import { useIsMobile } from './hooks/useIsMobile';
 import { GameCanvas } from './components/GameCanvas';
 import { GameOverOverlay } from './components/GameOverOverlay';
 import { PlayerControls } from './components/PlayerControls';
+import { AiPanel } from './components/AiPanel';
+import { useOpponentSetting } from './hooks/useOpponentSetting';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
 import { PlayerNumber } from './game/gameReducer';
 
@@ -18,8 +20,9 @@ const GravityArtilleryGame = () => {
   const orientation = useOrientation();
   const isMobile = useIsMobile();
 
+  const [aiDifficulty, setAiDifficulty] = useOpponentSetting();
   const { model, planets, gravitationalBodies, simulationRef, adjustAngle, adjustPower, toggleReady, nextRound } =
-    useGravityGame({ onExplosion: playExplosion });
+    useGravityGame({ onExplosion: playExplosion, aiDifficulty });
   const { phase: gameState, winner, players } = model;
 
   useCanvasRenderer({
@@ -37,8 +40,30 @@ const GravityArtilleryGame = () => {
   const controlsOnSides = !isMobile || orientation === 'landscape';
   const isMobileLandscape = isMobile && orientation === 'landscape';
 
-  const controls = (player: PlayerNumber, compact = false) => (
+  const switchClass = `w-full mt-2 underline disabled:opacity-60 ${isMobileLandscape ? 'text-[10px]' : 'text-xs'}`;
+
+  const controls = (player: PlayerNumber, compact = false) => player === 2 && aiDifficulty ? (
+    <AiPanel
+      angle={players[2].angle}
+      power={players[2].power}
+      ready={players[2].ready}
+      gameState={gameState}
+      difficulty={aiDifficulty}
+      setDifficulty={setAiDifficulty}
+      onSwitchToHuman={() => setAiDifficulty(null)}
+      compact={compact}
+    />
+  ) : (
     <PlayerControls
+      footer={player === 2 && (
+        <button
+          onClick={() => setAiDifficulty('normal')}
+          disabled={gameState === 'firing'}
+          className={`${switchClass} text-red-200`}
+        >
+          Play vs computer
+        </button>
+      )}
       player={player}
       angle={players[player].angle}
       power={players[player].power}
@@ -93,7 +118,7 @@ const GravityArtilleryGame = () => {
 
       <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
         Set your launch angle and power, then click Fire. When both players are ready, projectiles will fire simultaneously.
-        Gravitational bodies will bend your projectile's path. Hit the enemy planet three times to win!
+        Gravitational bodies will bend your projectile's path. Hit the enemy planet three times to win! Playing alone? Choose "Play vs computer" under Player 2.
       </p>
 
       <div className="text-gray-500 text-xs mt-4 md:mt-6 text-center max-w-2xl px-4">

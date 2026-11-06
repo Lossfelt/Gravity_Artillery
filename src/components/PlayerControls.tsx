@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { GameState } from '../types/game';
 import { PlayerNumber } from '../game/gameReducer';
 import { toRelativeAngle } from '../game/aim';
@@ -12,6 +13,8 @@ type PlayerControlsProps = {
   toggleReady: () => void;
   gameState: GameState;
   compact?: boolean;
+  // Extra content under the Fire button, e.g. the opponent switch
+  footer?: ReactNode;
 };
 
 // Full class names so Tailwind can find them
@@ -50,7 +53,8 @@ export const PlayerControls = ({
   ready,
   toggleReady,
   gameState,
-  compact = false
+  compact = false,
+  footer
 }: PlayerControlsProps) => {
   const theme = THEME[player];
   const locked = ready || gameState !== 'setup';
@@ -103,6 +107,7 @@ export const PlayerControls = ({
       >
         {actionLabel}
       </button>
+      {footer}
     </div>
   );
 };

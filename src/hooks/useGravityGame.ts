@@ -4,14 +4,18 @@ import { createInitialModel, gameReducer, isMatchOver, PlayerNumber } from '../g
 import { generateGravitationalBodies } from '../utils/generateGravitationalBodies';
 import { createRandom, randomSeed } from '../utils/random';
 import { useSimulation } from './useSimulation';
+import { useAiOpponent } from './useAiOpponent';
+import { Difficulty } from '../game/ai';
 
 type UseGravityGameProps = {
   onExplosion?: () => void;
+  // When set, the computer plays player 2
+  aiDifficulty?: Difficulty | null;
 };
 
 const RESULT_DELAY_MS = 2000;
 
-export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
+export const useGravityGame = ({ onExplosion, aiDifficulty = null }: UseGravityGameProps = {}) => {
   const [model, dispatch] = useReducer(gameReducer, undefined, () => createInitialModel());
   const planets = initialPlanets;
 
@@ -29,6 +33,15 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     gravitationalBodies,
     dispatch,
     onExplosion
+  });
+
+  useAiOpponent({
+    enabled: aiDifficulty !== null,
+    difficulty: aiDifficulty ?? 'normal',
+    model,
+    planets,
+    gravitationalBodies,
+    dispatch
   });
 
   // Show the match result a moment after the final hit
