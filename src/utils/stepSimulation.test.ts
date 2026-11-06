@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ExplosionParticle, GravityBody, PlanetFragment, Projectile } from '../types/game';
 import { initialPlanets } from '../constants/game';
-import { stepFragments, stepParticles, stepProjectile } from './stepSimulation';
+import { createProjectile, stepFragments, stepParticles, stepProjectile } from './stepSimulation';
 
 const projectile = (overrides: Partial<Projectile>): Projectile => ({
   x: 500, y: 300, vx: 0, vy: 0, trail: [], player: 1, active: true, ...overrides
@@ -77,5 +77,21 @@ describe('stepFragments', () => {
     stepFragments(fragments, 1);
     expect(fragments).toHaveLength(1);
     expect(fragments[0]).toMatchObject({ x: 501, rotation: 0.1 });
+  });
+});
+
+describe('createProjectile', () => {
+  it('scales launch speed with power', () => {
+    const { player1 } = initialPlanets;
+    const full = createProjectile(player1, 0, 100, 1);
+    const half = createProjectile(player1, 0, 50, 1);
+    expect(full.vx).toBeCloseTo(5);
+    expect(half.vx).toBeCloseTo(2.5);
+    expect(half.x).toBeCloseTo(player1.x + 25);
+  });
+
+  it('does not hit its own planet at the lowest power', () => {
+    const proj = createProjectile(initialPlanets.player1, 0, 50, 1);
+    expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
   });
 });

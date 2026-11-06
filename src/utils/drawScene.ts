@@ -1,5 +1,5 @@
 import { ExplosionParticle, GravityBody, Planet, PlanetFragment, Projectile } from '../types/game';
-import { PlayerNumber } from '../game/gameReducer';
+import { Aim, PlayerNumber } from '../game/gameReducer';
 import { CANVAS_WIDTH } from '../constants/game';
 import { drawGlowingSprite } from './glowSprites';
 
@@ -86,9 +86,10 @@ export const drawPlanets = (
   }
 };
 
-const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, angleDeg: number) => {
-  const lineLength = 40;
-  const angleRad = (angleDeg * Math.PI) / 180;
+// The aim line grows with launch power (40 px at 100 %)
+const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle, power }: Aim) => {
+  const lineLength = 40 * (power / 100);
+  const angleRad = (angle * Math.PI) / 180;
   ctx.beginPath();
   ctx.moveTo(planet.x, planet.y);
   ctx.lineTo(planet.x + Math.cos(angleRad) * lineLength, planet.y + Math.sin(angleRad) * lineLength);
@@ -97,9 +98,9 @@ const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, angleDeg: nu
   ctx.stroke();
 };
 
-export const drawAimLines = (ctx: CanvasRenderingContext2D, planets: Planets, angle1: number, angle2: number) => {
-  drawAimLine(ctx, planets.player1, angle1);
-  drawAimLine(ctx, planets.player2, angle2);
+export const drawAimLines = (ctx: CanvasRenderingContext2D, planets: Planets, aims: Record<PlayerNumber, Aim>) => {
+  drawAimLine(ctx, planets.player1, aims[1]);
+  drawAimLine(ctx, planets.player2, aims[2]);
 };
 
 // Trails are never shortened, so they are built up incrementally in a Path2D

@@ -18,7 +18,7 @@ const GravityArtilleryGame = () => {
   const orientation = useOrientation();
   const isMobile = useIsMobile();
 
-  const { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound } =
+  const { model, planets, gravitationalBodies, simulationRef, adjustAngle, adjustPower, toggleReady, nextRound } =
     useGravityGame({ onExplosion: playExplosion });
   const { phase: gameState, winner, players } = model;
 
@@ -29,8 +29,7 @@ const GravityArtilleryGame = () => {
     simulationRef,
     destroyed: model.destroyed,
     gameState,
-    player1Angle: players[1].angle,
-    player2Angle: players[2].angle,
+    aims: { 1: players[1], 2: players[2] },
     lives: { 1: players[1].lives, 2: players[2].lives }
   });
 
@@ -42,7 +41,9 @@ const GravityArtilleryGame = () => {
     <PlayerControls
       player={player}
       angle={players[player].angle}
+      power={players[player].power}
       adjustAngle={delta => adjustAngle(player, delta)}
+      adjustPower={delta => adjustPower(player, delta)}
       ready={players[player].ready}
       // Music starts on the first button press (a user gesture, which mobile browsers require)
       toggleReady={() => { startMusic(); toggleReady(player); }}
@@ -91,7 +92,7 @@ const GravityArtilleryGame = () => {
       </div>
 
       <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
-        Set your launch angle and click Fire. When both players are ready, projectiles will fire simultaneously.
+        Set your launch angle and power, then click Fire. When both players are ready, projectiles will fire simultaneously.
         Gravitational bodies will bend your projectile's path. Hit the enemy planet three times to win!
       </p>
 

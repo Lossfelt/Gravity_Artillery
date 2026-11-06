@@ -1,5 +1,5 @@
 import { ExplosionParticle, GravityBody, Planet, PlanetFragment, Projectile } from '../types/game';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, PLANET_RADIUS } from '../constants/game';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, PLANET_RADIUS, PROJECTILE_SPEED } from '../constants/game';
 import { calculateGravity } from './calculateGravity';
 import { checkCollision } from './checkCollision';
 
@@ -8,6 +8,24 @@ import { checkCollision } from './checkCollision';
 // slower the longer a shot lasted.
 
 type PlayerNumber = 1 | 2;
+
+/**
+ * Creates a projectile on the edge of a planet. power is in percent of the
+ * base projectile speed.
+ */
+export const createProjectile = (planet: Planet, angleDeg: number, power: number, player: PlayerNumber): Projectile => {
+  const angleRad = (angleDeg * Math.PI) / 180;
+  const speed = PROJECTILE_SPEED * (power / 100);
+  return {
+    x: planet.x + Math.cos(angleRad) * PLANET_RADIUS,
+    y: planet.y + Math.sin(angleRad) * PLANET_RADIUS,
+    vx: Math.cos(angleRad) * speed,
+    vy: Math.sin(angleRad) * speed,
+    trail: [],
+    player,
+    active: true
+  };
+};
 
 /**
  * Advances one active projectile one step. Returns the player whose planet it

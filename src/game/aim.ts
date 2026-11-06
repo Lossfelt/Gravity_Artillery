@@ -19,3 +19,11 @@ export const adjustAim = (player: PlayerNumber, worldAngle: number, delta: numbe
   const relative = Math.max(-AIM_LIMIT, Math.min(AIM_LIMIT, toRelativeAngle(player, worldAngle) + delta));
   return toWorldAngle(player, relative);
 };
+
+// Launch power in percent of the base projectile speed
+export const MIN_POWER = 50;
+export const MAX_POWER = 150;
+export const DEFAULT_POWER = 100;
+
+export const adjustPower = (power: number, delta: number) =>
+  Math.max(MIN_POWER, Math.min(MAX_POWER, power + delta));

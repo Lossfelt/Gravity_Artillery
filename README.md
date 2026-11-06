@@ -1,6 +1,6 @@
 # Gravity Artillery
 
-*A conflict in the Dark Forest.* To spillere skyter samtidig mot hverandres
+*A conflict in the Dark Forest.* To spillere stiller inn vinkel og kraft og skyter samtidig mot hverandres
 planet, og stjerner og usynlige svarte hull bøyer banene. Hver planet har tre
 liv. Et skudd kan også slynges tilbake og ødelegge sin egen planet.
 

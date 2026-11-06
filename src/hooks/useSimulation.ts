@@ -1,10 +1,9 @@
 import { Dispatch, useCallback, useEffect, useRef } from 'react';
-import { GravityBody, Planet, Projectile, Simulation } from '../types/game';
-import { PLANET_RADIUS, PROJECTILE_SPEED } from '../constants/game';
-import { GameAction, PlayerNumber } from '../game/gameReducer';
+import { GravityBody, Planet, Simulation } from '../types/game';
+import { Aim, GameAction, PlayerNumber } from '../game/gameReducer';
 import { createExplosion } from '../utils/createExplosion';
 import { createPlanetFragments } from '../utils/createPlanetFragments';
-import { stepFragments, stepParticles, stepProjectile } from '../utils/stepSimulation';
+import { createProjectile, stepFragments, stepParticles, stepProjectile } from '../utils/stepSimulation';
 import { consumeSteps } from '../utils/fixedTimestep';
 
 type Planets = { player1: Planet; player2: Planet };
@@ -12,7 +11,7 @@ type Planets = { player1: Planet; player2: Planet };
 type Params = {
   shotNumber: number;
   roundNumber: number;
-  angles: Record<PlayerNumber, number>;
+  aims: Record<PlayerNumber, Aim>;
   planets: Planets;
   gravitationalBodies: GravityBody[];
   dispatch: Dispatch<GameAction>;
@@ -20,19 +19,6 @@ type Params = {
 };
 
 const planetOf = (planets: Planets, player: PlayerNumber) => (player === 1 ? planets.player1 : planets.player2);
-
-const createProjectile = (planet: Planet, angleDeg: number, player: PlayerNumber): Projectile => {
-  const angleRad = (angleDeg * Math.PI) / 180;
-  return {
-    x: planet.x + Math.cos(angleRad) * PLANET_RADIUS,
-    y: planet.y + Math.sin(angleRad) * PLANET_RADIUS,
-    vx: Math.cos(angleRad) * PROJECTILE_SPEED,
-    vy: Math.sin(angleRad) * PROJECTILE_SPEED,
-    trail: [],
-    player,
-    active: true
-  };
-};
 
 const emptySimulation = (): Simulation => ({ projectiles: [], explosionParticles: [], planetFragments: [] });
 
@@ -55,10 +41,10 @@ export const useSimulation = (params: Params) => {
   // A new shot: both players fire at once
   useEffect(() => {
     if (shotNumber === 0) return;
-    const { planets, angles } = latestRef.current;
+    const { planets, aims } = latestRef.current;
     simulationRef.current.projectiles = [
-      createProjectile(planets.player1, angles[1], 1),
-      createProjectile(planets.player2, angles[2], 2)
+      createProjectile(planets.player1, aims[1].angle, aims[1].power, 1),
+      createProjectile(planets.player2, aims[2].angle, aims[2].power, 2)
     ];
     destroyedRef.current = new Set();
     resolvedRef.current = false;

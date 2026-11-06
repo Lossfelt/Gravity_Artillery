@@ -46,7 +46,7 @@ describe('gameReducer', () => {
 
   it('starts the next round with a new map when both are ready after a hit', () => {
     const model = run(createInitialModel(1), ...fire,
-      { type: 'setAngle', player: 1, angle: 30 },
+      { type: 'setAim', player: 1, angle: 30, power: 120 },
       { type: 'planetDestroyed', player: 2 },
       { type: 'roundEnded' },
       ...fire);
@@ -57,11 +57,12 @@ describe('gameReducer', () => {
     expect(lives(model)).toEqual([3, 2]);
   });
 
-  it('ignores angle changes while firing or ready', () => {
-    const firing = run(createInitialModel(1), ...fire, { type: 'setAngle', player: 1, angle: 45 });
+  it('ignores aim changes while firing or ready', () => {
+    const firing = run(createInitialModel(1), ...fire, { type: 'setAim', player: 1, angle: 45, power: 120 });
     expect(firing.players[1].angle).toBe(0);
-    const ready = run(createInitialModel(1), fire[0], { type: 'setAngle', player: 1, angle: 45 });
+    const ready = run(createInitialModel(1), fire[0], { type: 'setAim', player: 1, angle: 45, power: 120 });
     expect(ready.players[1].angle).toBe(0);
+    expect(ready.players[1].power).toBe(100);
   });
 
   it('declares a winner and resets lives for a new match', () => {
@@ -106,5 +107,17 @@ describe('adjustAngle', () => {
     let model = createInitialModel(1);
     for (let i = 0; i < 30; i++) model = gameReducer(model, { type: 'adjustAngle', player: 1, delta: 5 });
     expect(model.players[1].angle).toBe(90);
+  });
+});
+
+describe('adjustPower', () => {
+  it('changes power within limits and resets it next round', () => {
+    let model = createInitialModel(1);
+    model = run(model, { type: 'adjustPower', player: 1, delta: 10 }, { type: 'adjustPower', player: 1, delta: 1 });
+    expect(model.players[1].power).toBe(111);
+    for (let i = 0; i < 20; i++) model = gameReducer(model, { type: 'adjustPower', player: 2, delta: -10 });
+    expect(model.players[2].power).toBe(50);
+    model = run(model, ...fire, { type: 'planetDestroyed', player: 2 }, { type: 'roundEnded' }, ...fire);
+    expect([model.players[1].power, model.players[2].power]).toEqual([100, 100]);
   });
 });
