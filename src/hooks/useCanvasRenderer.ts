@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useRef } from 'react';
 import { GameState, GravityBody, Planet, Simulation } from '../types/game';
 import { PlayerNumber } from '../game/gameReducer';
-import starscapeImage from '../assets/images/Starscape.png';
+import starscapeImage from '../assets/images/Starscape.webp';
 import { createStaticLayer } from '../utils/createStaticLayer';
 import {
   SpriteCache,

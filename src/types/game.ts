@@ -53,6 +53,7 @@ export type PlanetFragment = {
   rotationSpeed: number;
   width: number;
   height: number;
+  // Source rectangle in the sprite, as fractions (0..1) of its size
   sourceX: number;
   sourceY: number;
   sourceWidth: number;

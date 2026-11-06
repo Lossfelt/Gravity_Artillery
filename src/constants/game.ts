@@ -1,9 +1,9 @@
 import { Planet } from '../types/game';
-import BluePlanetSprite from '../assets/images/planets/BluePlanet.png';
-import RedPlanetSprite from '../assets/images/planets/RedPlanet.png';
-import BlueStarSprite from '../assets/images/stars/BlueStar.png';
-import RedStarSprite from '../assets/images/stars/RedStar.png';
-import WhiteStarSprite from '../assets/images/stars/WhiteStar.png';
+import BluePlanetSprite from '../assets/images/planets/BluePlanet.webp';
+import RedPlanetSprite from '../assets/images/planets/RedPlanet.webp';
+import BlueStarSprite from '../assets/images/stars/BlueStar.webp';
+import RedStarSprite from '../assets/images/stars/RedStar.webp';
+import WhiteStarSprite from '../assets/images/stars/WhiteStar.webp';
 
 export const CANVAS_WIDTH = 1000;
 export const CANVAS_HEIGHT = 600;

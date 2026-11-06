@@ -170,7 +170,8 @@ export const drawFragments = (ctx: CanvasRenderingContext2D, fragments: PlanetFr
 
     ctx.drawImage(
       sprite,
-      fragment.sourceX, fragment.sourceY, fragment.sourceWidth, fragment.sourceHeight,
+      fragment.sourceX * sprite.naturalWidth, fragment.sourceY * sprite.naturalHeight,
+      fragment.sourceWidth * sprite.naturalWidth, fragment.sourceHeight * sprite.naturalHeight,
       -fragment.width / 2, -fragment.height / 2, fragment.width, fragment.height
     );
     ctx.restore();

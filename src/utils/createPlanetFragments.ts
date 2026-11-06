@@ -8,9 +8,9 @@ export const createPlanetFragments = (planet: Planet): PlanetFragment[] => {
   const centerY = planet.y;
   const radius = planet.radius;
 
-  // Assume sprite image is much larger (e.g., 1162x1162) and gets scaled down
-  // We need to use source coordinates from the actual sprite size
-  const spriteSize = 1162; // Actual sprite dimensions
+  // Source rectangles are stored as fractions of the sprite (0..1), so they
+  // work for any sprite resolution. The renderer scales them to pixels.
+  const spriteSize = 1;
   const halfSprite = spriteSize / 2;
 
   // Create 6-10 irregular fragments of varying sizes
