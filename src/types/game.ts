@@ -62,6 +62,14 @@ export type PlanetFragment = {
   clipPath: { x: number; y: number }[];
 };
 
+// Fast-changing game objects. Kept in a ref and mutated every frame instead of
+// React state, so the animation does not re-render the component tree.
+export type Simulation = {
+  projectiles: Projectile[];
+  explosionParticles: ExplosionParticle[];
+  planetFragments: PlanetFragment[];
+};
+
 export type PlayerStats = {
   lives: number;
 };

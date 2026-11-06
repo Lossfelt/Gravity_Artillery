@@ -1,21 +1,35 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GameState, Planet, GravityBody, Projectile, ExplosionParticle, PlanetFragment, GameStats } from '../types/game';
+import { GameState, Planet, GravityBody, Projectile, GameStats, Simulation } from '../types/game';
 import {
-  CANVAS_WIDTH,
-  CANVAS_HEIGHT,
   PLANET_RADIUS,
   PROJECTILE_SPEED,
   initialPlanets
 } from '../constants/game';
-import { calculateGravity } from '../utils/calculateGravity';
-import { checkCollision } from '../utils/checkCollision';
 import { generateGravitationalBodies } from '../utils/generateGravitationalBodies';
 import { createExplosion } from '../utils/createExplosion';
 import { createPlanetFragments } from '../utils/createPlanetFragments';
+import { stepFragments, stepParticles, stepProjectile } from '../utils/stepSimulation';
 
 type UseGravityGameProps = {
   onExplosion?: () => void;
 };
+
+type PlayerNumber = 1 | 2;
+
+const createProjectile = (planet: Planet, angleDeg: number, player: PlayerNumber): Projectile => {
+  const angleRad = (angleDeg * Math.PI) / 180;
+  return {
+    x: planet.x + Math.cos(angleRad) * PLANET_RADIUS,
+    y: planet.y + Math.sin(angleRad) * PLANET_RADIUS,
+    vx: Math.cos(angleRad) * PROJECTILE_SPEED,
+    vy: Math.sin(angleRad) * PROJECTILE_SPEED,
+    trail: [],
+    player,
+    active: true
+  };
+};
+
+const emptySimulation = (): Simulation => ({ projectiles: [], explosionParticles: [], planetFragments: [] });
 
 export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   const [player1Angle, setPlayer1Angle] = useState(0);
@@ -28,298 +42,117 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     player1: { lives: 3 },
     player2: { lives: 3 }
   });
-  const animationRef = useRef<number | null>(null);
-  const lastFrameTimeRef = useRef<number | null>(null);
-  const lastParticleTimeRef = useRef<number>(0);
-  const lastFragmentTimeRef = useRef<number>(0);
 
   const [planets] = useState<{ player1: Planet; player2: Planet }>(initialPlanets);
   const [gravitationalBodies, setGravitationalBodies] = useState<GravityBody[]>(() =>
     generateGravitationalBodies(initialPlanets)
   );
-  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-  const [explosionParticles, setExplosionParticles] = useState<ExplosionParticle[]>([]);
-  const [planetFragments, setPlanetFragments] = useState<PlanetFragment[]>([]);
-  const [destroyedPlanets, setDestroyedPlanets] = useState<Set<1 | 2>>(new Set());
+  const [destroyedPlanets, setDestroyedPlanets] = useState<Set<PlayerNumber>>(new Set());
 
-  const resetProjectiles = useCallback(() => setProjectiles([]), []);
+  const simulationRef = useRef<Simulation>(emptySimulation());
+  // The round is resolved exactly once: the flag is set before lives are touched,
+  // so extra animation frames can never subtract another life.
+  const roundRef = useRef({ resolved: true });
+  const destroyedRef = useRef<Set<PlayerNumber>>(new Set());
+  const latestRef = useRef({ gravitationalBodies, planets, onExplosion });
+
+  useEffect(() => {
+    latestRef.current = { gravitationalBodies, planets, onExplosion };
+  });
 
   const startGame = useCallback(() => {
-    const angleRad1 = (player1Angle * Math.PI) / 180;
-    const angleRad2 = (player2Angle * Math.PI) / 180;
-
-    // Reset delta time tracking for new game
-    lastFrameTimeRef.current = null;
-    lastParticleTimeRef.current = 0;
-    lastFragmentTimeRef.current = 0;
-
-    setProjectiles([
-      {
-        x: planets.player1.x + Math.cos(angleRad1) * PLANET_RADIUS,
-        y: planets.player1.y + Math.sin(angleRad1) * PLANET_RADIUS,
-        vx: Math.cos(angleRad1) * PROJECTILE_SPEED,
-        vy: Math.sin(angleRad1) * PROJECTILE_SPEED,
-        trail: [],
-        player: 1,
-        active: true
-      },
-      {
-        x: planets.player2.x + Math.cos(angleRad2) * PLANET_RADIUS,
-        y: planets.player2.y + Math.sin(angleRad2) * PLANET_RADIUS,
-        vx: Math.cos(angleRad2) * PROJECTILE_SPEED,
-        vy: Math.sin(angleRad2) * PROJECTILE_SPEED,
-        trail: [],
-        player: 2,
-        active: true
-      }
-    ]);
+    simulationRef.current.projectiles = [
+      createProjectile(planets.player1, player1Angle, 1),
+      createProjectile(planets.player2, player2Angle, 2)
+    ];
+    roundRef.current = { resolved: false };
 
     setGameState('firing');
     setWinner(null);
   }, [planets, player1Angle, player2Angle]);
 
-  // Animate explosion particles
-  useEffect(() => {
-    if (explosionParticles.length === 0) return;
+  // Each destroyed planet costs its owner one life, no matter whose shot hit it
+  const resolveRound = useCallback((planet1Destroyed: boolean, planet2Destroyed: boolean) => {
+    setPlayer1Ready(false);
+    setPlayer2Ready(false);
 
-    const animateParticles = (currentTime: number) => {
-      const deltaTime = lastParticleTimeRef.current
-        ? Math.min((currentTime - lastParticleTimeRef.current) / 16.67, 2)
-        : 1;
-      lastParticleTimeRef.current = currentTime;
-
-      setExplosionParticles(prevParticles => {
-        return prevParticles
-          .map(particle => ({
-            ...particle,
-            x: particle.x + particle.vx * deltaTime,
-            y: particle.y + particle.vy * deltaTime,
-            life: particle.life - 1 * deltaTime
-          }))
-          .filter(particle => particle.life > 0);
-      });
-    };
-
-    const particleAnimRef = requestAnimationFrame(animateParticles);
-
-    return () => {
-      cancelAnimationFrame(particleAnimRef);
-    };
-  }, [explosionParticles]);
-
-  // Animate planet fragments
-  useEffect(() => {
-    if (planetFragments.length === 0) return;
-
-    const animateFragments = (currentTime: number) => {
-      const deltaTime = lastFragmentTimeRef.current
-        ? Math.min((currentTime - lastFragmentTimeRef.current) / 16.67, 2)
-        : 1;
-      lastFragmentTimeRef.current = currentTime;
-
-      setPlanetFragments(prevFragments => {
-        return prevFragments
-          .map(fragment => ({
-            ...fragment,
-            x: fragment.x + fragment.vx * deltaTime,
-            y: fragment.y + fragment.vy * deltaTime,
-            rotation: fragment.rotation + fragment.rotationSpeed * deltaTime
-          }))
-          .filter(fragment => {
-            // Remove fragments that are far off screen
-            return fragment.x > -100 && fragment.x < CANVAS_WIDTH + 100 &&
-                   fragment.y > -100 && fragment.y < CANVAS_HEIGHT + 100;
-          });
-      });
-    };
-
-    const fragmentAnimRef = requestAnimationFrame(animateFragments);
-
-    return () => {
-      cancelAnimationFrame(fragmentAnimRef);
-    };
-  }, [planetFragments]);
-
-  useEffect(() => {
-    if (gameState !== 'firing') return;
-
-    // Track which players have hit their targets (outside animate to persist)
-    let player1Hit = false;
-    let player2Hit = false;
-    // Track which planets have been destroyed in this animation cycle to prevent duplicates
-    const localDestroyedPlanets = new Set(destroyedPlanets);
-
-    const animate = (currentTime: number) => {
-      // Calculate delta time (time since last frame) in seconds
-      // Target 60 FPS as baseline (16.67ms per frame)
-      const deltaTime = lastFrameTimeRef.current
-        ? Math.min((currentTime - lastFrameTimeRef.current) / 16.67, 2) // Cap at 2x to prevent huge jumps
-        : 1;
-      lastFrameTimeRef.current = currentTime;
-
-      setProjectiles(prevProjectiles => {
-        const updated = prevProjectiles.map(proj => {
-          if (!proj.active) return proj;
-
-          const { ax, ay } = calculateGravity(proj.x, proj.y, gravitationalBodies);
-
-          const newVx = proj.vx + ax * 0.1 * deltaTime;
-          const newVy = proj.vy + ay * 0.1 * deltaTime;
-          const newX = proj.x + newVx * deltaTime;
-          const newY = proj.y + newVy * deltaTime;
-
-          if (newX < 0 || newX > CANVAS_WIDTH || newY < 0 || newY > CANVAS_HEIGHT) {
-            return { ...proj, active: false };
-          }
-
-          const enemyPlanet = proj.player === 1 ? planets.player2 : planets.player1;
-          const enemyPlayerNumber = proj.player === 1 ? 2 : 1;
-
-          // Only create fragments if this planet hasn't been destroyed yet
-          if (!localDestroyedPlanets.has(enemyPlayerNumber as 1 | 2) &&
-              checkCollision({ x: newX, y: newY }, enemyPlanet, PLANET_RADIUS)) {
-            // Mark that this player hit, but don't end the game yet
-            if (proj.player === 1) player1Hit = true;
-            if (proj.player === 2) player2Hit = true;
-
-            // Mark planet as destroyed locally to prevent duplicate fragments in same cycle
-            localDestroyedPlanets.add(enemyPlayerNumber as 1 | 2);
-
-            // Play explosion sound and create explosion particles
-            onExplosion?.();
-            setExplosionParticles(prev => [...prev, ...createExplosion(enemyPlanet.x, enemyPlanet.y)]);
-
-            // Create planet fragments and mark planet as destroyed
-            setPlanetFragments(prev => [...prev, ...createPlanetFragments(enemyPlanet)]);
-            setDestroyedPlanets(prev => new Set(prev).add(enemyPlayerNumber as 1 | 2));
-
-            return { ...proj, active: false };
-          }
-
-          const newTrail = [...proj.trail, { x: proj.x, y: proj.y }];
-
-          return {
-            ...proj,
-            x: newX,
-            y: newY,
-            vx: newVx,
-            vy: newVy,
-            trail: newTrail
-          };
-        });
-
-        // Only end the game when both projectiles are inactive
-        if (updated.every(p => !p.active)) {
-          // Determine the winner based on who hit their target
-          if (player1Hit && player2Hit) {
-            // Both hit - reduce both players' lives
-            setGameStats(prev => {
-              const newPlayer1Lives = prev.player1.lives - 1;
-              const newPlayer2Lives = prev.player2.lives - 1;
-
-              // Check if either player lost all lives
-              // Use setTimeout to delay showing game over screen by 2 seconds
-              setTimeout(() => {
-                if (newPlayer1Lives <= 0 && newPlayer2Lives <= 0) {
-                  setWinner('draw');
-                } else if (newPlayer1Lives <= 0) {
-                  setWinner(2);
-                } else if (newPlayer2Lives <= 0) {
-                  setWinner(1);
-                } else {
-                  // Both still have lives, continue playing
-                  setWinner(null);
-                }
-              }, 2000);
-
-              return {
-                player1: { lives: Math.max(0, newPlayer1Lives) },
-                player2: { lives: Math.max(0, newPlayer2Lives) }
-              };
-            });
-            setGameState('gameover');
-            setPlayer1Ready(false);
-            setPlayer2Ready(false);
-          } else if (player1Hit) {
-            // Only player 1 hit - reduce player 2's lives
-            setGameStats(prev => {
-              const newPlayer2Lives = prev.player2.lives - 1;
-
-              // Use setTimeout to delay showing game over screen by 2 seconds
-              setTimeout(() => {
-                if (newPlayer2Lives <= 0) {
-                  setWinner(1); // Player 1 wins the match
-                } else {
-                  setWinner(null); // Continue to next round
-                }
-              }, 2000);
-
-              return {
-                ...prev,
-                player2: { lives: Math.max(0, newPlayer2Lives) }
-              };
-            });
-            setGameState('gameover');
-            setPlayer1Ready(false);
-            setPlayer2Ready(false);
-          } else if (player2Hit) {
-            // Only player 2 hit - reduce player 1's lives
-            setGameStats(prev => {
-              const newPlayer1Lives = prev.player1.lives - 1;
-
-              // Use setTimeout to delay showing game over screen by 2 seconds
-              setTimeout(() => {
-                if (newPlayer1Lives <= 0) {
-                  setWinner(2); // Player 2 wins the match
-                } else {
-                  setWinner(null); // Continue to next round
-                }
-              }, 2000);
-
-              return {
-                ...prev,
-                player1: { lives: Math.max(0, newPlayer1Lives) }
-              };
-            });
-            setGameState('gameover');
-            setPlayer1Ready(false);
-            setPlayer2Ready(false);
-          } else {
-            // Neither hit - both missed (retry with same setup)
-            // Return to setup immediately, keep trails visible until next fire
-            setWinner(null);
-            setGameState('setup');
-            setPlayer1Ready(false);
-            setPlayer2Ready(false);
-            // Projectiles are kept to show trails from previous attempt
-          }
-        }
-
-        return updated;
-      });
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [gameState, gravitationalBodies, planets]);
-
-  const resetGame = useCallback(() => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
+    if (!planet1Destroyed && !planet2Destroyed) {
+      // Both missed: retry with same setup, trails stay visible until next fire
+      setGameState('setup');
+      return;
     }
 
-    // Reset delta time tracking
-    lastFrameTimeRef.current = null;
-    lastParticleTimeRef.current = 0;
-    lastFragmentTimeRef.current = 0;
+    setGameStats(prev => ({
+      player1: { lives: Math.max(0, prev.player1.lives - (planet1Destroyed ? 1 : 0)) },
+      player2: { lives: Math.max(0, prev.player2.lives - (planet2Destroyed ? 1 : 0)) }
+    }));
+    setGameState('gameover');
+  }, []);
 
+  const destroyPlanet = useCallback((player: PlayerNumber, planet: Planet) => {
+    const simulation = simulationRef.current;
+    latestRef.current.onExplosion?.();
+    simulation.explosionParticles.push(...createExplosion(planet.x, planet.y));
+    simulation.planetFragments.push(...createPlanetFragments(planet));
+    destroyedRef.current.add(player);
+    setDestroyedPlanets(new Set(destroyedRef.current));
+  }, []);
+
+  const stepRound = useCallback((deltaTime: number) => {
+    const { projectiles } = simulationRef.current;
+    const { gravitationalBodies: bodies, planets: currentPlanets } = latestRef.current;
+
+    for (const proj of projectiles) {
+      if (!proj.active) continue;
+      const hitPlayer = stepProjectile(proj, bodies, currentPlanets, destroyedRef.current, deltaTime);
+      if (hitPlayer === null) continue;
+      destroyPlanet(hitPlayer, hitPlayer === 1 ? currentPlanets.player1 : currentPlanets.player2);
+    }
+
+    // The round ends when both projectiles have hit or left the screen
+    if (projectiles.every(p => !p.active)) {
+      roundRef.current.resolved = true;
+      resolveRound(destroyedRef.current.has(1), destroyedRef.current.has(2));
+    }
+  }, [destroyPlanet, resolveRound]);
+
+  // Single simulation loop. Mutates simulationRef, the renderer draws from it.
+  useEffect(() => {
+    let frameId: number;
+    let lastTime: number | null = null;
+
+    const tick = (now: number) => {
+      // Target 60 FPS as baseline (16.67ms per frame), cap at 2x to prevent huge jumps
+      const deltaTime = lastTime === null ? 1 : Math.min((now - lastTime) / 16.67, 2);
+      lastTime = now;
+
+      const simulation = simulationRef.current;
+      stepParticles(simulation.explosionParticles, deltaTime);
+      stepFragments(simulation.planetFragments, deltaTime);
+      if (!roundRef.current.resolved) stepRound(deltaTime);
+
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [stepRound]);
+
+  // Show the match result 2 seconds after the final hit
+  useEffect(() => {
+    if (gameState !== 'gameover') return;
+    const p1Lives = gameStats.player1.lives;
+    const p2Lives = gameStats.player2.lives;
+    if (p1Lives > 0 && p2Lives > 0) return;
+
+    const timeoutId = window.setTimeout(() => {
+      if (p1Lives <= 0 && p2Lives <= 0) setWinner('draw');
+      else setWinner(p1Lives <= 0 ? 2 : 1);
+    }, 2000);
+    return () => window.clearTimeout(timeoutId);
+  }, [gameState, gameStats]);
+
+  const resetGame = useCallback(() => {
     // Always reset angles and regenerate bodies when coming from gameover
     // (This function is only called from gameover state, which means someone hit)
     setPlayer1Angle(0);
@@ -329,24 +162,19 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     // Reset lives if someone won the match (not just a round)
     setGameStats(prev => {
       const shouldResetLives = prev.player1.lives <= 0 || prev.player2.lives <= 0;
-      if (shouldResetLives) {
-        return {
-          player1: { lives: 3 },
-          player2: { lives: 3 }
-        };
-      }
-      return prev;
+      return shouldResetLives ? { player1: { lives: 3 }, player2: { lives: 3 } } : prev;
     });
 
     setGameState('setup');
     setWinner(null);
     setPlayer1Ready(false);
     setPlayer2Ready(false);
-    resetProjectiles();
-    setExplosionParticles([]);
-    setPlanetFragments([]);
+
+    simulationRef.current = emptySimulation();
+    roundRef.current.resolved = true;
+    destroyedRef.current = new Set();
     setDestroyedPlanets(new Set());
-  }, [planets, resetProjectiles]);
+  }, [planets]);
 
   // Handle ready state transitions
   useEffect(() => {
@@ -370,9 +198,7 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     setPlayer2Ready,
     planets,
     gravitationalBodies,
-    projectiles,
-    explosionParticles,
-    planetFragments,
+    simulationRef,
     destroyedPlanets,
     gameState,
     winner,
