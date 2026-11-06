@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { GameState, Planet, GravityBody, Projectile, GameStats, Simulation } from '../types/game';
 import {
   PLANET_RADIUS,
@@ -9,6 +9,8 @@ import { generateGravitationalBodies } from '../utils/generateGravitationalBodie
 import { createExplosion } from '../utils/createExplosion';
 import { createPlanetFragments } from '../utils/createPlanetFragments';
 import { stepFragments, stepParticles, stepProjectile } from '../utils/stepSimulation';
+import { consumeSteps } from '../utils/fixedTimestep';
+import { createRandom, randomSeed } from '../utils/random';
 
 type UseGravityGameProps = {
   onExplosion?: () => void;
@@ -44,8 +46,11 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   });
 
   const [planets] = useState<{ player1: Planet; player2: Planet }>(initialPlanets);
-  const [gravitationalBodies, setGravitationalBodies] = useState<GravityBody[]>(() =>
-    generateGravitationalBodies(initialPlanets)
+  // The star map is derived from a seed, so the same seed recreates the same map
+  const [mapSeed, setMapSeed] = useState(randomSeed);
+  const gravitationalBodies = useMemo<GravityBody[]>(
+    () => generateGravitationalBodies(planets, createRandom(mapSeed)),
+    [planets, mapSeed]
   );
   const [destroyedPlanets, setDestroyedPlanets] = useState<Set<PlayerNumber>>(new Set());
 
@@ -120,16 +125,19 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
   useEffect(() => {
     let frameId: number;
     let lastTime: number | null = null;
+    let accumulatorMs = 0;
 
     const tick = (now: number) => {
-      // Target 60 FPS as baseline (16.67ms per frame), cap at 2x to prevent huge jumps
-      const deltaTime = lastTime === null ? 1 : Math.min((now - lastTime) / 16.67, 2);
+      const consumed = consumeSteps(accumulatorMs, lastTime === null ? 0 : now - lastTime);
+      accumulatorMs = consumed.accumulatorMs;
       lastTime = now;
 
-      const simulation = simulationRef.current;
-      stepParticles(simulation.explosionParticles, deltaTime);
-      stepFragments(simulation.planetFragments, deltaTime);
-      if (!roundRef.current.resolved) stepRound(deltaTime);
+      for (let i = 0; i < consumed.steps; i++) {
+        const simulation = simulationRef.current;
+        stepParticles(simulation.explosionParticles, 1);
+        stepFragments(simulation.planetFragments, 1);
+        if (!roundRef.current.resolved) stepRound(1);
+      }
 
       frameId = requestAnimationFrame(tick);
     };
@@ -157,7 +165,7 @@ export const useGravityGame = ({ onExplosion }: UseGravityGameProps = {}) => {
     // (This function is only called from gameover state, which means someone hit)
     setPlayer1Angle(0);
     setPlayer2Angle(180);
-    setGravitationalBodies(generateGravitationalBodies(planets));
+    setMapSeed(randomSeed());
 
     // Reset lives if someone won the match (not just a round)
     setGameStats(prev => {

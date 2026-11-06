@@ -1,4 +1,5 @@
 import { GravityBody, Planet } from '../types/game';
+import { Random } from './random';
 import {
   BODY_TYPES,
   GRAVITY_BODY_COUNT,
@@ -52,11 +53,12 @@ const generateRandomPosition = (
   radius: number,
   existingBodies: GravityBody[],
   playerPlanets: { player1: Planet; player2: Planet },
+  random: Random,
   maxAttempts = 100
 ): { x: number; y: number } | null => {
   for (let i = 0; i < maxAttempts; i++) {
-    const x = radius + Math.random() * (CANVAS_WIDTH - 2 * radius);
-    const y = radius + Math.random() * (CANVAS_HEIGHT - 2 * radius);
+    const x = radius + random() * (CANVAS_WIDTH - 2 * radius);
+    const y = radius + random() * (CANVAS_HEIGHT - 2 * radius);
 
     if (isValidPosition(x, y, radius, existingBodies, playerPlanets)) {
       return { x, y };
@@ -69,34 +71,36 @@ const generateRandomPosition = (
 /**
  * Select a random body type based on probability
  */
-const selectRandomBodyType = () => {
+const selectRandomBodyType = (random: Random) => {
   // Check if we should spawn a black hole (rare)
-  if (Math.random() < BLACK_HOLE_CHANCE) {
+  if (random() < BLACK_HOLE_CHANCE) {
     return BODY_TYPES.BLACK_HOLE;
   }
 
   // Otherwise, randomly select a star type
   const starTypes = [BODY_TYPES.BLUE_STAR, BODY_TYPES.WHITE_STAR, BODY_TYPES.RED_STAR];
-  return starTypes[Math.floor(Math.random() * starTypes.length)];
+  return starTypes[Math.floor(random() * starTypes.length)];
 };
 
 /**
- * Generate an array of random gravitational bodies
+ * Generate an array of random gravitational bodies. Pass a seeded Random
+ * (see createRandom) to get the same map for the same seed.
  */
 export const generateGravitationalBodies = (
-  playerPlanets: { player1: Planet; player2: Planet }
+  playerPlanets: { player1: Planet; player2: Planet },
+  random: Random
 ): GravityBody[] => {
   const bodies: GravityBody[] = [];
 
   for (let i = 0; i < GRAVITY_BODY_COUNT; i++) {
-    const bodyType = selectRandomBodyType();
-    const position = generateRandomPosition(bodyType.radius, bodies, playerPlanets);
+    const bodyType = selectRandomBodyType(random);
+    const position = generateRandomPosition(bodyType.radius, bodies, playerPlanets, random);
 
     if (!position) {
       // If we can't find a valid position, try with a smaller body
       console.warn(`Could not find valid position for body ${i}, retrying with smaller radius`);
       const smallerBodyType = BODY_TYPES.RED_STAR; // Use smallest star as fallback
-      const fallbackPosition = generateRandomPosition(smallerBodyType.radius, bodies, playerPlanets, 200);
+      const fallbackPosition = generateRandomPosition(smallerBodyType.radius, bodies, playerPlanets, random, 200);
 
       if (fallbackPosition) {
         bodies.push({
