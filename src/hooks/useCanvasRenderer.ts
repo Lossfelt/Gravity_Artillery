@@ -13,6 +13,7 @@ import {
 } from '../utils/drawScene';
 import { TrailPaths, drawProjectiles } from '../utils/drawProjectiles';
 import { drawFlash, drawShockwaves, shakeOffset } from '../utils/drawImpacts';
+import { createBackgroundStars, drawBackgroundStars } from '../utils/backgroundStars';
 
 type Params = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -70,6 +71,7 @@ export const useCanvasRenderer = (params: Params) => {
     let frameId: number;
     let staticLayer: StaticLayer | null = null;
     const trailPaths: TrailPaths = new WeakMap();
+    const backgroundStars = createBackgroundStars();
 
     const draw = (ctx: CanvasRenderingContext2D, now: number) => {
       const p = paramsRef.current;
@@ -83,9 +85,13 @@ export const useCanvasRenderer = (params: Params) => {
       }
       ctx.drawImage(staticLayer.canvas, 0, 0);
 
+      // Slow ambient motion (drift, rotation, corona) stands still for reduced motion
+      const ambient = reducedMotion.matches ? 0 : now / 1000;
+      drawBackgroundStars(ctx, backgroundStars, p.gravitationalBodies, ambient);
+
       const pulse = Math.sin((now / 1000) * PULSE_SPEED) * 0.3 + 0.7; // Oscillates between 0.4 and 1.0
-      drawGravityBodies(ctx, p.gravitationalBodies, sprites, pulse);
-      drawPlanets(ctx, p.planets, p.destroyed, sprites, p.lives);
+      drawGravityBodies(ctx, p.gravitationalBodies, sprites, pulse, ambient);
+      drawPlanets(ctx, p.planets, p.destroyed, sprites, p.lives, { bodies: p.gravitationalBodies, time: ambient });
       if (p.gameState === 'setup') drawAimLines(ctx, p.planets, p.aims);
       drawProjectiles(ctx, simulation.projectiles, trailPaths);
       drawShockwaves(ctx, simulation.impacts);

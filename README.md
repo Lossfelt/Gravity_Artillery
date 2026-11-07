@@ -39,6 +39,11 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   `requestAnimationFrame`-løkker. React rendrer bare ved knappetrykk og når
   runden endrer tilstand. Dette var nødvendig for god ytelse på mobil.
 - **Hele prosjektilsporet beholdes** og bygges opp gradvis i en `Path2D`.
+- **Kulisser:** planetene roterer som glober (overflaten rulles sidelengs og
+  presses sammen mot kanten), lyses opp fra de sterkeste stjernene og har en
+  tynn atmosfære. Stjernene har en flimrende korona, og to lag med små stjerner
+  driver sakte over bakgrunnen. Svarte hull skjuler stjernene som passerer bak
+  dem. All langsom bevegelse står stille ved redusert bevegelse.
 - **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film
   på treffet som avgjør kampen. Blink og risting slås av når systemet ber om
   redusert bevegelse (`prefers-reduced-motion`).

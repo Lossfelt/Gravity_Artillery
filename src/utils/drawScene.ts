@@ -2,6 +2,8 @@ import { ExplosionParticle, GravityBody, Planet, PlanetFragment } from '../types
 import { Aim, PlayerNumber } from '../game/gameReducer';
 import { CANVAS_WIDTH } from '../constants/game';
 import { drawGlowingSprite } from './glowSprites';
+import { drawCoronas } from './drawCorona';
+import { drawGlobe, lightDirection } from './drawGlobe';
 
 export type SpriteCache = Record<string, HTMLImageElement>;
 type Planets = { player1: Planet; player2: Planet };
@@ -10,8 +12,10 @@ export const drawGravityBodies = (
   ctx: CanvasRenderingContext2D,
   bodies: GravityBody[],
   sprites: SpriteCache,
-  pulse: number
+  pulse: number,
+  time: number
 ) => {
+  drawCoronas(ctx, bodies, time);
   bodies.forEach(body => {
     if (body.type === 'blackhole') return; // Black holes are only visible through lensing
 
@@ -33,10 +37,12 @@ export const drawGravityBodies = (
   });
 };
 
-const drawPlanet = (ctx: CanvasRenderingContext2D, planet: Planet, sprites: SpriteCache) => {
+type SceneTime = { bodies: GravityBody[]; time: number };
+
+const drawPlanet = (ctx: CanvasRenderingContext2D, planet: Planet, sprites: SpriteCache, spin: number, scene: SceneTime) => {
   const sprite = planet.sprite ? sprites[planet.sprite] : null;
   if (sprite) {
-    ctx.drawImage(sprite, planet.x - planet.radius, planet.y - planet.radius, planet.radius * 2, planet.radius * 2);
+    drawGlobe(ctx, planet, sprite, lightDirection(planet, scene.bodies), scene.time, spin);
     return;
   }
   ctx.beginPath();
@@ -68,20 +74,22 @@ const drawHearts = (ctx: CanvasRenderingContext2D, planetY: number, lives: numbe
   }
 };
 
-/** Draws surviving planets with their lives. */
+/** Draws surviving planets, lit by the stars, with their lives. time is in seconds. */
 export const drawPlanets = (
   ctx: CanvasRenderingContext2D,
   planets: Planets,
   destroyed: PlayerNumber[],
   sprites: SpriteCache,
-  lives: Record<PlayerNumber, number>
+  lives: Record<PlayerNumber, number>,
+  scene: SceneTime
 ) => {
+  // The planets turn in opposite directions, mirroring each other
   if (!destroyed.includes(1)) {
-    drawPlanet(ctx, planets.player1, sprites);
+    drawPlanet(ctx, planets.player1, sprites, 1, scene);
     drawHearts(ctx, planets.player1.y, lives[1], true);
   }
   if (!destroyed.includes(2)) {
-    drawPlanet(ctx, planets.player2, sprites);
+    drawPlanet(ctx, planets.player2, sprites, -1, scene);
     drawHearts(ctx, planets.player2.y, lives[2], false);
   }
 };
