@@ -1,6 +1,5 @@
 import { GravityBody } from '../types/game';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../constants/game';
-import { drawSpacetimeGrid } from './drawSpacetimeGrid';
 
 /**
  * Bends the background around a black hole (gravitational lensing).
@@ -64,8 +63,7 @@ const applyLensing = (ctx: CanvasRenderingContext2D, blackHole: GravityBody) => 
 };
 
 /**
- * Draws everything that does not move during a round (background, spacetime
- * grid and lensing)
+ * Draws everything that does not move during a round (background + lensing)
  * into an offscreen canvas that can be blitted each frame with one drawImage.
  */
 export const createStaticLayer = (
@@ -85,8 +83,6 @@ export const createStaticLayer = (
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
 
-  // The grid goes under the lensing, so black holes bend it as well
-  drawSpacetimeGrid(ctx, bodies);
   bodies.filter(body => body.type === 'blackhole').forEach(blackHole => applyLensing(ctx, blackHole));
   return canvas;
 };

@@ -39,9 +39,6 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   `requestAnimationFrame`-løkker. React rendrer bare ved knappetrykk og når
   runden endrer tilstand. Dette var nødvendig for god ytelse på mobil.
 - **Hele prosjektilsporet beholdes** og bygges opp gradvis i en `Path2D`.
-- **Romtid-rutenett:** et svakt rutenett trekkes mot massene og viser hvor
-  gravitasjonen er sterk. Svarte hull bøyer det også, så nettet synker der
-  ingenting synes. Det tegnes i det statiske laget og koster ingenting per frame.
 - **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film
   på treffet som avgjør kampen. Blink og risting slås av når systemet ber om
   redusert bevegelse (`prefers-reduced-motion`).
