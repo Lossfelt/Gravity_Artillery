@@ -28,7 +28,7 @@ body {
   player's planet colour, so buttons, borders and glow follow the player.
 */
 @theme {
-  --font-sans: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Roboto, sans-serif;
+  --font-sans: 'Exo 2 Variable', 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Roboto, sans-serif;
 }
 
 :root {

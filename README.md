@@ -47,7 +47,9 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 - **Felles grensesnittstil** i `src/index.css` (`.panel`, `.btn`, `.readout`,
   `.meter`). Hvert panel setter `--accent` til spillerens planetfarge. Ikoner
   og hjerter er tegnet som vektorer (SVG og `Path2D`) i stedet for emoji, som
-  ser forskjellige ut fra telefon til telefon.
+  ser forskjellige ut fra telefon til telefon. Fonten er Exo 2 (OFL), lagt inn
+  via `@fontsource-variable/exo-2` og bygget inn i appen, så ingen fonter
+  hentes fra Google.
 - **Oppsett etter både bredde og høyde** (`src/utils/layout.ts`). En telefon på
   tvers er ofte bredere enn 768 px, men lav, så lav liggende skjerm (under
   500 px) gir kompakte paneler på sidene uten tittel.
