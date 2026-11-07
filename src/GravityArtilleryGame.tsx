@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useGravityGame } from './hooks/useGravityGame';
 import { useCanvasRenderer } from './hooks/useCanvasRenderer';
-import { useSoundEffects } from './hooks/useSoundEffects';
+import { useGravityHum, useSoundEffects } from './hooks/useSoundEffects';
 import { useResponsiveCanvas } from './hooks/useResponsiveCanvas';
 import { useLayout } from './hooks/useLayout';
 import { GameCanvas } from './components/GameCanvas';
@@ -14,13 +14,14 @@ import { PlayerNumber } from './game/gameReducer';
 
 const GravityArtilleryGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { playExplosion, startMusic } = useSoundEffects();
+  const { engine, sounds, startAudio } = useSoundEffects();
   const { width: displayWidth, height: displayHeight } = useResponsiveCanvas();
   const layout = useLayout();
 
   const [aiDifficulty, setAiDifficulty] = useOpponentSetting();
   const { model, planets, gravitationalBodies, simulationRef, adjustAngle, adjustPower, toggleReady, nextRound } =
-    useGravityGame({ onExplosion: playExplosion, aiDifficulty });
+    useGravityGame({ sounds, aiDifficulty });
+  useGravityHum(engine, simulationRef, gravitationalBodies);
   const { phase: gameState, winner, players } = model;
 
   useCanvasRenderer({
@@ -68,8 +69,8 @@ const GravityArtilleryGame = () => {
       adjustAngle={delta => adjustAngle(player, delta)}
       adjustPower={delta => adjustPower(player, delta)}
       ready={players[player].ready}
-      // Music starts on the first button press (a user gesture, which mobile browsers require)
-      toggleReady={() => { startMusic(); toggleReady(player); }}
+      // Audio starts on the Fire press (a user gesture, which mobile browsers require)
+      toggleReady={() => { startAudio(); toggleReady(player); }}
       gameState={gameState}
       compact={compact}
     />
@@ -122,7 +123,8 @@ const GravityArtilleryGame = () => {
       <div className="text-[var(--ink-dim)] opacity-70 text-xs mt-4 md:mt-6 text-center max-w-2xl px-4">
         <p className="font-semibold mb-1">Credits:</p>
         <p>Music: www.purple-planet.com</p>
-        <p>Sound effect: by freesound_community via Pixabay</p>
+        <p>Explosion sound: by freesound_community via Pixabay</p>
+        <p>Launch sound: generated with ElevenLabs</p>
         <p>Planets: "2D Planets" by Rawdanitsu licensed Public Domain CC0: https://opengameart.org/content/2d-planets-0</p>
         <p>Stars: "Planets and stars set (high-res)" by Rawdanitsu licensed Public Domain CC0: https://opengameart.org/content/planets-and-stars-set-high-res</p>
       </div>

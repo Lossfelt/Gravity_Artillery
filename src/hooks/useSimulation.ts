@@ -16,7 +16,13 @@ type Params = {
   gravitationalBodies: GravityBody[];
   lives: Record<PlayerNumber, number>;
   dispatch: Dispatch<GameAction>;
-  onExplosion?: () => void;
+  sounds?: SimulationSounds;
+};
+
+// Called when something audible happens, with its x position for stereo panning
+export type SimulationSounds = {
+  onLaunch?: (x: number) => void;
+  onExplosion?: (x: number, decisive: boolean) => void;
 };
 
 // The hit that ends the match plays in slow motion for a moment
@@ -53,7 +59,9 @@ export const useSimulation = (params: Params) => {
   // A new shot: both players fire at once
   useEffect(() => {
     if (shotNumber === 0) return;
-    const { planets, aims } = latestRef.current;
+    const { planets, aims, sounds } = latestRef.current;
+    sounds?.onLaunch?.(planets.player1.x);
+    sounds?.onLaunch?.(planets.player2.x);
     simulationRef.current.projectiles = [
       createProjectile(planets.player1, aims[1].angle, aims[1].power, 1),
       createProjectile(planets.player2, aims[2].angle, aims[2].power, 2)
@@ -70,11 +78,11 @@ export const useSimulation = (params: Params) => {
 
   const destroyPlanet = useCallback((player: PlayerNumber, planet: Planet) => {
     const simulation = simulationRef.current;
-    latestRef.current.onExplosion?.();
+    const decisive = latestRef.current.lives[player] <= 1;
+    latestRef.current.sounds?.onExplosion?.(planet.x, decisive);
     simulation.explosionParticles.push(...createExplosion(planet.x, planet.y));
     simulation.planetFragments.push(...createPlanetFragments(planet));
 
-    const decisive = latestRef.current.lives[player] <= 1;
     simulation.impacts.push({
       x: planet.x,
       y: planet.y,

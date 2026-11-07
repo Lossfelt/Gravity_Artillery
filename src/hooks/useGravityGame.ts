@@ -3,19 +3,19 @@ import { initialPlanets } from '../constants/game';
 import { createInitialModel, gameReducer, isMatchOver, PlayerNumber } from '../game/gameReducer';
 import { generateGravitationalBodies } from '../utils/generateGravitationalBodies';
 import { createRandom, randomSeed } from '../utils/random';
-import { useSimulation } from './useSimulation';
+import { SimulationSounds, useSimulation } from './useSimulation';
 import { useAiOpponent } from './useAiOpponent';
 import { Difficulty } from '../game/ai';
 
 type UseGravityGameProps = {
-  onExplosion?: () => void;
+  sounds?: SimulationSounds;
   // When set, the computer plays player 2
   aiDifficulty?: Difficulty | null;
 };
 
 const RESULT_DELAY_MS = 2000;
 
-export const useGravityGame = ({ onExplosion, aiDifficulty = null }: UseGravityGameProps = {}) => {
+export const useGravityGame = ({ sounds, aiDifficulty = null }: UseGravityGameProps = {}) => {
   const [model, dispatch] = useReducer(gameReducer, undefined, () => createInitialModel());
   const planets = initialPlanets;
 
@@ -33,7 +33,7 @@ export const useGravityGame = ({ onExplosion, aiDifficulty = null }: UseGravityG
     planets,
     gravitationalBodies,
     dispatch,
-    onExplosion
+    sounds
   });
 
   useAiOpponent({

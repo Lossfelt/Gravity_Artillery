@@ -51,6 +51,11 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 - **Oppsett etter både bredde og høyde** (`src/utils/layout.ts`). En telefon på
   tvers er ofte bredere enn 768 px, men lav, så lav liggende skjerm (under
   500 px) gir kompakte paneler på sidene uten tittel.
+- **Lyd med Web Audio** (`src/audio/`). Hver lyd panoreres dit den skjer på
+  skjermen. Utskytingen er et klipp laget med ElevenLabs, med et syntetisert sus
+  som reserve. En dyp brumming (sagtann gjennom lavpassfilter) stiger når et
+  skudd passerer nær en stjerne eller et svart hull. Treffet som avgjør kampen
+  spilles langsommere og dypere. Lydene pauses når fanen er skjult.
 - **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film
   på treffet som avgjør kampen. Blink og risting slås av når systemet ber om
   redusert bevegelse (`prefers-reduced-motion`).
@@ -62,3 +67,4 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 ## Kreditering
 
 Se bunnen av spillsiden for musikk, lyd og grafikk (alle CC0 eller fri bruk).
+Utskytingslyden er generert med ElevenLabs.
