@@ -3,7 +3,8 @@ import launchUrl from '../assets/sounds/Launch.mp3';
 import { panFor } from './spatial';
 
 // Sound effects built on the Web Audio API. The launch is a sample generated
-// with ElevenLabs, with a synthesised whoosh as fallback while it loads. The
+// with ElevenLabs: an electromagnetic whoosh that sweeps up in pitch, like a
+// coil gun accelerating the shot. A synthesised whoosh plays while it loads. The
 // gravity hum is synthesised, since it changes continuously with distance. Every sound is panned to
 // where it happens on screen. The context can only start after a user
 // gesture, so nothing plays until unlock() has been called from a click.
@@ -65,7 +66,7 @@ export class SoundEngine {
     source.buffer = launch;
     source.playbackRate.value = 0.94 + Math.random() * 0.12;
     const gain = ctx.createGain();
-    gain.gain.value = 0.3; // The sample is loud and heavily compressed
+    gain.gain.value = 0.35;
     this.connect(source.connect(gain), x);
     source.start();
   }
