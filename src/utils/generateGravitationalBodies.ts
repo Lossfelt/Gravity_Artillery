@@ -47,7 +47,14 @@ const isValidPosition = (
 };
 
 /**
- * Generate a random position within canvas bounds
+ * A number from 0 to 1 that is most likely near 0.5: the average of two
+ * random numbers. Bodies cluster towards the middle, where they bend the
+ * shots, but can still end up near the edges.
+ */
+const towardsMiddle = (random: Random) => (random() + random()) / 2;
+
+/**
+ * Generate a random position within canvas bounds, weighted towards the middle
  */
 const generateRandomPosition = (
   radius: number,
@@ -57,8 +64,8 @@ const generateRandomPosition = (
   maxAttempts = 100
 ): { x: number; y: number } | null => {
   for (let i = 0; i < maxAttempts; i++) {
-    const x = radius + random() * (CANVAS_WIDTH - 2 * radius);
-    const y = radius + random() * (CANVAS_HEIGHT - 2 * radius);
+    const x = radius + towardsMiddle(random) * (CANVAS_WIDTH - 2 * radius);
+    const y = radius + towardsMiddle(random) * (CANVAS_HEIGHT - 2 * radius);
 
     if (isValidPosition(x, y, radius, existingBodies, playerPlanets)) {
       return { x, y };

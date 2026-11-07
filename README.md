@@ -35,6 +35,12 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   (`src/utils/fixedTimestep.ts`), så samme skudd gir samme bane på alle enheter.
 - **Seedet stjernekart.** Kartet lages fra et seed (`src/utils/random.ts`), så
   det kan gjenskapes.
+- **Stjerner og svarte hull trekkes mot midten.** Hver koordinat er snittet av
+  to tilfeldige tall, så kroppene havner oftest midt på brettet, men kan
+  fortsatt ligge ved kanten. Målt over 120 kart ga det flere ulike veier til
+  målet (4,7 mot 3,8) og nesten dobbelt så mange kropper nær linjen mellom
+  planetene, uten at hvert treffvindu ble smalere. En fast boks i midten ga
+  litt mer av det samme, men tomme kanter og mer like kart.
 - **Ingen React-rendering per frame.** Animasjonen kjører i egne
   `requestAnimationFrame`-løkker. React rendrer bare ved knappetrykk og når
   runden endrer tilstand. Dette var nødvendig for god ytelse på mobil.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { initialPlanets } from '../constants/game';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, initialPlanets } from '../constants/game';
 import { consumeSteps, MAX_STEPS_PER_FRAME, PHYSICS_STEP_MS } from './fixedTimestep';
 import { generateGravitationalBodies } from './generateGravitationalBodies';
 import { createRandom } from './random';
@@ -24,6 +24,20 @@ describe('generateGravitationalBodies', () => {
     const second = generateGravitationalBodies(initialPlanets, createRandom(1234));
     expect(second).toEqual(first);
     expect(first.length).toBeGreaterThan(0);
+  });
+
+  it('places bodies mostly towards the middle, but inside the board', () => {
+    const bodies = Array.from({ length: 100 }, (_, seed) =>
+      generateGravitationalBodies(initialPlanets, createRandom(seed))).flat();
+    const nearCentreLine = bodies.filter(b => Math.abs(b.y - CANVAS_HEIGHT / 2) < 100).length;
+    // Spread evenly over the board, about a quarter would be this close
+    expect(nearCentreLine / bodies.length).toBeGreaterThan(0.4);
+    for (const b of bodies) {
+      expect(b.x - b.radius).toBeGreaterThanOrEqual(0);
+      expect(b.x + b.radius).toBeLessThanOrEqual(CANVAS_WIDTH);
+      expect(b.y - b.radius).toBeGreaterThanOrEqual(0);
+      expect(b.y + b.radius).toBeLessThanOrEqual(CANVAS_HEIGHT);
+    }
   });
 });
 
