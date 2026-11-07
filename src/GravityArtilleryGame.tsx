@@ -3,8 +3,7 @@ import { useGravityGame } from './hooks/useGravityGame';
 import { useCanvasRenderer } from './hooks/useCanvasRenderer';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { useResponsiveCanvas } from './hooks/useResponsiveCanvas';
-import { useOrientation } from './hooks/useOrientation';
-import { useIsMobile } from './hooks/useIsMobile';
+import { useLayout } from './hooks/useLayout';
 import { GameCanvas } from './components/GameCanvas';
 import { GameOverOverlay } from './components/GameOverOverlay';
 import { PlayerControls } from './components/PlayerControls';
@@ -17,8 +16,7 @@ const GravityArtilleryGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { playExplosion, startMusic } = useSoundEffects();
   const { width: displayWidth, height: displayHeight } = useResponsiveCanvas();
-  const orientation = useOrientation();
-  const isMobile = useIsMobile();
+  const layout = useLayout();
 
   const [aiDifficulty, setAiDifficulty] = useOpponentSetting();
   const { model, planets, gravitationalBodies, simulationRef, adjustAngle, adjustPower, toggleReady, nextRound } =
@@ -36,11 +34,11 @@ const GravityArtilleryGame = () => {
     lives: { 1: players[1].lives, 2: players[2].lives }
   });
 
-  // Controls on sides for desktop and mobile landscape, below the canvas for mobile portrait
-  const controlsOnSides = !isMobile || orientation === 'landscape';
-  const isMobileLandscape = isMobile && orientation === 'landscape';
+  // Controls below the canvas in narrow portrait, on the sides otherwise
+  const controlsOnSides = layout !== 'stacked';
+  const isCompact = layout === 'compact';
 
-  const switchClass = `link-btn w-full mt-2 ${isMobileLandscape ? 'text-[10px]' : 'text-xs'}`;
+  const switchClass = `link-btn block w-full mt-2 ${isCompact ? 'text-[10px]' : 'text-xs'}`;
 
   const controls = (player: PlayerNumber, compact = false) => player === 2 && aiDifficulty ? (
     <AiPanel
@@ -79,19 +77,19 @@ const GravityArtilleryGame = () => {
 
   return (
     <div className={`flex flex-col items-center min-h-screen ${
-      isMobileLandscape ? 'p-2 pt-1' : 'p-4 pt-4 md:pt-8'
+      isCompact ? 'p-2 pt-1' : 'p-4 pt-4 md:pt-8'
     }`}>
-      {/* Hide title in mobile landscape to save vertical space */}
-      {!isMobileLandscape && (
+      {/* Hide title in the compact layout to save vertical space */}
+      {!isCompact && (
         <div className="text-center mb-4 md:mb-8">
           <h1 className="text-2xl md:text-4xl font-bold uppercase tracking-[0.18em] mb-1">Gravity Artillery</h1>
           <p className="text-xs md:text-sm text-[var(--ink-dim)] italic tracking-wide">a conflict in the Dark Forest</p>
         </div>
       )}
 
-      <div className={`flex ${controlsOnSides ? 'flex-row' : 'flex-col'} items-center justify-center ${isMobileLandscape ? 'gap-2' : 'gap-4'} w-full`}>
+      <div className={`flex ${controlsOnSides ? 'flex-row' : 'flex-col'} items-center justify-center ${isCompact ? 'gap-2' : 'gap-4'} w-full`}>
         {/* Always show side controls to prevent layout jumping */}
-        {controlsOnSides && <div>{controls(1, isMobileLandscape)}</div>}
+        {controlsOnSides && <div>{controls(1, isCompact)}</div>}
 
         <div className={`flex flex-col items-center gap-4 ${controlsOnSides ? 'w-auto' : 'w-full'}`}>
           <div className="relative">
@@ -113,7 +111,7 @@ const GravityArtilleryGame = () => {
           )}
         </div>
 
-        {controlsOnSides && <div>{controls(2, isMobileLandscape)}</div>}
+        {controlsOnSides && <div>{controls(2, isCompact)}</div>}
       </div>
 
       <p className="text-[var(--ink-dim)] text-xs md:text-sm mt-4 max-w-2xl text-center px-4">

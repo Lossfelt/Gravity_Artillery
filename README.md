@@ -48,6 +48,9 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   `.meter`). Hvert panel setter `--accent` til spillerens planetfarge. Ikoner
   og hjerter er tegnet som vektorer (SVG og `Path2D`) i stedet for emoji, som
   ser forskjellige ut fra telefon til telefon.
+- **Oppsett etter både bredde og høyde** (`src/utils/layout.ts`). En telefon på
+  tvers er ofte bredere enn 768 px, men lav, så lav liggende skjerm (under
+  500 px) gir kompakte paneler på sidene uten tittel.
 - **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film
   på treffet som avgjør kampen. Blink og risting slås av når systemet ber om
   redusert bevegelse (`prefers-reduced-motion`).

@@ -72,7 +72,7 @@ export const AiPanel = ({
       </div>
 
       <p
-        className={`btn w-full cursor-default ${ready ? 'btn-ready' : 'chip'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
+        className={`btn flex w-full cursor-default ${ready ? 'btn-ready' : 'chip'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
         aria-live="polite"
       >
         {ready && <Check />}
@@ -82,7 +82,7 @@ export const AiPanel = ({
       <button
         onClick={onSwitchToHuman}
         disabled={locked}
-        className={`link-btn w-full mt-2 ${compact ? 'text-[10px]' : 'text-xs'}`}
+        className={`link-btn block w-full mt-2 ${compact ? 'text-[10px]' : 'text-xs'}`}
       >
         Play vs human
       </button>

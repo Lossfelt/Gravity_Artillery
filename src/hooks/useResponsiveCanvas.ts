@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../constants/game';
+import { currentLayout, Layout } from '../utils/layout';
 
 type CanvasSize = {
   width: number;
@@ -14,8 +15,8 @@ export const useResponsiveCanvas = () => {
 
   useEffect(() => {
     let timeoutId: number;
-    const isMobile = window.innerWidth < 768;
-    const isLandscape = window.innerWidth > window.innerHeight;
+    // Phones (touch screens) resize their visual viewport when the address bar moves
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
 
     const handleResize = () => {
       // Debounce resize events to avoid flickering
@@ -23,8 +24,8 @@ export const useResponsiveCanvas = () => {
       timeoutId = window.setTimeout(() => {
         const newSize = calculateCanvasSize();
 
-        // More aggressive threshold for mobile landscape to prevent scroll-triggered resizes
-        const threshold = (isMobile && isLandscape) ? 30 : 15;
+        // More aggressive threshold for the compact layout to prevent scroll-triggered resizes
+        const threshold = currentLayout() === 'compact' ? 30 : 15;
 
         // Only update if size changed significantly
         setCanvasSize(prevSize => {
@@ -39,7 +40,7 @@ export const useResponsiveCanvas = () => {
 
     // On mobile: ONLY listen to visualViewport to avoid address bar triggering resize
     // On desktop: listen to window.resize
-    if (isMobile && window.visualViewport) {
+    if (isTouch && window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
     } else {
       window.addEventListener('resize', handleResize);
@@ -50,7 +51,7 @@ export const useResponsiveCanvas = () => {
 
     return () => {
       clearTimeout(timeoutId);
-      if (isMobile && window.visualViewport) {
+      if (isTouch && window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
       } else {
         window.removeEventListener('resize', handleResize);
@@ -68,15 +69,13 @@ let cachedMobileLandscapeHeight: number | null = null;
 function calculateCanvasSize(): CanvasSize {
   const aspectRatio = CANVAS_WIDTH / CANVAS_HEIGHT;
 
-  // Get viewport dimensions with some padding
   const viewportWidth = window.innerWidth;
-  const isMobile = viewportWidth < 768;
-  const isLandscape = viewportWidth > window.innerHeight;
+  const layout: Layout = currentLayout();
 
   // For mobile landscape, use cached height or calculate once
   // This prevents scroll-triggered size changes from address bar
   let viewportHeight: number;
-  if (isMobile && isLandscape) {
+  if (layout === 'compact') {
     if (cachedMobileLandscapeHeight === null) {
       // Use the larger of visualViewport or innerHeight for initial calculation
       cachedMobileLandscapeHeight = Math.max(
@@ -86,7 +85,7 @@ function calculateCanvasSize(): CanvasSize {
     }
     viewportHeight = cachedMobileLandscapeHeight;
   } else {
-    // Reset cache when not in mobile landscape
+    // Reset cache when not in the compact layout
     cachedMobileLandscapeHeight = null;
     viewportHeight = window.visualViewport?.height || window.innerHeight;
   }
@@ -94,14 +93,12 @@ function calculateCanvasSize(): CanvasSize {
   let maxWidth: number;
   let maxHeight: number;
 
-  // Use the already calculated isMobile and isLandscape values
-  if (isMobile && !isLandscape) {
+  if (layout === 'stacked') {
     // Mobile Portrait: controls below canvas
     maxWidth = viewportWidth - 32; // 16px padding on each side
     maxHeight = viewportHeight - 420; // Reserve space for title, controls below, instructions (reduced)
-  } else if (isMobile && isLandscape) {
-    // Mobile Landscape: controls on sides (compact)
-    // Minimize reserved space for maximum canvas size
+  } else if (layout === 'compact') {
+    // Phone sideways: compact controls on the sides, no title
     maxWidth = viewportWidth - 220; // Two compact panels (~92 px each), gaps and padding
     maxHeight = viewportHeight - 20; // Title, instructions, and padding (minimized)
   } else {

@@ -66,14 +66,15 @@ export const PlayerControls = ({
           <span className="readout-label">Angle</span>
           <span className="readout-value">{toRelativeAngle(player, angle)}&deg;</span>
         </p>
-        <div className={`flex flex-col items-center ${compact ? 'gap-1' : 'gap-1 md:gap-1.5'}`}>
+        {/* Compact: a 2x2 grid (up on top, down below) to save height on a phone held sideways */}
+        <div className={compact ? `grid grid-cols-2 gap-1 mx-auto ${width}` : 'flex flex-col items-center gap-1 md:gap-1.5'}>
           {ANGLE_STEPS.map(step => (
             <button
               key={step.delta}
               onClick={() => adjustAngle(step.delta)}
               disabled={locked}
               aria-label={step.label}
-              className={`btn btn-step ${width} ${compact ? 'py-1 text-sm' : 'py-1.5 md:py-2 text-base md:text-lg'}`}
+              className={`btn btn-step ${compact ? 'py-1 text-sm' : `${width} py-1.5 md:py-2 text-base md:text-lg`}`}
             >
               {step.icon}
             </button>
@@ -107,7 +108,7 @@ export const PlayerControls = ({
       <button
         onClick={toggleReady}
         disabled={gameState === 'firing'}
-        className={`btn w-full ${ready ? 'btn-ready' : 'btn-primary'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
+        className={`btn flex w-full ${ready ? 'btn-ready' : 'btn-primary'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
       >
         {actionContent(ready, gameState)}
       </button>
