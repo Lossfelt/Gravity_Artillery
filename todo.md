@@ -1,8 +1,5 @@
 # TODO - Gravity Artillery
 
-## UI/Controls
-- [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
-
 ## Backlog: spillvarianter (når vi er fornøyd med spillet som det er)
 - [ ] Flere elementer: kraft tilbake, flere stjerner samtidig, nye romobjekter og flere typer prosjektiler, slik at man må variere både vinkel og kraft. Kraft ble fjernet fordi målinger viste at vinkelen alene løste nesten alle kart, så kartene må gjøre kraft nødvendig.
 - [ ] Solsystemer: hver spiller er et solsystem med tre bebodde planeter i bane rundt en stjerne. Planetene beveger seg og må tas med i beregningen, og hver planet er ett liv.
