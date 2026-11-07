@@ -39,6 +39,10 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   `requestAnimationFrame`-løkker. React rendrer bare ved knappetrykk og når
   runden endrer tilstand. Dette var nødvendig for god ytelse på mobil.
 - **Hele prosjektilsporet beholdes** og bygges opp gradvis i en `Path2D`.
+- **Maks flytid på 10 s.** Et skudd som fortsatt flyr da, brenner ut, så en
+  lang bane rundt en stjerne ikke kan holde runden i gang. Målt over 27 300
+  skudd lander 99 % innen 5 s og bare 0,1 % flyr lenger enn 10 s. AI-en
+  simulerer med samme grense.
 - **Kulisser:** planetene roterer som glober (overflaten rulles sidelengs og
   presses sammen mot kanten), lyses opp fra de sterkeste stjernene og har en
   tynn atmosfære. Stjernene har en flimrende korona, og to lag med små stjerner
@@ -54,9 +58,9 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   tvers er ofte bredere enn 768 px, men lav, så lav liggende skjerm (under
   500 px) gir kompakte paneler på sidene uten tittel.
 - **Lyd med Web Audio** (`src/audio/`). Hver lyd panoreres dit den skjer på
-  skjermen. Utskytingen er et klipp laget med ElevenLabs: et elektromagnetisk
-  sus som stiger i tonehøyde, som en spolekanon som akselererer skuddet. Et
-  syntetisert sus spilles til klippet er lastet. En dyp brumming (sagtann gjennom lavpassfilter) stiger når et
+  skjermen. Utskytingen er et klipp laget med ElevenLabs: et dypt, mykt
+  «fwoom», valgt blant fem kandidater. Et syntetisert sus spilles til klippet
+  er lastet. En dyp brumming (sagtann gjennom lavpassfilter) stiger når et
   skudd passerer nær en stjerne eller et svart hull. Treffet som avgjør kampen
   spilles langsommere og dypere. Lydene pauses når fanen er skjult.
 - **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film

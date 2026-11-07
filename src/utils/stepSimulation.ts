@@ -1,5 +1,5 @@
 import { ExplosionParticle, GravityBody, Impact, Planet, PlanetFragment, Projectile } from '../types/game';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, PLANET_RADIUS, PROJECTILE_SPEED } from '../constants/game';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, MAX_FLIGHT_STEPS, PLANET_RADIUS, PROJECTILE_SPEED } from '../constants/game';
 import { calculateGravity } from './calculateGravity';
 import { checkCollision } from './checkCollision';
 
@@ -63,6 +63,17 @@ export const stepProjectile = (
   proj.vx = newVx;
   proj.vy = newVy;
   return null;
+};
+
+/**
+ * Stops the projectiles that are still flying once the shot has lasted
+ * MAX_FLIGHT_STEPS, and returns them so they can fizzle out on screen.
+ */
+export const burnOutProjectiles = (projectiles: Projectile[], flightSteps: number) => {
+  if (flightSteps < MAX_FLIGHT_STEPS) return [];
+  const burnedOut = projectiles.filter(p => p.active);
+  for (const proj of burnedOut) proj.active = false;
+  return burnedOut;
 };
 
 export const stepParticles = (particles: ExplosionParticle[], deltaTime: number) => {

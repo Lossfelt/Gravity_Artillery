@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ExplosionParticle, GravityBody, PlanetFragment, Projectile } from '../types/game';
-import { initialPlanets } from '../constants/game';
-import { createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
+import { initialPlanets, MAX_FLIGHT_STEPS } from '../constants/game';
+import { burnOutProjectiles, createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
 
 const projectile = (overrides: Partial<Projectile>): Projectile => ({
   x: 500, y: 300, vx: 0, vy: 0, trail: [], player: 1, active: true, ...overrides
@@ -91,6 +91,17 @@ describe('createProjectile', () => {
   it('does not hit its own planet on the first step', () => {
     const proj = createProjectile(initialPlanets.player1, 0, 1);
     expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
+  });
+});
+
+describe('burnOutProjectiles', () => {
+  it('stops only the shots still flying, and only once the time is up', () => {
+    const flying = projectile({});
+    const landed = projectile({ active: false });
+    expect(burnOutProjectiles([flying, landed], MAX_FLIGHT_STEPS - 1)).toEqual([]);
+    expect(flying.active).toBe(true);
+    expect(burnOutProjectiles([flying, landed], MAX_FLIGHT_STEPS)).toEqual([flying]);
+    expect(flying.active).toBe(false);
   });
 });
 

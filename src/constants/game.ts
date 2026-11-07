@@ -9,6 +9,9 @@ export const CANVAS_WIDTH = 1000;
 export const CANVAS_HEIGHT = 600;
 export const PLANET_RADIUS = 25;
 export const PROJECTILE_SPEED = 5;
+// A shot still flying after 10 s (at 60 steps per second) burns out, so a
+// shot caught in a long orbit cannot hold up the round
+export const MAX_FLIGHT_STEPS = 600;
 
 export const initialPlanets: { player1: Planet; player2: Planet } = {
   player1: {

@@ -3,7 +3,7 @@ import { GravityBody, Planet, Simulation } from '../types/game';
 import { Aim, GameAction, PlayerNumber } from '../game/gameReducer';
 import { createExplosion } from '../utils/createExplosion';
 import { createPlanetFragments } from '../utils/createPlanetFragments';
-import { createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from '../utils/stepSimulation';
+import { burnOutProjectiles, createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from '../utils/stepSimulation';
 import { consumeSteps } from '../utils/fixedTimestep';
 
 type Planets = { player1: Planet; player2: Planet };
@@ -29,6 +29,7 @@ export type SimulationSounds = {
 const SLOW_MOTION_MS = 1500;
 const SLOW_MOTION_SCALE = 0.3;
 const DECISIVE_STRENGTH = 1.6;
+const BURN_OUT_PARTICLES = 10;
 
 const planetOf = (planets: Planets, player: PlayerNumber) => (player === 1 ? planets.player1 : planets.player2);
 
@@ -48,6 +49,8 @@ export const useSimulation = (params: Params) => {
   const simulationRef = useRef<Simulation>(emptySimulation());
   // Set before the round is reported, so extra frames can never end a round twice
   const resolvedRef = useRef(true);
+  // Physics steps since the current shot was fired
+  const flightStepsRef = useRef(0);
   const destroyedRef = useRef(new Set<PlayerNumber>());
   const latestRef = useRef(params);
   const slowMotionUntilRef = useRef(0);
@@ -68,6 +71,7 @@ export const useSimulation = (params: Params) => {
     ];
     destroyedRef.current = new Set();
     resolvedRef.current = false;
+    flightStepsRef.current = 0;
   }, [shotNumber]);
 
   // A new round: clear trails, explosions and fragments
@@ -106,7 +110,12 @@ export const useSimulation = (params: Params) => {
       if (hitPlayer !== null) destroyPlanet(hitPlayer, planetOf(planets, hitPlayer));
     }
 
-    // The round ends when both projectiles have hit or left the screen
+    flightStepsRef.current++;
+    for (const proj of burnOutProjectiles(projectiles, flightStepsRef.current)) {
+      simulationRef.current.explosionParticles.push(...createExplosion(proj.x, proj.y, BURN_OUT_PARTICLES));
+    }
+
+    // The round ends when both projectiles have hit, left the screen or burned out
     if (projectiles.every(p => !p.active)) {
       resolvedRef.current = true;
       dispatch({ type: 'roundEnded' });

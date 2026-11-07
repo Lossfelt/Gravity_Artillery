@@ -1,4 +1,5 @@
 import { GravityBody, Planet } from '../types/game';
+import { MAX_FLIGHT_STEPS } from '../constants/game';
 import { createProjectile, stepProjectile } from '../utils/stepSimulation';
 import { Random } from '../utils/random';
 import { AIM_LIMIT, toRelativeAngle, toWorldAngle } from './aim';
@@ -12,7 +13,6 @@ import type { Aim, PlayerNumber } from './gameReducer';
 type Planets = { player1: Planet; player2: Planet };
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
-const MAX_FLIGHT_STEPS = 1200; // 20 s of flight
 const SELF_HIT_PENALTY = 10_000;
 const NOTHING_DESTROYED = new Set<PlayerNumber>();
 
