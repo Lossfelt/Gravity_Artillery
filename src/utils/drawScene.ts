@@ -51,27 +51,39 @@ const drawPlanet = (ctx: CanvasRenderingContext2D, planet: Planet, sprites: Spri
   ctx.fill();
 };
 
+// Hearts are drawn as vector shapes, so they look the same on every platform
+const HEART_SIZE = 11;
+const HEART_SPACING = 15;
+
+const heartPath = (x: number, y: number, s: number) => {
+  const path = new Path2D();
+  path.moveTo(x, y + s * 0.45);
+  path.bezierCurveTo(x - s * 0.1, y + s * 0.3, x - s * 0.55, y + s * 0.1, x - s * 0.5, y - s * 0.15);
+  path.bezierCurveTo(x - s * 0.45, y - s * 0.5, x - s * 0.05, y - s * 0.5, x, y - s * 0.2);
+  path.bezierCurveTo(x + s * 0.05, y - s * 0.5, x + s * 0.45, y - s * 0.5, x + s * 0.5, y - s * 0.15);
+  path.bezierCurveTo(x + s * 0.55, y + s * 0.1, x + s * 0.1, y + s * 0.3, x, y + s * 0.45);
+  return path;
+};
+
 const drawHearts = (ctx: CanvasRenderingContext2D, planetY: number, lives: number, isPlayer1: boolean) => {
-  const heartSpacing = 15;
-  const heartX = isPlayer1 ? 15 : CANVAS_WIDTH - 15;
-  const startY = planetY - 15;
-
-  ctx.font = 'bold 12px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
+  const x = isPlayer1 ? 15 : CANVAS_WIDTH - 15;
+  ctx.save();
   for (let i = 0; i < 3; i++) {
-    const heartY = startY + i * heartSpacing;
+    const y = planetY - HEART_SPACING + i * HEART_SPACING;
+    const heart = heartPath(x, y, HEART_SIZE);
     if (i < lives) {
-      ctx.fillStyle = '#ff6b6b';
-      ctx.fillText('❤', heartX, heartY);
+      // A larger, faint heart behind gives a cheap glow (shadowBlur is slow on mobile)
+      ctx.fillStyle = 'rgba(255, 90, 120, 0.25)';
+      ctx.fill(heartPath(x, y, HEART_SIZE * 1.6));
+      ctx.fillStyle = '#ff5c7a';
+      ctx.fill(heart);
     } else {
-      // Empty heart outline
-      ctx.strokeStyle = '#666666';
-      ctx.lineWidth = 0.75;
-      ctx.strokeText('❤', heartX, heartY);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke(heart);
     }
   }
+  ctx.restore();
 };
 
 /** Draws surviving planets, lit by the stars, with their lives. time is in seconds. */

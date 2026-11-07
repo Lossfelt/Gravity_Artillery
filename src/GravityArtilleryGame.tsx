@@ -40,7 +40,7 @@ const GravityArtilleryGame = () => {
   const controlsOnSides = !isMobile || orientation === 'landscape';
   const isMobileLandscape = isMobile && orientation === 'landscape';
 
-  const switchClass = `w-full mt-2 underline disabled:opacity-60 ${isMobileLandscape ? 'text-[10px]' : 'text-xs'}`;
+  const switchClass = `link-btn w-full mt-2 ${isMobileLandscape ? 'text-[10px]' : 'text-xs'}`;
 
   const controls = (player: PlayerNumber, compact = false) => player === 2 && aiDifficulty ? (
     <AiPanel
@@ -59,7 +59,7 @@ const GravityArtilleryGame = () => {
         <button
           onClick={() => setAiDifficulty('normal')}
           disabled={gameState === 'firing'}
-          className={`${switchClass} text-red-200`}
+          className={switchClass}
         >
           Play vs computer
         </button>
@@ -78,18 +78,18 @@ const GravityArtilleryGame = () => {
   );
 
   return (
-    <div className={`flex flex-col items-center min-h-screen bg-gray-900 ${
+    <div className={`flex flex-col items-center min-h-screen ${
       isMobileLandscape ? 'p-2 pt-1' : 'p-4 pt-4 md:pt-8'
     }`}>
       {/* Hide title in mobile landscape to save vertical space */}
       {!isMobileLandscape && (
         <div className="text-center mb-4 md:mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-white mb-1">Gravity Artillery</h1>
-          <p className="text-xs md:text-sm text-gray-500 italic">a conflict in the Dark Forest</p>
+          <h1 className="text-2xl md:text-4xl font-bold uppercase tracking-[0.18em] mb-1">Gravity Artillery</h1>
+          <p className="text-xs md:text-sm text-[var(--ink-dim)] italic tracking-wide">a conflict in the Dark Forest</p>
         </div>
       )}
 
-      <div className={`flex ${controlsOnSides ? 'flex-row' : 'flex-col'} items-center justify-center gap-4 w-full`}>
+      <div className={`flex ${controlsOnSides ? 'flex-row' : 'flex-col'} items-center justify-center ${isMobileLandscape ? 'gap-2' : 'gap-4'} w-full`}>
         {/* Always show side controls to prevent layout jumping */}
         {controlsOnSides && <div>{controls(1, isMobileLandscape)}</div>}
 
@@ -116,12 +116,12 @@ const GravityArtilleryGame = () => {
         {controlsOnSides && <div>{controls(2, isMobileLandscape)}</div>}
       </div>
 
-      <p className="text-gray-400 text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
+      <p className="text-[var(--ink-dim)] text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
         Set your launch angle and power, then click Fire. When both players are ready, projectiles will fire simultaneously.
         Gravitational bodies will bend your projectile's path. Hit the enemy planet three times to win! Playing alone? Choose "Play vs computer" under Player 2.
       </p>
 
-      <div className="text-gray-500 text-xs mt-4 md:mt-6 text-center max-w-2xl px-4">
+      <div className="text-[var(--ink-dim)] opacity-70 text-xs mt-4 md:mt-6 text-center max-w-2xl px-4">
         <p className="font-semibold mb-1">Credits:</p>
         <p>Music: www.purple-planet.com</p>
         <p>Sound effect: by freesound_community via Pixabay</p>

@@ -102,7 +102,7 @@ function calculateCanvasSize(): CanvasSize {
   } else if (isMobile && isLandscape) {
     // Mobile Landscape: controls on sides (compact)
     // Minimize reserved space for maximum canvas size
-    maxWidth = viewportWidth - 200; // Controls + padding + gaps (minimized for larger canvas)
+    maxWidth = viewportWidth - 220; // Two compact panels (~92 px each), gaps and padding
     maxHeight = viewportHeight - 20; // Title, instructions, and padding (minimized)
   } else {
     // Desktop: leave space for side controls (400px total), title, and padding

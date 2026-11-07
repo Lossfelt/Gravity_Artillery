@@ -1,6 +1,8 @@
 import { GameState } from '../types/game';
 import { Difficulty } from '../game/ai';
 import { toRelativeAngle } from '../game/aim';
+import { accentStyle, powerFill } from './theme';
+import { Check } from './icons';
 
 type AiPanelProps = {
   angle: number;
@@ -40,41 +42,47 @@ export const AiPanel = ({
   const locked = gameState === 'firing';
 
   return (
-    <div className={`bg-red-900 rounded-lg w-full md:w-fit ${compact ? 'p-2' : 'p-4 md:p-6'}`}>
-      <h2 className={`font-bold text-white ${compact ? 'text-sm mb-1' : 'text-lg md:text-xl mb-2 md:mb-3'}`}>Computer</h2>
+    <div style={accentStyle(2)} className={`panel w-full md:w-fit ${compact ? 'p-2' : 'p-4 md:p-5'}`}>
+      <h2 className={`panel-title ${compact ? 'text-xs mb-1.5 tracking-[0.04em] before:hidden' : 'text-sm md:text-base mb-3'}`}>Computer</h2>
 
-      <div className={`flex flex-col gap-1 ${compact ? 'mb-2' : 'mb-4'}`}>
+      <div className={`flex flex-col gap-1 ${compact ? 'mb-2' : 'mb-4'}`} role="group" aria-label="Difficulty">
         {DIFFICULTIES.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => setDifficulty(value)}
             disabled={locked}
             aria-pressed={difficulty === value}
-            className={`rounded font-bold text-white disabled:opacity-60 ${compact ? 'py-0.5 px-2 text-xs' : 'py-1 px-3 text-sm'} ${
-              difficulty === value ? 'bg-red-500' : 'bg-red-800 hover:bg-red-700'
-            }`}
+            className={`btn btn-step ${compact ? 'py-0.5 px-2 text-xs' : 'py-1 px-3 text-sm'}`}
           >
             {label}
           </button>
         ))}
       </div>
 
-      <p className={`text-white whitespace-nowrap ${text}`}>Angle: {toRelativeAngle(2, angle)}&deg;</p>
-      <p className={`text-white whitespace-nowrap ${text} ${compact ? 'mb-2' : 'mb-4'}`}>Power: {power}%</p>
+      <p className={`readout ${text} mb-1`}>
+        <span className="readout-label">Angle</span>
+        <span className="readout-value">{toRelativeAngle(2, angle)}&deg;</span>
+      </p>
+      <p className={`readout ${text} mb-1`}>
+        <span className="readout-label">Power</span>
+        <span className="readout-value">{power}%</span>
+      </p>
+      <div className={`meter ${compact ? 'mb-2' : 'mb-4'}`} aria-hidden="true">
+        <span style={{ width: `${powerFill(power)}%` }} />
+      </div>
 
       <p
-        className={`w-full rounded font-bold text-white text-center ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'} ${
-          ready ? 'bg-green-600' : 'bg-red-700'
-        }`}
+        className={`btn w-full cursor-default ${ready ? 'btn-ready' : 'chip'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
         aria-live="polite"
       >
+        {ready && <Check />}
         {statusText(ready, gameState)}
       </p>
 
       <button
         onClick={onSwitchToHuman}
         disabled={locked}
-        className={`w-full mt-2 text-red-200 underline disabled:opacity-60 ${compact ? 'text-[10px]' : 'text-xs'}`}
+        className={`link-btn w-full mt-2 ${compact ? 'text-[10px]' : 'text-xs'}`}
       >
         Play vs human
       </button>

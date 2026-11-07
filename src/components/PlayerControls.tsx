@@ -2,6 +2,8 @@ import { ReactNode } from 'react';
 import { GameState } from '../types/game';
 import { PlayerNumber } from '../game/gameReducer';
 import { toRelativeAngle } from '../game/aim';
+import { accentStyle, powerFill } from './theme';
+import { Check, ChevronDown, ChevronsDown, ChevronsUp, ChevronUp, Crosshair, NextArrow } from './icons';
 
 type PlayerControlsProps = {
   player: PlayerNumber;
@@ -17,18 +19,12 @@ type PlayerControlsProps = {
   footer?: ReactNode;
 };
 
-// Full class names so Tailwind can find them
-const THEME: Record<PlayerNumber, { panel: string; step: string; action: string }> = {
-  1: { panel: 'bg-blue-900', step: 'bg-blue-700 hover:bg-blue-800', action: 'bg-blue-600 hover:bg-blue-700' },
-  2: { panel: 'bg-red-900', step: 'bg-red-700 hover:bg-red-800', action: 'bg-red-600 hover:bg-red-700' }
-};
-
 // Negative steps aim up, positive aim down
 const ANGLE_STEPS = [
-  { delta: -5, label: '⏫', big: true },
-  { delta: -1, label: '🔼', big: false },
-  { delta: 1, label: '🔽', big: false },
-  { delta: 5, label: '⏬', big: true }
+  { delta: -5, icon: <ChevronsUp />, label: 'Aim up 5°' },
+  { delta: -1, icon: <ChevronUp />, label: 'Aim up 1°' },
+  { delta: 1, icon: <ChevronDown />, label: 'Aim down 1°' },
+  { delta: 5, icon: <ChevronsDown />, label: 'Aim down 5°' }
 ];
 
 // Two columns: decrease on the left, increase on the right
@@ -39,9 +35,10 @@ const POWER_STEPS = [
   { delta: 1, label: '+1' }
 ];
 
-const angleButtonSize = (compact: boolean, big: boolean) => {
-  if (compact) return `py-1 px-3 w-16 ${big ? 'text-base' : 'text-sm'}`;
-  return `py-1.5 md:py-2 px-4 md:px-6 w-20 md:w-24 ${big ? 'text-lg md:text-xl' : 'text-base md:text-lg'}`;
+const actionContent = (ready: boolean, gameState: GameState) => {
+  if (ready) return <><Check />Ready!</>;
+  if (gameState === 'gameover') return <>Next<NextArrow /></>;
+  return <><Crosshair />Fire!</>;
 };
 
 export const PlayerControls = ({
@@ -56,41 +53,50 @@ export const PlayerControls = ({
   compact = false,
   footer
 }: PlayerControlsProps) => {
-  const theme = THEME[player];
   const locked = ready || gameState !== 'setup';
-  const actionLabel = ready ? 'Ready!' : gameState === 'gameover' ? 'Next' : 'Fire!';
-  const labelClass = `text-white block whitespace-nowrap ${compact ? 'text-xs mb-1' : 'text-sm md:text-base mb-2'}`;
-  const stepClass = `${theme.step} disabled:bg-gray-600 text-white font-bold rounded`;
+  const text = compact ? 'text-xs' : 'text-sm md:text-base';
+  const width = compact ? 'w-16' : 'w-20 md:w-24';
 
   return (
-    <div className={`${theme.panel} rounded-lg w-full md:w-fit ${compact ? 'p-2' : 'p-4 md:p-6'}`}>
-      <h2 className={`font-bold text-white ${compact ? 'text-sm mb-1' : 'text-lg md:text-xl mb-2 md:mb-3'}`}>Player {player}</h2>
+    <div style={accentStyle(player)} className={`panel w-full md:w-fit ${compact ? 'p-2' : 'p-4 md:p-5'}`}>
+      <h2 className={`panel-title ${compact ? 'text-xs mb-1.5 tracking-[0.04em] before:hidden' : 'text-sm md:text-base mb-3'}`}>Player {player}</h2>
 
       <div className={compact ? 'mb-2' : 'mb-3 md:mb-4'}>
-        <label className={labelClass}>Angle: {toRelativeAngle(player, angle)}&deg;</label>
-        <div className={`flex flex-col items-center ${compact ? 'gap-1' : 'gap-1 md:gap-2'}`}>
+        <p className={`readout ${text} ${compact ? 'mb-1' : 'mb-2'}`}>
+          <span className="readout-label">Angle</span>
+          <span className="readout-value">{toRelativeAngle(player, angle)}&deg;</span>
+        </p>
+        <div className={`flex flex-col items-center ${compact ? 'gap-1' : 'gap-1 md:gap-1.5'}`}>
           {ANGLE_STEPS.map(step => (
             <button
               key={step.delta}
               onClick={() => adjustAngle(step.delta)}
               disabled={locked}
-              className={`${stepClass} ${angleButtonSize(compact, step.big)}`}
+              aria-label={step.label}
+              className={`btn btn-step ${width} ${compact ? 'py-1 text-sm' : 'py-1.5 md:py-2 text-base md:text-lg'}`}
             >
-              {step.label}
+              {step.icon}
             </button>
           ))}
         </div>
       </div>
 
-      <div className={compact ? 'mb-3' : 'mb-4 md:mb-6'}>
-        <label className={labelClass}>Power: {power}%</label>
-        <div className={`grid grid-cols-2 mx-auto ${compact ? 'gap-1 w-16' : 'gap-1 md:gap-2 w-20 md:w-24'}`}>
+      <div className={compact ? 'mb-2' : 'mb-4 md:mb-5'}>
+        <p className={`readout ${text} mb-1`}>
+          <span className="readout-label">Power</span>
+          <span className="readout-value">{power}%</span>
+        </p>
+        <div className={`meter ${compact ? 'mb-1.5' : 'mb-2'}`} aria-hidden="true">
+          <span style={{ width: `${powerFill(power)}%` }} />
+        </div>
+        <div className={`grid grid-cols-2 mx-auto ${width} ${compact ? 'gap-1' : 'gap-1 md:gap-1.5'}`}>
           {POWER_STEPS.map(step => (
             <button
               key={step.delta}
               onClick={() => adjustPower(step.delta)}
               disabled={locked}
-              className={`${stepClass} ${compact ? 'py-0.5 text-xs' : 'py-1 text-sm'}`}
+              aria-label={`Power ${step.label}`}
+              className={`btn btn-step ${compact ? 'py-0.5 text-xs' : 'py-1 text-sm'}`}
             >
               {step.label}
             </button>
@@ -101,11 +107,9 @@ export const PlayerControls = ({
       <button
         onClick={toggleReady}
         disabled={gameState === 'firing'}
-        className={`w-full rounded font-bold text-white ${
-          compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'
-        } ${ready ? 'bg-green-600 hover:bg-green-700' : theme.action}`}
+        className={`btn w-full ${ready ? 'btn-ready' : 'btn-primary'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
       >
-        {actionLabel}
+        {actionContent(ready, gameState)}
       </button>
       {footer}
     </div>

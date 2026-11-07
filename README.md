@@ -44,6 +44,10 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   tynn atmosfære. Stjernene har en flimrende korona, og to lag med små stjerner
   driver sakte over bakgrunnen. Svarte hull skjuler stjernene som passerer bak
   dem. All langsom bevegelse står stille ved redusert bevegelse.
+- **Felles grensesnittstil** i `src/index.css` (`.panel`, `.btn`, `.readout`,
+  `.meter`). Hvert panel setter `--accent` til spillerens planetfarge. Ikoner
+  og hjerter er tegnet som vektorer (SVG og `Path2D`) i stedet for emoji, som
+  ser forskjellige ut fra telefon til telefon.
 - **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film
   på treffet som avgjør kampen. Blink og risting slås av når systemet ber om
   redusert bevegelse (`prefers-reduced-motion`).
