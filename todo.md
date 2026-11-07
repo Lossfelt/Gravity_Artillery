@@ -1,8 +1,5 @@
 # TODO - Gravity Artillery
 
-## Diverse
-- [ ] Rydd opp i prosjektet, unødendige filer, funksjoner, etc
-
 ## UI/Controls
 - [ ] Hver spiller har en gi-opp-knapp, hvis begge trykker så telles det som en "Draw"
 
@@ -11,6 +8,7 @@
 - [ ] Solsystemer: hver spiller er et solsystem med tre bebodde planeter i bane rundt en stjerne. Planetene beveger seg og må tas med i beregningen, og hver planet er ett liv.
 
 ## Fullført
+- [X] Rydd opp i prosjektet, unødvendige filer, funksjoner, etc
 - [X] Stjerner og svarte hull plasseres med myk vekting mot midten
 - [X] Flytte input-feltene til sidene av canvas
 - [X] Fikse "hopping" av elementene på skjermen

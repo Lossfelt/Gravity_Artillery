@@ -14,7 +14,7 @@ export type GravityBody = {
   mass: number;
   radius: number;
   color: string;
-  type: 'star' | 'planet' | 'blackhole';
+  type: 'star' | 'blackhole';
   sprite?: string;
 };
 

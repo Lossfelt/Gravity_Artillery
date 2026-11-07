@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { Difficulty } from '../game/ai';
 
 // null = human opponent, otherwise the computer's difficulty
-export type OpponentSetting = Difficulty | null;
+type OpponentSetting = Difficulty | null;
 
 const STORAGE_KEY = 'gravity-artillery:opponent';
 const VALID: Difficulty[] = ['easy', 'normal', 'hard'];

@@ -7,7 +7,7 @@ export type Winner = PlayerNumber | 'draw' | null;
 
 export type Aim = { angle: number };
 
-export type PlayerState = {
+type PlayerState = {
   angle: number;
   ready: boolean;
   lives: number;
@@ -37,8 +37,8 @@ export type GameAction =
   | { type: 'revealWinner' }
   | { type: 'nextRound'; mapSeed: number };
 
-export const START_LIVES = 3;
-export const DEFAULT_ANGLES: Record<PlayerNumber, number> = { 1: 0, 2: 180 };
+const START_LIVES = 3;
+const DEFAULT_ANGLES: Record<PlayerNumber, number> = { 1: 0, 2: 180 };
 
 const initialPlayer = (player: PlayerNumber): PlayerState =>
   ({ angle: DEFAULT_ANGLES[player], ready: false, lives: START_LIVES });
@@ -59,7 +59,7 @@ const mapPlayers = (model: GameModel, fn: (p: PlayerState, n: PlayerNumber) => P
 export const isMatchOver = (model: GameModel) =>
   model.players[1].lives <= 0 || model.players[2].lives <= 0;
 
-export const matchWinner = (model: GameModel): Winner => {
+const matchWinner = (model: GameModel): Winner => {
   const p1Out = model.players[1].lives <= 0;
   const p2Out = model.players[2].lives <= 0;
   if (p1Out && p2Out) return 'draw';

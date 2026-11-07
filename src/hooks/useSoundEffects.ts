@@ -39,7 +39,7 @@ export const useSoundEffects = () => {
       await musicRef.current?.play();
       musicStartedRef.current = true;
     } catch (error) {
-      console.log('Could not start music:', error);
+      console.warn('Could not start music:', error);
     }
   }, [engine]);
 

@@ -2,16 +2,10 @@ import { useState, useEffect } from 'react';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../constants/game';
 import { currentLayout, Layout } from '../utils/layout';
 
-type CanvasSize = {
-  width: number;
-  height: number;
-  scale: number;
-};
+type CanvasSize = { width: number; height: number };
 
 export const useResponsiveCanvas = () => {
-  const [canvasSize, setCanvasSize] = useState<CanvasSize>(() =>
-    calculateCanvasSize()
-  );
+  const [canvasSize, setCanvasSize] = useState<CanvasSize>(calculateCanvasSize);
 
   useEffect(() => {
     let timeoutId: number;
@@ -35,18 +29,17 @@ export const useResponsiveCanvas = () => {
           }
           return prevSize;
         });
-      }, 150); // Increased debounce for better stability
+      }, 150);
     };
 
-    // On mobile: ONLY listen to visualViewport to avoid address bar triggering resize
-    // On desktop: listen to window.resize
+    // Phones listen only to the visual viewport, so the address bar sliding in
+    // and out does not count as a resize
     if (isTouch && window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
     } else {
       window.addEventListener('resize', handleResize);
     }
 
-    // Also listen to orientation change for more reliable detection
     window.addEventListener('orientationchange', handleResize);
 
     return () => {
@@ -94,20 +87,20 @@ function calculateCanvasSize(): CanvasSize {
   let maxHeight: number;
 
   if (layout === 'stacked') {
-    // Mobile Portrait: controls below canvas
-    maxWidth = viewportWidth - 32; // 16px padding on each side
-    maxHeight = viewportHeight - 420; // Reserve space for title, controls below, instructions (reduced)
+    // Phone upright: title above, controls below
+    maxWidth = viewportWidth - 32;
+    maxHeight = viewportHeight - 420;
   } else if (layout === 'compact') {
     // Phone sideways: compact controls on the sides, no title
     maxWidth = viewportWidth - 232; // Two compact panels (~96 px each), gaps and padding
-    maxHeight = viewportHeight - 20; // Title, instructions, and padding (minimized)
+    maxHeight = viewportHeight - 20; // No title, so only padding
   } else {
-    // Desktop: leave space for side controls (400px total), title, and padding
-    maxWidth = viewportWidth - 480; // Controls + padding (reduced for larger canvas)
-    maxHeight = viewportHeight - 220; // Title, instructions, and padding (reduced)
+    // Panels on the sides, title above
+    maxWidth = viewportWidth - 480;
+    maxHeight = viewportHeight - 220;
   }
 
-  // Calculate size maintaining aspect ratio
+  // Fit the board's aspect ratio inside the space left
   let width = maxWidth;
   let height = width / aspectRatio;
 
@@ -116,12 +109,5 @@ function calculateCanvasSize(): CanvasSize {
     width = height * aspectRatio;
   }
 
-  // Calculate scale factor
-  const scale = width / CANVAS_WIDTH;
-
-  return {
-    width: Math.floor(width),
-    height: Math.floor(height),
-    scale
-  };
+  return { width: Math.floor(width), height: Math.floor(height) };
 }

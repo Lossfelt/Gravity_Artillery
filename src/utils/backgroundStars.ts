@@ -14,7 +14,7 @@ const LAYERS: Layer[] = [
 const SEED = 20260411; // The same sky every time
 const SHADOW_SCALE = 1.6; // Radius of a black hole's shadow relative to its radius
 
-export type BackgroundStar = {
+type BackgroundStar = {
   x: number;
   y: number;
   size: number;

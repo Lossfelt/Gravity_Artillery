@@ -10,41 +10,20 @@ import {
   CANVAS_HEIGHT
 } from '../constants/game';
 
-/**
- * Calculate distance between two points
- */
-const getDistance = (x1: number, y1: number, x2: number, y2: number): number => {
-  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-};
+type Planets = { player1: Planet; player2: Planet };
+type BodyType = (typeof BODY_TYPES)[keyof typeof BODY_TYPES];
 
-/**
- * Check if a position is valid (doesn't overlap with existing bodies or players)
- */
-const isValidPosition = (
-  x: number,
-  y: number,
-  radius: number,
-  existingBodies: GravityBody[],
-  playerPlanets: { player1: Planet; player2: Planet }
-): boolean => {
-  // Check distance from player planets
-  const distToPlayer1 = getDistance(x, y, playerPlanets.player1.x, playerPlanets.player1.y);
-  const distToPlayer2 = getDistance(x, y, playerPlanets.player2.x, playerPlanets.player2.y);
+const STAR_TYPES = [BODY_TYPES.BLUE_STAR, BODY_TYPES.WHITE_STAR, BODY_TYPES.RED_STAR];
 
-  if (distToPlayer1 < MIN_PLAYER_DISTANCE + radius || distToPlayer2 < MIN_PLAYER_DISTANCE + radius) {
-    return false;
-  }
+/** Black holes are rare; otherwise one of the three star types. */
+const pickBodyType = (random: Random): BodyType =>
+  random() < BLACK_HOLE_CHANCE ? BODY_TYPES.BLACK_HOLE : STAR_TYPES[Math.floor(random() * STAR_TYPES.length)];
 
-  // Check distance from existing bodies
-  for (const body of existingBodies) {
-    const dist = getDistance(x, y, body.x, body.y);
-    if (dist < MIN_BODY_DISTANCE + radius + body.radius) {
-      return false;
-    }
-  }
-
-  return true;
-};
+/** Far enough from both players and from every body already placed. */
+const isFree = (x: number, y: number, radius: number, bodies: GravityBody[], planets: Planets) =>
+  Math.hypot(x - planets.player1.x, y - planets.player1.y) >= MIN_PLAYER_DISTANCE + radius &&
+  Math.hypot(x - planets.player2.x, y - planets.player2.y) >= MIN_PLAYER_DISTANCE + radius &&
+  bodies.every(body => Math.hypot(x - body.x, y - body.y) >= MIN_BODY_DISTANCE + radius + body.radius);
 
 /**
  * A number from 0 to 1 that is most likely near 0.5: the average of two
@@ -53,87 +32,35 @@ const isValidPosition = (
  */
 const towardsMiddle = (random: Random) => (random() + random()) / 2;
 
-/**
- * Generate a random position within canvas bounds, weighted towards the middle
- */
-const generateRandomPosition = (
-  radius: number,
-  existingBodies: GravityBody[],
-  playerPlanets: { player1: Planet; player2: Planet },
-  random: Random,
-  maxAttempts = 100
-): { x: number; y: number } | null => {
+/** A free position inside the board, weighted towards the middle, or null after maxAttempts. */
+const findPosition = (radius: number, bodies: GravityBody[], planets: Planets, random: Random, maxAttempts: number) => {
   for (let i = 0; i < maxAttempts; i++) {
     const x = radius + towardsMiddle(random) * (CANVAS_WIDTH - 2 * radius);
     const y = radius + towardsMiddle(random) * (CANVAS_HEIGHT - 2 * radius);
-
-    if (isValidPosition(x, y, radius, existingBodies, playerPlanets)) {
-      return { x, y };
-    }
+    if (isFree(x, y, radius, bodies, planets)) return { x, y };
   }
-
   return null;
 };
 
 /**
- * Select a random body type based on probability
+ * Places the stars and black holes. Pass a seeded Random (see createRandom)
+ * to get the same map for the same seed. A body that does not fit is retried
+ * as the smallest star, and left out if that does not fit either.
  */
-const selectRandomBodyType = (random: Random) => {
-  // Check if we should spawn a black hole (rare)
-  if (random() < BLACK_HOLE_CHANCE) {
-    return BODY_TYPES.BLACK_HOLE;
-  }
-
-  // Otherwise, randomly select a star type
-  const starTypes = [BODY_TYPES.BLUE_STAR, BODY_TYPES.WHITE_STAR, BODY_TYPES.RED_STAR];
-  return starTypes[Math.floor(random() * starTypes.length)];
-};
-
-/**
- * Generate an array of random gravitational bodies. Pass a seeded Random
- * (see createRandom) to get the same map for the same seed.
- */
-export const generateGravitationalBodies = (
-  playerPlanets: { player1: Planet; player2: Planet },
-  random: Random
-): GravityBody[] => {
+export const generateGravitationalBodies = (planets: Planets, random: Random): GravityBody[] => {
   const bodies: GravityBody[] = [];
 
   for (let i = 0; i < GRAVITY_BODY_COUNT; i++) {
-    const bodyType = selectRandomBodyType(random);
-    const position = generateRandomPosition(bodyType.radius, bodies, playerPlanets, random);
-
+    let type: BodyType = pickBodyType(random);
+    let position = findPosition(type.radius, bodies, planets, random, 100);
     if (!position) {
-      // If we can't find a valid position, try with a smaller body
-      console.warn(`Could not find valid position for body ${i}, retrying with smaller radius`);
-      const smallerBodyType = BODY_TYPES.RED_STAR; // Use smallest star as fallback
-      const fallbackPosition = generateRandomPosition(smallerBodyType.radius, bodies, playerPlanets, random, 200);
-
-      if (fallbackPosition) {
-        bodies.push({
-          x: fallbackPosition.x,
-          y: fallbackPosition.y,
-          mass: smallerBodyType.mass,
-          radius: smallerBodyType.radius,
-          color: smallerBodyType.color,
-          type: smallerBodyType.type,
-          sprite: smallerBodyType.sprite
-        });
-      } else {
-        console.error(`Failed to place body ${i}`);
-      }
-      continue;
+      type = BODY_TYPES.RED_STAR;
+      position = findPosition(type.radius, bodies, planets, random, 200);
     }
+    if (!position) continue;
 
-    bodies.push({
-      x: position.x,
-      y: position.y,
-      mass: bodyType.mass,
-      radius: bodyType.radius,
-      color: bodyType.color,
-      type: bodyType.type,
-      ...('sprite' in bodyType && { sprite: bodyType.sprite })
-    });
+    const { mass, radius, color } = type;
+    bodies.push({ ...position, mass, radius, color, type: type.type, ...('sprite' in type && { sprite: type.sprite }) });
   }
 
   return bodies;

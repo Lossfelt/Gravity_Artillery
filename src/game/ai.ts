@@ -19,7 +19,7 @@ const NOTHING_DESTROYED = new Set<PlayerNumber>();
 const planetOf = (planets: Planets, player: PlayerNumber) => (player === 1 ? planets.player1 : planets.player2);
 const opponentOf = (player: PlayerNumber): PlayerNumber => (player === 1 ? 2 : 1);
 
-export type ShotResult = { hit: PlayerNumber | null; closest: number };
+type ShotResult = { hit: PlayerNumber | null; closest: number };
 
 /** Flies a shot to the end and reports what it hit and how close it came to the opponent. */
 export const simulateShot = (planets: Planets, bodies: GravityBody[], player: PlayerNumber, aim: Aim): ShotResult => {
