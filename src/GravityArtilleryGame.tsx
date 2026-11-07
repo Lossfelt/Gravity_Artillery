@@ -19,7 +19,7 @@ const GravityArtilleryGame = () => {
   const layout = useLayout();
 
   const [aiDifficulty, setAiDifficulty] = useOpponentSetting();
-  const { model, planets, gravitationalBodies, simulationRef, adjustAngle, adjustPower, toggleReady, nextRound } =
+  const { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound } =
     useGravityGame({ sounds, aiDifficulty });
   useGravityHum(engine, simulationRef, gravitationalBodies);
   const { phase: gameState, winner, players } = model;
@@ -44,7 +44,6 @@ const GravityArtilleryGame = () => {
   const controls = (player: PlayerNumber, compact = false) => player === 2 && aiDifficulty ? (
     <AiPanel
       angle={players[2].angle}
-      power={players[2].power}
       ready={players[2].ready}
       gameState={gameState}
       difficulty={aiDifficulty}
@@ -65,9 +64,7 @@ const GravityArtilleryGame = () => {
       )}
       player={player}
       angle={players[player].angle}
-      power={players[player].power}
       adjustAngle={delta => adjustAngle(player, delta)}
-      adjustPower={delta => adjustPower(player, delta)}
       ready={players[player].ready}
       // Audio starts on the Fire press (a user gesture, which mobile browsers require)
       toggleReady={() => { startAudio(); toggleReady(player); }}
@@ -116,7 +113,7 @@ const GravityArtilleryGame = () => {
       </div>
 
       <p className="text-[var(--ink-dim)] text-xs md:text-sm mt-4 max-w-2xl text-center px-4">
-        Set your launch angle and power, then click Fire. When both players are ready, projectiles will fire simultaneously.
+        Set your launch angle, then click Fire. When both players are ready, projectiles will fire simultaneously.
         Gravitational bodies will bend your projectile's path. Hit the enemy planet three times to win! Playing alone? Choose "Play vs computer" under Player 2.
       </p>
 

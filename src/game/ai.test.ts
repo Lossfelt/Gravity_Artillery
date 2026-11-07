@@ -11,11 +11,11 @@ const star = (x: number, y: number, mass = 8000): GravityBody =>
 
 describe('simulateShot', () => {
   it('hits the opponent with a straight shot in empty space', () => {
-    expect(simulateShot(initialPlanets, [], 2, { angle: 180, power: 100 })).toEqual({ hit: 1, closest: 0 });
+    expect(simulateShot(initialPlanets, [], 2, { angle: 180 })).toEqual({ hit: 1, closest: 0 });
   });
 
   it('reports the closest approach on a miss', () => {
-    const result = simulateShot(initialPlanets, [], 1, { angle: -30, power: 100 });
+    const result = simulateShot(initialPlanets, [], 1, { angle: -30 });
     expect(result.hit).toBeNull();
     expect(result.closest).toBeGreaterThan(25);
   });
@@ -45,7 +45,7 @@ describe('findBestAim', () => {
 });
 
 describe('aimWithError', () => {
-  const best = { angle: 180, power: 100 };
+  const best = { angle: 180 };
 
   it('misses by less on later attempts', () => {
     const spread = (attempt: number) => {
@@ -68,16 +68,15 @@ describe('aimWithError', () => {
       }
       return max;
     };
-    expect(maxError('hard')).toBeLessThanOrEqual(2);
-    expect(maxError('easy')).toBeGreaterThan(2);
+    expect(maxError('hard')).toBeLessThanOrEqual(4);
+    expect(maxError('easy')).toBeGreaterThan(4);
   });
 
   it('keeps aim within the allowed range', () => {
     const random = createRandom(3);
     for (let i = 0; i < 100; i++) {
-      const aim = aimWithError({ angle: 270, power: 150 }, 2, 'easy', 0, random);
+      const aim = aimWithError({ angle: 270 }, 2, 'easy', 0, random);
       expect(Math.abs(toRelativeAngle(2, aim.angle))).toBeLessThanOrEqual(90);
-      expect(aim.power).toBeLessThanOrEqual(150);
     }
   });
 });

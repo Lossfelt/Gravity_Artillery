@@ -63,8 +63,8 @@ export const useSimulation = (params: Params) => {
     sounds?.onLaunch?.(planets.player1.x);
     sounds?.onLaunch?.(planets.player2.x);
     simulationRef.current.projectiles = [
-      createProjectile(planets.player1, aims[1].angle, aims[1].power, 1),
-      createProjectile(planets.player2, aims[2].angle, aims[2].power, 2)
+      createProjectile(planets.player1, aims[1].angle, 1),
+      createProjectile(planets.player2, aims[2].angle, 2)
     ];
     destroyedRef.current = new Set();
     resolvedRef.current = false;

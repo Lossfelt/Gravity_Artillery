@@ -81,17 +81,15 @@ describe('stepFragments', () => {
 });
 
 describe('createProjectile', () => {
-  it('scales launch speed with power', () => {
+  it('launches from the planet edge at the fixed speed', () => {
     const { player1 } = initialPlanets;
-    const full = createProjectile(player1, 0, 100, 1);
-    const half = createProjectile(player1, 0, 50, 1);
-    expect(full.vx).toBeCloseTo(5);
-    expect(half.vx).toBeCloseTo(2.5);
-    expect(half.x).toBeCloseTo(player1.x + 25);
+    const proj = createProjectile(player1, 0, 1);
+    expect(proj.vx).toBeCloseTo(5);
+    expect(proj.x).toBeCloseTo(player1.x + 25);
   });
 
-  it('does not hit its own planet at the lowest power', () => {
-    const proj = createProjectile(initialPlanets.player1, 0, 50, 1);
+  it('does not hit its own planet on the first step', () => {
+    const proj = createProjectile(initialPlanets.player1, 0, 1);
     expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
   });
 });

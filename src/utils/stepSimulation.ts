@@ -9,18 +9,14 @@ import { checkCollision } from './checkCollision';
 
 type PlayerNumber = 1 | 2;
 
-/**
- * Creates a projectile on the edge of a planet. power is in percent of the
- * base projectile speed.
- */
-export const createProjectile = (planet: Planet, angleDeg: number, power: number, player: PlayerNumber): Projectile => {
+/** Creates a projectile on the edge of a planet, at the fixed launch speed. */
+export const createProjectile = (planet: Planet, angleDeg: number, player: PlayerNumber): Projectile => {
   const angleRad = (angleDeg * Math.PI) / 180;
-  const speed = PROJECTILE_SPEED * (power / 100);
   return {
     x: planet.x + Math.cos(angleRad) * PLANET_RADIUS,
     y: planet.y + Math.sin(angleRad) * PLANET_RADIUS,
-    vx: Math.cos(angleRad) * speed,
-    vy: Math.sin(angleRad) * speed,
+    vx: Math.cos(angleRad) * PROJECTILE_SPEED,
+    vy: Math.sin(angleRad) * PROJECTILE_SPEED,
     trail: [],
     player,
     active: true

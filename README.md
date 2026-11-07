@@ -1,6 +1,6 @@
 # Gravity Artillery
 
-*A conflict in the Dark Forest.* To spillere stiller inn vinkel og kraft og skyter samtidig mot hverandres
+*A conflict in the Dark Forest.* To spillere stiller inn vinkel og skyter samtidig mot hverandres
 planet, og stjerner og usynlige svarte hull bøyer banene. Hver planet har tre
 liv. Et skudd kan også slynges tilbake og ødelegge sin egen planet. Med
 «Play vs computer» spiller du alene mot en AI (Easy, Normal eller Hard).
@@ -22,7 +22,7 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 | Sted | Innhold |
 |---|---|
 | `src/game/gameReducer.ts` | Spillflyten som en ren tilstandsmaskin: oppsett, skyting, runde slutt, neste runde |
-| `src/game/aim.ts` | Sikting relativt til motstanderen (0 = rett frem, negativt = opp) og kraft |
+| `src/game/aim.ts` | Sikting relativt til motstanderen (0 = rett frem, negativt = opp) |
 | `src/game/ai.ts` + `src/hooks/useAiOpponent.ts` | AI-motstander: simulerer skudd for å finne beste sikte, og legger på siktefeil etter vanskelighetsgrad |
 | `src/hooks/useSimulation.ts` | Fysikkløkka. Prosjektiler, partikler og fragmenter ligger i en ref, ikke i React-state |
 | `src/hooks/useCanvasRenderer.ts` | Tegneløkka, som leser simuleringen direkte hver frame |
@@ -54,14 +54,20 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   tvers er ofte bredere enn 768 px, men lav, så lav liggende skjerm (under
   500 px) gir kompakte paneler på sidene uten tittel.
 - **Lyd med Web Audio** (`src/audio/`). Hver lyd panoreres dit den skjer på
-  skjermen. Utskytingen er et klipp laget med ElevenLabs, med et syntetisert sus
-  som reserve. En dyp brumming (sagtann gjennom lavpassfilter) stiger når et
+  skjermen. Utskytingen er et klipp laget med ElevenLabs: et elektromagnetisk
+  sus som stiger i tonehøyde, som en spolekanon som akselererer skuddet. Et
+  syntetisert sus spilles til klippet er lastet. En dyp brumming (sagtann gjennom lavpassfilter) stiger når et
   skudd passerer nær en stjerne eller et svart hull. Treffet som avgjør kampen
   spilles langsommere og dypere. Lydene pauses når fanen er skjult.
 - **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film
   på treffet som avgjør kampen. Blink og risting slås av når systemet ber om
   redusert bevegelse (`prefers-reduced-motion`).
-- **AI-en jukser ikke med motstanderens sikte.** Den ser bare stjernekartet.
+- **Bare vinkel, ingen kraft.** Spillet hadde en tid kraft fra 50 til 150 %.
+  En simulering av 150 kart viste at nesten alle kart kunne treffes med de
+  fleste kraftnivåer bare ved å justere vinkelen, så kraft ga en ekstra knapp,
+  men ikke et reelt valg. Alle skudd går derfor med samme fart.
+- **AI-en jukser ikke med motstanderens sikte.** Den ser bare stjernekartet,
+  prøver alle hele grader og sikter midt i det bredeste treffvinduet.
   Siktefeilen krymper for hvert skudd på samme kart, omtrent som når et
   menneske justerer seg etter sporet. Målt over 60 kart treffer den i snitt
   etter ca. 8 skudd på Easy, 4 på Normal og 2-3 på Hard.

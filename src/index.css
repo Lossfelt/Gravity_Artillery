@@ -94,22 +94,6 @@ body {
     font-variant-numeric: tabular-nums;
   }
 
-  .meter {
-    height: 4px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.08);
-    overflow: hidden;
-  }
-
-  .meter > span {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
-    transition: width 0.12s ease-out;
-  }
-
   .btn {
     display: inline-flex;
     align-items: center;
@@ -184,11 +168,5 @@ body {
   .link-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .meter > span {
-    transition: none;
   }
 }

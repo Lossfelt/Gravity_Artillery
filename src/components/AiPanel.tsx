@@ -1,12 +1,11 @@
 import { GameState } from '../types/game';
 import { Difficulty } from '../game/ai';
 import { toRelativeAngle } from '../game/aim';
-import { accentStyle, powerFill } from './theme';
+import { accentStyle } from './theme';
 import { Check } from './icons';
 
 type AiPanelProps = {
   angle: number;
-  power: number;
   ready: boolean;
   gameState: GameState;
   difficulty: Difficulty;
@@ -30,7 +29,6 @@ const statusText = (ready: boolean, gameState: GameState) => {
 /** Player 2's panel when the computer plays. Shows its aim and lets you pick difficulty. */
 export const AiPanel = ({
   angle,
-  power,
   ready,
   gameState,
   difficulty,
@@ -59,18 +57,10 @@ export const AiPanel = ({
         ))}
       </div>
 
-      <p className={`readout ${text} mb-1`}>
+      <p className={`readout ${text} ${compact ? 'mb-2' : 'mb-4'}`}>
         <span className="readout-label">Angle</span>
         <span className="readout-value">{toRelativeAngle(2, angle)}&deg;</span>
       </p>
-      <p className={`readout ${text} mb-1`}>
-        <span className="readout-label">Power</span>
-        <span className="readout-value">{power}%</span>
-      </p>
-      <div className={`meter ${compact ? 'mb-2' : 'mb-4'}`} aria-hidden="true">
-        <span style={{ width: `${powerFill(power)}%` }} />
-      </div>
-
       <p
         className={`btn flex w-full cursor-default ${ready ? 'btn-ready' : 'chip'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
         aria-live="polite"

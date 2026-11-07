@@ -106,13 +106,13 @@ export const drawPlanets = (
   }
 };
 
-// The aim line grows with launch power (40 px at 100 %)
-const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle, power }: Aim) => {
-  const lineLength = 40 * (power / 100);
+const AIM_LINE_LENGTH = 40;
+
+const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle }: Aim) => {
   const angleRad = (angle * Math.PI) / 180;
   ctx.beginPath();
   ctx.moveTo(planet.x, planet.y);
-  ctx.lineTo(planet.x + Math.cos(angleRad) * lineLength, planet.y + Math.sin(angleRad) * lineLength);
+  ctx.lineTo(planet.x + Math.cos(angleRad) * AIM_LINE_LENGTH, planet.y + Math.sin(angleRad) * AIM_LINE_LENGTH);
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 2;
   ctx.stroke();

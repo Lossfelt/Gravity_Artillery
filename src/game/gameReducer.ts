@@ -1,15 +1,14 @@
 import { GameState } from '../types/game';
 import { randomSeed } from '../utils/random';
-import { adjustAim, adjustPower, DEFAULT_POWER } from './aim';
+import { adjustAim } from './aim';
 
 export type PlayerNumber = 1 | 2;
 export type Winner = PlayerNumber | 'draw' | null;
 
-export type Aim = { angle: number; power: number };
+export type Aim = { angle: number };
 
 export type PlayerState = {
   angle: number;
-  power: number;
   ready: boolean;
   lives: number;
 };
@@ -28,10 +27,9 @@ export type GameModel = {
 };
 
 export type GameAction =
-  | { type: 'setAim'; player: PlayerNumber; angle: number; power: number }
+  | { type: 'setAim'; player: PlayerNumber; angle: number }
   // Relative change in degrees (negative = up), applied to the current angle
   | { type: 'adjustAngle'; player: PlayerNumber; delta: number }
-  | { type: 'adjustPower'; player: PlayerNumber; delta: number }
   // mapSeed is used if this toggle starts the next round (keeps the reducer pure)
   | { type: 'toggleReady'; player: PlayerNumber; mapSeed: number }
   | { type: 'planetDestroyed'; player: PlayerNumber }
@@ -43,7 +41,7 @@ export const START_LIVES = 3;
 export const DEFAULT_ANGLES: Record<PlayerNumber, number> = { 1: 0, 2: 180 };
 
 const initialPlayer = (player: PlayerNumber): PlayerState =>
-  ({ angle: DEFAULT_ANGLES[player], power: DEFAULT_POWER, ready: false, lives: START_LIVES });
+  ({ angle: DEFAULT_ANGLES[player], ready: false, lives: START_LIVES });
 
 export const createInitialModel = (mapSeed = randomSeed()): GameModel => ({
   phase: 'setup',
@@ -87,7 +85,6 @@ const nextRound = (model: GameModel, mapSeed: number): GameModel => {
     phase: 'setup',
     players: mapPlayers(model, (p, n) => ({
       angle: DEFAULT_ANGLES[n],
-      power: DEFAULT_POWER,
       ready: false,
       lives: resetLives ? START_LIVES : p.lives
     })),
@@ -125,14 +122,10 @@ const endRound = (model: GameModel): GameModel => {
 export const gameReducer = (model: GameModel, action: GameAction): GameModel => {
   switch (action.type) {
     case 'setAim':
-      return updatePlayer(model, action.player, { angle: action.angle, power: action.power });
+      return updatePlayer(model, action.player, { angle: action.angle });
     case 'adjustAngle': {
       const current = model.players[action.player].angle;
       return updatePlayer(model, action.player, { angle: adjustAim(action.player, current, action.delta) });
-    }
-    case 'adjustPower': {
-      const current = model.players[action.player].power;
-      return updatePlayer(model, action.player, { power: adjustPower(current, action.delta) });
     }
     case 'toggleReady':
       return toggleReady(model, action.player, action.mapSeed);
