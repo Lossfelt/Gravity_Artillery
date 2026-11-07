@@ -1,4 +1,4 @@
-import { ExplosionParticle, GravityBody, Planet, PlanetFragment, Projectile } from '../types/game';
+import { ExplosionParticle, GravityBody, Impact, Planet, PlanetFragment, Projectile } from '../types/game';
 import { CANVAS_HEIGHT, CANVAS_WIDTH, PLANET_RADIUS, PROJECTILE_SPEED } from '../constants/game';
 import { calculateGravity } from './calculateGravity';
 import { checkCollision } from './checkCollision';
@@ -92,4 +92,16 @@ export const stepFragments = (fragments: PlanetFragment[], deltaTime: number) =>
     if (onScreen) fragments[kept++] = fragment;
   }
   fragments.length = kept;
+};
+
+// How long an impact lives, in physics steps (1 s)
+export const IMPACT_STEPS = 60;
+
+export const stepImpacts = (impacts: Impact[], deltaTime: number) => {
+  let kept = 0;
+  for (const impact of impacts) {
+    impact.age += deltaTime;
+    if (impact.age < IMPACT_STEPS) impacts[kept++] = impact;
+  }
+  impacts.length = kept;
 };

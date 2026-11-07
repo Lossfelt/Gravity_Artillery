@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ExplosionParticle, GravityBody, PlanetFragment, Projectile } from '../types/game';
 import { initialPlanets } from '../constants/game';
-import { createProjectile, stepFragments, stepParticles, stepProjectile } from './stepSimulation';
+import { createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
 
 const projectile = (overrides: Partial<Projectile>): Projectile => ({
   x: 500, y: 300, vx: 0, vy: 0, trail: [], player: 1, active: true, ...overrides
@@ -93,5 +93,17 @@ describe('createProjectile', () => {
   it('does not hit its own planet at the lowest power', () => {
     const proj = createProjectile(initialPlanets.player1, 0, 50, 1);
     expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
+  });
+});
+
+describe('stepImpacts', () => {
+  it('ages impacts and removes them after a second', () => {
+    const impacts = [
+      { x: 0, y: 0, age: 0, color: '255, 0, 0', strength: 1 },
+      { x: 0, y: 0, age: 59.5, color: '255, 0, 0', strength: 1 }
+    ];
+    stepImpacts(impacts, 1);
+    expect(impacts).toHaveLength(1);
+    expect(impacts[0].age).toBe(1);
   });
 });

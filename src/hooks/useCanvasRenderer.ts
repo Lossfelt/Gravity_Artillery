@@ -12,6 +12,7 @@ import {
   drawPlanets
 } from '../utils/drawScene';
 import { TrailPaths, drawProjectiles } from '../utils/drawProjectiles';
+import { drawFlash, drawShockwaves, shakeOffset } from '../utils/drawImpacts';
 
 type Params = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -87,13 +88,34 @@ export const useCanvasRenderer = (params: Params) => {
       drawPlanets(ctx, p.planets, p.destroyed, sprites, p.lives);
       if (p.gameState === 'setup') drawAimLines(ctx, p.planets, p.aims);
       drawProjectiles(ctx, simulation.projectiles, trailPaths);
+      drawShockwaves(ctx, simulation.impacts);
       drawParticles(ctx, simulation.explosionParticles);
       drawFragments(ctx, simulation.planetFragments, sprites);
+      if (!reducedMotion.matches) drawFlash(ctx, simulation.impacts);
+    };
+
+    // Screen shake moves the whole canvas element, so no blank edges show.
+    // Skipped when the player has asked the system for reduced motion.
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let shaking = false;
+    const applyShake = (canvas: HTMLCanvasElement) => {
+      const offset = reducedMotion.matches ? null : shakeOffset(paramsRef.current.simulationRef.current.impacts);
+      if (offset) {
+        canvas.style.transform = `translate(${offset.dx.toFixed(1)}px, ${offset.dy.toFixed(1)}px)`;
+        shaking = true;
+      } else if (shaking) {
+        canvas.style.transform = '';
+        shaking = false;
+      }
     };
 
     const tick = (now: number) => {
-      const ctx = paramsRef.current.canvasRef.current?.getContext('2d');
-      if (ctx) draw(ctx, now);
+      const canvas = paramsRef.current.canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (canvas && ctx) {
+        draw(ctx, now);
+        applyShake(canvas);
+      }
       frameId = requestAnimationFrame(tick);
     };
 

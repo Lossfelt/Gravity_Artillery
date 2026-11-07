@@ -69,4 +69,14 @@ export type Simulation = {
   projectiles: Projectile[];
   explosionParticles: ExplosionParticle[];
   planetFragments: PlanetFragment[];
+  impacts: Impact[];
+};
+
+// A planet being hit. Drives the shockwave, flash and screen shake.
+export type Impact = {
+  x: number;
+  y: number;
+  age: number; // Physics steps since the hit
+  color: string; // "r, g, b"
+  strength: number; // 1 for a normal hit, more for the match-deciding hit
 };

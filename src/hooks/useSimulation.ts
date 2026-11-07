@@ -3,7 +3,7 @@ import { GravityBody, Planet, Simulation } from '../types/game';
 import { Aim, GameAction, PlayerNumber } from '../game/gameReducer';
 import { createExplosion } from '../utils/createExplosion';
 import { createPlanetFragments } from '../utils/createPlanetFragments';
-import { createProjectile, stepFragments, stepParticles, stepProjectile } from '../utils/stepSimulation';
+import { createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from '../utils/stepSimulation';
 import { consumeSteps } from '../utils/fixedTimestep';
 
 type Planets = { player1: Planet; player2: Planet };
@@ -14,13 +14,24 @@ type Params = {
   aims: Record<PlayerNumber, Aim>;
   planets: Planets;
   gravitationalBodies: GravityBody[];
+  lives: Record<PlayerNumber, number>;
   dispatch: Dispatch<GameAction>;
   onExplosion?: () => void;
 };
 
+// The hit that ends the match plays in slow motion for a moment
+const SLOW_MOTION_MS = 1500;
+const SLOW_MOTION_SCALE = 0.3;
+const DECISIVE_STRENGTH = 1.6;
+
 const planetOf = (planets: Planets, player: PlayerNumber) => (player === 1 ? planets.player1 : planets.player2);
 
-const emptySimulation = (): Simulation => ({ projectiles: [], explosionParticles: [], planetFragments: [] });
+const emptySimulation = (): Simulation =>
+  ({ projectiles: [], explosionParticles: [], planetFragments: [], impacts: [] });
+
+// "#4287f5" -> "66, 135, 245"
+const hexToRgb = (hex: string) =>
+  [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(', ');
 
 /**
  * Runs projectiles, explosions and fragments in a fixed-timestep loop outside
@@ -33,6 +44,7 @@ export const useSimulation = (params: Params) => {
   const resolvedRef = useRef(true);
   const destroyedRef = useRef(new Set<PlayerNumber>());
   const latestRef = useRef(params);
+  const slowMotionUntilRef = useRef(0);
 
   useEffect(() => {
     latestRef.current = params;
@@ -61,6 +73,17 @@ export const useSimulation = (params: Params) => {
     latestRef.current.onExplosion?.();
     simulation.explosionParticles.push(...createExplosion(planet.x, planet.y));
     simulation.planetFragments.push(...createPlanetFragments(planet));
+
+    const decisive = latestRef.current.lives[player] <= 1;
+    simulation.impacts.push({
+      x: planet.x,
+      y: planet.y,
+      age: 0,
+      color: hexToRgb(planet.color),
+      strength: decisive ? DECISIVE_STRENGTH : 1
+    });
+    if (decisive) slowMotionUntilRef.current = performance.now() + SLOW_MOTION_MS;
+
     destroyedRef.current.add(player);
     dispatch({ type: 'planetDestroyed', player });
   }, [dispatch]);
@@ -88,7 +111,10 @@ export const useSimulation = (params: Params) => {
     let accumulatorMs = 0;
 
     const tick = (now: number) => {
-      const consumed = consumeSteps(accumulatorMs, lastTime === null ? 0 : now - lastTime);
+      // Slow motion runs fewer physics steps per real second; the physics itself is unchanged
+      const timeScale = now < slowMotionUntilRef.current ? SLOW_MOTION_SCALE : 1;
+      const elapsed = lastTime === null ? 0 : now - lastTime;
+      const consumed = consumeSteps(accumulatorMs, elapsed * timeScale);
       accumulatorMs = consumed.accumulatorMs;
       lastTime = now;
 
@@ -96,6 +122,7 @@ export const useSimulation = (params: Params) => {
         const simulation = simulationRef.current;
         stepParticles(simulation.explosionParticles, 1);
         stepFragments(simulation.planetFragments, 1);
+        stepImpacts(simulation.impacts, 1);
         if (!resolvedRef.current) stepRound();
       }
       frameId = requestAnimationFrame(tick);

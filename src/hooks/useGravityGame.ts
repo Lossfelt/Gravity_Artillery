@@ -29,6 +29,7 @@ export const useGravityGame = ({ onExplosion, aiDifficulty = null }: UseGravityG
     shotNumber: model.shotNumber,
     roundNumber: model.roundNumber,
     aims: { 1: model.players[1], 2: model.players[2] },
+    lives: { 1: model.players[1].lives, 2: model.players[2].lives },
     planets,
     gravitationalBodies,
     dispatch,

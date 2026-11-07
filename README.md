@@ -39,6 +39,9 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   `requestAnimationFrame`-løkker. React rendrer bare ved knappetrykk og når
   runden endrer tilstand. Dette var nødvendig for god ytelse på mobil.
 - **Hele prosjektilsporet beholdes** og bygges opp gradvis i en `Path2D`.
+- **Treff har tyngde:** sjokkbølge, kort blink og skjermristing, og sakte film
+  på treffet som avgjør kampen. Blink og risting slås av når systemet ber om
+  redusert bevegelse (`prefers-reduced-motion`).
 - **AI-en jukser ikke med motstanderens sikte.** Den ser bare stjernekartet.
   Siktefeilen krymper for hvert skudd på samme kart, omtrent som når et
   menneske justerer seg etter sporet. Målt over 60 kart treffer den i snitt
