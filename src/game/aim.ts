@@ -14,9 +14,17 @@ export const toRelativeAngle = (player: PlayerNumber, worldAngle: number) =>
 export const toWorldAngle = (player: PlayerNumber, relativeAngle: number) =>
   BASE_ANGLE[player] + relativeAngle * MIRROR[player];
 
+// Aim goes in tenths of a degree. Rounding after every step keeps sums like
+// 0.1 + 0.2 from drifting into 0.30000000000000004.
+const toTenths = (degrees: number) => Math.round(degrees * 10) / 10 + 0;
+
 /** Changes a player's aim by delta degrees (negative = up), clamped to the allowed range. */
 export const adjustAim = (player: PlayerNumber, worldAngle: number, delta: number) => {
-  const relative = Math.max(-AIM_LIMIT, Math.min(AIM_LIMIT, toRelativeAngle(player, worldAngle) + delta));
+  const relative = toTenths(Math.max(-AIM_LIMIT, Math.min(AIM_LIMIT, toRelativeAngle(player, worldAngle) + delta)));
   return toWorldAngle(player, relative);
 };
+
+/** The aim as the player sees it, always with one decimal so the readout does not jump in width. */
+export const formatAim = (player: PlayerNumber, worldAngle: number) =>
+  `${toTenths(toRelativeAngle(player, worldAngle)).toFixed(1)}°`;
 

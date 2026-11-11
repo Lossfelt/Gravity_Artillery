@@ -1,6 +1,6 @@
 import { GameState } from '../types/game';
 import { Difficulty } from '../game/ai';
-import { toRelativeAngle } from '../game/aim';
+import { formatAim } from '../game/aim';
 import { accentStyle } from './theme';
 import { Check } from './icons';
 
@@ -59,7 +59,7 @@ export const AiPanel = ({
 
       <p className={`readout ${text} ${compact ? 'mb-2' : 'mb-4'}`}>
         <span className="readout-label">Angle</span>
-        <span className="readout-value">{toRelativeAngle(2, angle)}&deg;</span>
+        <span className="readout-value">{formatAim(2, angle)}</span>
       </p>
       <p
         className={`btn flex w-full cursor-default ${ready ? 'btn-ready' : 'chip'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}

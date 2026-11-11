@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialModel, GameAction, gameReducer, GameModel } from './gameReducer';
+import { formatAim } from './aim';
 
 const run = (model: GameModel, ...actions: GameAction[]) => actions.reduce(gameReducer, model);
 const fire: GameAction[] = [
@@ -93,6 +94,14 @@ describe('gameReducer', () => {
 });
 
 describe('adjustAngle', () => {
+  it('steps in tenths of a degree without rounding drift', () => {
+    let model = createInitialModel(1);
+    for (let i = 0; i < 3; i++) model = gameReducer(model, { type: 'adjustAngle', player: 1, delta: 0.1 });
+    expect(model.players[1].angle).toBe(0.3);
+    model = run(model, { type: 'adjustAngle', player: 2, delta: -0.1 }, { type: 'adjustAngle', player: 2, delta: -0.2 });
+    expect(model.players[2].angle).toBe(180.3);
+  });
+
   it('applies several quick adjustments on top of each other', () => {
     const model = run(createInitialModel(1),
       { type: 'adjustAngle', player: 2, delta: -5 },
@@ -106,5 +115,13 @@ describe('adjustAngle', () => {
     let model = createInitialModel(1);
     for (let i = 0; i < 30; i++) model = gameReducer(model, { type: 'adjustAngle', player: 1, delta: 5 });
     expect(model.players[1].angle).toBe(90);
+  });
+});
+
+describe('formatAim', () => {
+  it('always shows one decimal, relative to facing the opponent', () => {
+    expect(formatAim(1, 0)).toBe('0.0°');
+    expect(formatAim(1, -12.3)).toBe('-12.3°');
+    expect(formatAim(2, 180.3)).toBe('-0.3°');
   });
 });
