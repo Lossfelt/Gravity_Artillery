@@ -39,7 +39,7 @@ const GravityArtilleryGame = () => {
   const controlsOnSides = layout !== 'stacked';
   const isCompact = layout === 'compact';
 
-  const switchClass = `link-btn block w-full mt-2 ${isCompact ? 'text-[10px]' : 'text-xs'}`;
+  const switchClass = `link-btn block w-full ${isCompact ? 'mt-1 py-2 text-[11px]' : 'mt-2 text-xs'}`;
 
   const controls = (player: PlayerNumber, compact = false) => player === 2 && aiDifficulty ? (
     <AiPanel

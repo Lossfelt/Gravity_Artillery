@@ -50,7 +50,8 @@ export const PlayerControls = ({
 }: PlayerControlsProps) => {
   const locked = ready || gameState !== 'setup';
   const text = compact ? 'text-xs' : 'text-sm md:text-base';
-  const width = compact ? 'w-16' : 'w-20 md:w-24';
+  // Compact: two 44 px columns, the usual minimum for a finger on a phone
+  const width = compact ? 'w-[5.75rem]' : 'w-20 md:w-24';
   const [fine, setFine] = useState(false);
 
   return (
@@ -63,14 +64,14 @@ export const PlayerControls = ({
           <span className="readout-value">{formatAim(player, angle)}</span>
         </p>
         {/* Compact: a 2x2 grid (up on top, down below) to save height on a phone held sideways */}
-        <div className={compact ? `grid grid-cols-2 gap-1 mx-auto ${width}` : 'flex flex-col items-center gap-1 md:gap-1.5'}>
+        <div className={compact ? `grid grid-cols-2 gap-1.5 mx-auto ${width}` : 'flex flex-col items-center gap-1 md:gap-1.5'}>
           {angleSteps(fine).map(step => (
             <button
               key={step.key}
               onClick={() => adjustAngle(step.delta)}
               disabled={locked}
               aria-label={step.label}
-              className={`btn btn-step ${compact ? 'py-1 text-sm' : `${width} py-1.5 md:py-2 text-base md:text-lg`}`}
+              className={`btn btn-step ${compact ? 'h-11 text-base' : `${width} py-1.5 md:py-2 text-base md:text-lg`}`}
             >
               {step.icon}
             </button>
@@ -81,7 +82,7 @@ export const PlayerControls = ({
           disabled={locked}
           aria-pressed={fine}
           title="Steps of 1° and 0.1° instead of 5° and 1°"
-          className={`btn btn-step block mx-auto ${width} ${compact ? 'mt-1 py-0.5 text-[10px]' : 'mt-1.5 md:mt-2 py-1 text-xs'}`}
+          className={`btn btn-step block mx-auto ${width} ${compact ? 'mt-1.5 h-9 text-xs' : 'mt-1.5 md:mt-2 py-1 text-xs'}`}
         >
           Fine 0.1°
         </button>
@@ -90,7 +91,7 @@ export const PlayerControls = ({
       <button
         onClick={toggleReady}
         disabled={gameState === 'firing'}
-        className={`btn flex w-full ${ready ? 'btn-ready' : 'btn-primary'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
+        className={`btn flex w-full ${ready ? 'btn-ready' : 'btn-primary'} ${compact ? 'h-10 px-2 text-sm' : 'py-2 px-4 text-sm md:text-base'}`}
       >
         {actionContent(ready, gameState)}
       </button>

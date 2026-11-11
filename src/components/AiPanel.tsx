@@ -50,7 +50,7 @@ export const AiPanel = ({
             onClick={() => setDifficulty(value)}
             disabled={locked}
             aria-pressed={difficulty === value}
-            className={`btn btn-step ${compact ? 'py-0.5 px-2 text-xs' : 'py-1 px-3 text-sm'}`}
+            className={`btn btn-step ${compact ? 'min-h-9 px-2 text-sm' : 'py-1 px-3 text-sm'}`}
           >
             {label}
           </button>
@@ -62,7 +62,7 @@ export const AiPanel = ({
         <span className="readout-value">{formatAim(2, angle)}</span>
       </p>
       <p
-        className={`btn flex w-full cursor-default ${ready ? 'btn-ready' : 'chip'} ${compact ? 'py-1 px-2 text-xs' : 'py-2 px-4 text-sm md:text-base'}`}
+        className={`btn flex w-full cursor-default ${ready ? 'btn-ready' : 'chip'} ${compact ? 'py-1.5 px-2 text-sm' : 'py-2 px-4 text-sm md:text-base'}`}
         aria-live="polite"
       >
         {ready && <Check />}
@@ -72,7 +72,7 @@ export const AiPanel = ({
       <button
         onClick={onSwitchToHuman}
         disabled={locked}
-        className={`link-btn block w-full mt-2 ${compact ? 'text-[10px]' : 'text-xs'}`}
+        className={`link-btn block w-full ${compact ? 'mt-1 py-2 text-[11px]' : 'mt-2 text-xs'}`}
       >
         Play vs human
       </button>

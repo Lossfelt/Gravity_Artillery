@@ -92,7 +92,7 @@ function calculateCanvasSize(): CanvasSize {
     maxHeight = viewportHeight - 420;
   } else if (layout === 'compact') {
     // Phone sideways: compact controls on the sides, no title
-    maxWidth = viewportWidth - 232; // Two compact panels (~96 px each), gaps and padding
+    maxWidth = viewportWidth - 260; // Two compact panels (110 px each), gaps and padding
     maxHeight = viewportHeight - 20; // No title, so only padding
   } else {
     // Panels on the sides, title above
