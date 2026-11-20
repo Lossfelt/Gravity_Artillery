@@ -15,11 +15,11 @@ const DRAW_ACCENT = { '--accent': '#9b7bff' } as CSSProperties;
 const victoryMessage = (lives: number | null) => {
   switch (lives) {
     case 1:
-      return 'Their civilization barely survives, on a world still burning.';
+      return 'But at terrible cost. Scattered colonies are all that remain, to rebuild civilization among the shattered remnants of empire.';
     case 2:
-      return 'Their civilization endures, but victory has left a scar.';
+      return 'Much was lost, but all can be rebuilt with the resources acquired from liberate systems.';
     default:
-      return 'Their civilization continues, on the backs of desolated systems.';
+      return 'Swift like a nova, they won the war before their opponent knew it had begun.';
   }
 };
 
