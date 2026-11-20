@@ -98,7 +98,13 @@ const GravityArtilleryGame = () => {
               displayWidth={displayWidth}
               displayHeight={displayHeight}
             />
-            {winner !== null && <GameOverOverlay winner={winner} onPlayAgain={nextRound} />}
+            {winner !== null && (
+              <GameOverOverlay
+                winner={winner}
+                winnerLives={winner === 'draw' ? null : players[winner].lives}
+                onPlayAgain={nextRound}
+              />
+            )}
           </div>
 
           {!controlsOnSides && (
