@@ -13,6 +13,13 @@ export const PROJECTILE_SPEED = 5;
 // shot caught in a long orbit cannot hold up the round
 export const MAX_FLIGHT_STEPS = 600;
 
+// Special shots: a homing shot steers towards the enemy planet once it is
+// within range, a splitter fires three shots this many degrees apart, a phase
+// shot ignores the stars' pull (black holes still bend it)
+export const HOMING_RANGE = 250;
+export const HOMING_PULL = 0.15;
+export const SPLIT_ANGLE = 3;
+
 export const initialPlanets: { player1: Planet; player2: Planet } = {
   player1: {
     x: 50,

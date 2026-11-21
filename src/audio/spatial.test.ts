@@ -5,7 +5,7 @@ import { GravityBody, Projectile } from '../types/game';
 
 const star: GravityBody = { x: 500, y: 300, mass: 8000, radius: 18, color: '#ffffff', type: 'star' };
 const projectileAt = (x: number, y: number, active = true): Projectile =>
-  ({ x, y, vx: 0, vy: 0, trail: [], player: 1, active });
+  ({ x, y, vx: 0, vy: 0, trail: [], player: 1, active, kind: 'standard' });
 
 describe('panFor', () => {
   it('places sounds left, centre and right without going fully into one ear', () => {

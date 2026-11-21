@@ -148,6 +148,33 @@ describe('match statistics', () => {
   });
 });
 
+describe('special shots', () => {
+  const armed = () => createInitialModel(1, { 1: 3, 2: 3 }, { 1: { homing: 1, splitter: 0, phase: 2 } });
+
+  it('uses up the chosen shot when fired, then goes back to standard', () => {
+    const model = run(armed(), { type: 'selectShot', player: 1, shot: 'homing' }, ...fire);
+    expect(model.firedShots).toEqual({ 1: 'homing', 2: 'standard' });
+    expect(model.players[1].ammo).toEqual({ homing: 0, splitter: 0, phase: 2 });
+    expect(model.players[1].shot).toBe('standard');
+  });
+
+  it('cannot choose a shot there is no ammunition for', () => {
+    expect(run(armed(), { type: 'selectShot', player: 1, shot: 'splitter' }).players[1].shot).toBe('standard');
+    expect(run(createInitialModel(1), { type: 'selectShot', player: 2, shot: 'phase' }).players[2].shot).toBe('standard');
+  });
+
+  it('cannot change the shot after pressing Fire', () => {
+    const model = run(armed(), fire[0], { type: 'selectShot', player: 1, shot: 'phase' });
+    expect(model.players[1].shot).toBe('standard');
+  });
+
+  it('keeps the ammunition left between rounds', () => {
+    const model = run(armed(), { type: 'selectShot', player: 1, shot: 'phase' }, ...fire,
+      { type: 'planetDestroyed', player: 2, shooter: 1 }, { type: 'roundEnded' }, { type: 'nextRound', mapSeed: 4 });
+    expect(model.players[1].ammo.phase).toBe(1);
+  });
+});
+
 describe('adjustAngle', () => {
   it('steps in tenths of a degree without rounding drift', () => {
     let model = createInitialModel(1);

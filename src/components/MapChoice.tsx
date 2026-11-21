@@ -1,4 +1,6 @@
 import { MapReport, MapTier } from '../game/mapScouting';
+import { Reward } from '../game/campaign';
+import { SHOT_INFO } from './shots';
 import { MapChoices } from '../hooks/useMapScouting';
 import { MapOptions } from '../utils/generateGravitationalBodies';
 import { MapPreview } from './MapPreview';
@@ -8,8 +10,10 @@ type MapChoiceProps = {
   title: string;
   choices: MapChoices | null;
   map: MapOptions;
-  // Reward for the harder map: a life, a note that lives are full, or nothing at all
-  reward: 'life' | 'full' | null;
+  // Whether this choice pays a reward (the first map after a win)
+  rewardRound: boolean;
+  // What the harder map pays, by its seed
+  rewardFor: (seed: number) => Reward | null;
   onChoose: (report: MapReport, harder: boolean) => void;
   onMenu: () => void;
   compact?: boolean;
@@ -29,13 +33,15 @@ const Pips = ({ count }: { count: number }) => (
   </span>
 );
 
-const RewardLine = ({ reward }: { reward: MapChoiceProps['reward'] }) => {
-  if (reward === 'life') return <span className="text-[#ff9db0]">Reward: +<LivesRow lives={1} /></span>;
-  if (reward === 'full') return <span className="text-[var(--ink-dim)]">Lives full, no reward</span>;
+const RewardLine = ({ reward }: { reward: Reward | null }) => {
+  if (reward?.kind === 'life') return <span className="text-[#ff9db0]">Reward: +<LivesRow lives={1} /></span>;
+  if (reward?.kind === 'shot') {
+    return <span className="text-[var(--accent)]" title={SHOT_INFO[reward.shot].hint}>Reward: +1 {SHOT_INFO[reward.shot].label} shot</span>;
+  }
   return <span className="text-[var(--ink-dim)]">No reward</span>;
 };
 
-export const MapChoice = ({ title, choices, map, reward, onChoose, onMenu, compact = false }: MapChoiceProps) => (
+export const MapChoice = ({ title, choices, map, rewardRound, rewardFor, onChoose, onMenu, compact = false }: MapChoiceProps) => (
   <Modal title={title} compact={compact} wide>
     {choices === null ? (
       <p className={`text-[var(--ink-dim)] ${compact ? 'py-6' : 'py-12'}`} aria-live="polite">Scouting the systems…</p>
@@ -56,9 +62,9 @@ export const MapChoice = ({ title, choices, map, reward, onChoose, onMenu, compa
                 {tier.label}
                 <Pips count={tier.pips} />
               </span>
-              {reward !== null && (
+              {rewardRound && (
                 <span className={`px-1 font-normal ${compact ? 'text-[11px]' : 'text-xs pb-1'}`}>
-                  {harder ? <RewardLine reward={reward} /> : <RewardLine reward={null} />}
+                  <RewardLine reward={harder ? rewardFor(report.seed) : null} />
                 </span>
               )}
             </button>

@@ -17,10 +17,10 @@ En kjede av 8 systemer mot datamaskinen. Enkeltkamp blir igjen som eget valg i s
 - [X] Ved systemstart etter en seier gir det vanskeligste kartet +1 liv (ingenting med fulle liv)
 
 ### Steg 3: spesialprosjektiler (få av hver)
-- [ ] Belønning ved systemstart blir +1 liv eller et spesialprosjektil (med fulle liv: prosjektil)
-- [ ] Tungt skudd: halvparten så påvirket av gravitasjon
-- [ ] Splitter: tre skudd med ±3° spredning
-- [ ] Faseskudd: går gjennom stjerner, men ikke svarte hull
+- [X] Belønning ved systemstart blir +1 liv eller et spesialprosjektil (med fulle liv: prosjektil)
+- [X] Søkende skudd: svinger mot fiendeplaneten innenfor 250 px (erstattet «tungt skudd», som nesten ikke hjalp)
+- [X] Splitter: tre skudd med ±3° spredning
+- [X] Faseskudd: ikke påvirket av stjernenes tyngdekraft, bare svarte hull (skudd går allerede gjennom stjerner)
 
 ### Steg 4: sjefer og ferdiglagde kart
 - [ ] Sjefer i system 4 og 8, med egne regler (f.eks. 5 liv, to skudd per runde, planet i bane)

@@ -1,6 +1,8 @@
 import { Difficulty } from './ai';
 import { START_LIVES, Winner } from './gameReducer';
 import { MapOptions } from '../utils/generateGravitationalBodies';
+import { Ammo, SpecialShot } from '../types/game';
+import { createRandom } from '../utils/random';
 
 // A campaign is a chain of matches against the computer. Your lives carry
 // over from system to system; the opponent starts every system with full
@@ -8,6 +10,10 @@ import { MapOptions } from '../utils/generateGravitationalBodies';
 
 export const CAMPAIGN_LENGTH = 8;
 export const MAX_PLAYER_LIVES = 5;
+export const SPECIAL_SHOTS: SpecialShot[] = ['homing', 'splitter', 'phase'];
+// One of each to try them out; rewards add more
+export const START_AMMO: Ammo = { homing: 1, splitter: 1, phase: 1 };
+export const MAX_AMMO = 3;
 
 export type CampaignStatus = 'active' | 'won' | 'lost';
 
@@ -17,9 +23,12 @@ export type Campaign = {
   system: number;
   playerLives: number;
   status: CampaignStatus;
-  // Won a system and has not chosen the next map yet: the harder map pays +1 life
+  // Won a system and has not chosen the next map yet: the harder map pays a reward
   rewardPending: boolean;
+  ammo: Ammo;
 };
+
+export type Reward = { kind: 'life' } | { kind: 'shot'; shot: SpecialShot };
 
 export type SystemConfig = {
   opponentLives: number;
@@ -47,10 +56,15 @@ export const systemConfig = (index: number): SystemConfig => {
 };
 
 export const startCampaign = (difficulty: Difficulty): Campaign =>
-  ({ difficulty, system: 0, playerLives: START_LIVES, status: 'active', rewardPending: false });
+  ({ difficulty, system: 0, playerLives: START_LIVES, status: 'active', rewardPending: false, ammo: START_AMMO });
 
 /** Moves on after a match: a win advances to the next system, anything else ends the campaign. */
-export const recordCampaignMatch = (campaign: Campaign, winner: Exclude<Winner, null>, playerLives: number): Campaign => {
+export const recordCampaignMatch = (
+  campaign: Campaign,
+  winner: Exclude<Winner, null>,
+  playerLives: number,
+  ammo = campaign.ammo
+): Campaign => {
   if (campaign.status !== 'active') return campaign;
   if (winner !== 1) return { ...campaign, playerLives: 0, status: 'lost', rewardPending: false };
   const system = campaign.system + 1;
@@ -59,33 +73,60 @@ export const recordCampaignMatch = (campaign: Campaign, winner: Exclude<Winner, 
     ...campaign,
     system,
     playerLives: Math.min(MAX_PLAYER_LIVES, playerLives),
+    ammo,
     status: won ? 'won' : 'active',
     rewardPending: !won
   };
 };
 
-/** Whether the reward for the harder map would do anything. */
-export const canTakeReward = (campaign: Campaign) =>
-  campaign.rewardPending && campaign.playerLives < MAX_PLAYER_LIVES;
+/**
+ * The reward on the harder map after a win: a life or a special shot, half
+ * each. A full stock of either is skipped, so full lives always give a shot.
+ * Drawn from the map's seed, so the same map always shows the same reward.
+ */
+export const rewardFor = (campaign: Campaign, seed: number): Reward | null => {
+  if (!campaign.rewardPending) return null;
+  const random = createRandom(seed);
+  const lifeFits = campaign.playerLives < MAX_PLAYER_LIVES;
+  const shots = SPECIAL_SHOTS.filter(shot => campaign.ammo[shot] < MAX_AMMO);
+  if (lifeFits && (shots.length === 0 || random() < 0.5)) return { kind: 'life' };
+  return shots.length > 0 ? { kind: 'shot', shot: shots[Math.floor(random() * shots.length)] } : null;
+};
 
-/** After choosing the first map of a system; takeReward when it was the harder one. */
-export const chooseSystemMap = (campaign: Campaign, takeReward: boolean): Campaign => ({
-  ...campaign,
-  playerLives: takeReward && canTakeReward(campaign) ? campaign.playerLives + 1 : campaign.playerLives,
-  rewardPending: false
-});
+/** After choosing the first map of a system, with the reward it carried. */
+export const chooseSystemMap = (campaign: Campaign, reward: Reward | null): Campaign => {
+  const next = { ...campaign, rewardPending: false };
+  if (!campaign.rewardPending || reward === null) return next;
+  if (reward.kind === 'life') return { ...next, playerLives: Math.min(MAX_PLAYER_LIVES, campaign.playerLives + 1) };
+  return { ...next, ammo: { ...campaign.ammo, [reward.shot]: Math.min(MAX_AMMO, campaign.ammo[reward.shot] + 1) } };
+};
+
+const parseAmmo = (value: unknown): Ammo | null => {
+  // Saves from before special shots have none
+  if (value === undefined) return START_AMMO;
+  if (typeof value !== 'object' || value === null) return null;
+  const ammo = { ...START_AMMO };
+  for (const shot of SPECIAL_SHOTS) {
+    const count = (value as Record<string, unknown>)[shot];
+    if (!Number.isInteger(count) || (count as number) < 0 || (count as number) > MAX_AMMO) return null;
+    ammo[shot] = count as number;
+  }
+  return ammo;
+};
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard'];
 
 /** A saved campaign that can be resumed, or null if the value is anything else. */
 export const parseCampaign = (value: unknown): Campaign | null => {
   if (typeof value !== 'object' || value === null) return null;
-  const { difficulty, system, playerLives, status, rewardPending } = value as Record<string, unknown>;
+  const { difficulty, system, playerLives, status, rewardPending, ammo: savedAmmo } = value as Record<string, unknown>;
+  const ammo = parseAmmo(savedAmmo);
   const valid =
     DIFFICULTIES.includes(difficulty as Difficulty) &&
     Number.isInteger(system) && (system as number) >= 0 && (system as number) < CAMPAIGN_LENGTH &&
     Number.isInteger(playerLives) && (playerLives as number) >= 1 && (playerLives as number) <= MAX_PLAYER_LIVES &&
-    status === 'active';
+    status === 'active' &&
+    ammo !== null;
   // Saves from before map choices have no rewardPending
-  return valid ? { difficulty, system, playerLives, status, rewardPending: rewardPending === true } as Campaign : null;
+  return valid ? { difficulty, system, playerLives, status, rewardPending: rewardPending === true, ammo } as Campaign : null;
 };

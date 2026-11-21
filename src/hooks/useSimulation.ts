@@ -1,9 +1,9 @@
 import { Dispatch, useCallback, useEffect, useRef } from 'react';
-import { GravityBody, Planet, Simulation } from '../types/game';
+import { GravityBody, Planet, ShotKind, Simulation } from '../types/game';
 import { Aim, GameAction, PlayerNumber } from '../game/gameReducer';
 import { createExplosion } from '../utils/createExplosion';
 import { createPlanetFragments } from '../utils/createPlanetFragments';
-import { burnOutProjectiles, createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from '../utils/stepSimulation';
+import { burnOutProjectiles, createShot, stepFragments, stepImpacts, stepParticles, stepProjectile } from '../utils/stepSimulation';
 import { consumeSteps } from '../utils/fixedTimestep';
 
 type Planets = { player1: Planet; player2: Planet };
@@ -12,6 +12,8 @@ type Params = {
   shotNumber: number;
   roundNumber: number;
   aims: Record<PlayerNumber, Aim>;
+  // What each player fires in the current shot
+  shots: Record<PlayerNumber, ShotKind>;
   planets: Planets;
   gravitationalBodies: GravityBody[];
   lives: Record<PlayerNumber, number>;
@@ -62,12 +64,12 @@ export const useSimulation = (params: Params) => {
   // A new shot: both players fire at once
   useEffect(() => {
     if (shotNumber === 0) return;
-    const { planets, aims, sounds } = latestRef.current;
+    const { planets, aims, shots, sounds } = latestRef.current;
     sounds?.onLaunch?.(planets.player1.x);
     sounds?.onLaunch?.(planets.player2.x);
     simulationRef.current.projectiles = [
-      createProjectile(planets.player1, aims[1].angle, 1),
-      createProjectile(planets.player2, aims[2].angle, 2)
+      ...createShot(planets.player1, aims[1].angle, 1, shots[1]),
+      ...createShot(planets.player2, aims[2].angle, 2, shots[2])
     ];
     destroyedRef.current = new Set();
     resolvedRef.current = false;

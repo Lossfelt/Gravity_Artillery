@@ -1,4 +1,4 @@
-import { GameState } from '../types/game';
+import { Ammo, GameState, ShotKind, SpecialShot } from '../types/game';
 import { randomSeed } from '../utils/random';
 import { adjustAim } from './aim';
 
@@ -15,6 +15,9 @@ type PlayerState = {
   maxLives: number;
   // Shots this match that destroyed the opponent's planet
   hits: number;
+  ammo: Ammo;
+  // Fired with the next Fire; goes back to standard after every shot
+  shot: ShotKind;
 };
 
 export type Lives = Record<PlayerNumber, number>;
@@ -32,12 +35,15 @@ export type GameModel = {
   roundNumber: number;
   // Shots fired this match (each player fires once per shot)
   matchShots: number;
+  // What each player fired in the latest shot
+  firedShots: Record<PlayerNumber, ShotKind>;
 };
 
 export type GameAction =
   | { type: 'setAim'; player: PlayerNumber; angle: number }
   // Relative change in degrees (negative = up), applied to the current angle
   | { type: 'adjustAngle'; player: PlayerNumber; delta: number }
+  | { type: 'selectShot'; player: PlayerNumber; shot: ShotKind }
   // mapSeed is used if this toggle starts the next round (keeps the reducer pure)
   | { type: 'toggleReady'; player: PlayerNumber; mapSeed: number }
   | { type: 'planetDestroyed'; player: PlayerNumber; shooter: PlayerNumber }
@@ -45,24 +51,32 @@ export type GameAction =
   | { type: 'revealWinner' }
   | { type: 'nextRound'; mapSeed: number }
   // Throws away the current match and starts a new one with the given lives
-  | { type: 'newMatch'; mapSeed: number; lives: Lives };
+  | { type: 'newMatch'; mapSeed: number; lives: Lives; ammo?: Partial<Record<PlayerNumber, Ammo>> };
 
 export const START_LIVES = 3;
 const DEFAULT_LIVES: Lives = { 1: START_LIVES, 2: START_LIVES };
 const DEFAULT_ANGLES: Record<PlayerNumber, number> = { 1: 0, 2: 180 };
 
-const initialPlayer = (player: PlayerNumber, lives: number): PlayerState =>
-  ({ angle: DEFAULT_ANGLES[player], ready: false, lives, maxLives: lives, hits: 0 });
+export const NO_AMMO: Ammo = { homing: 0, splitter: 0, phase: 0 };
+const STANDARD_SHOTS: Record<PlayerNumber, ShotKind> = { 1: 'standard', 2: 'standard' };
 
-export const createInitialModel = (mapSeed = randomSeed(), lives = DEFAULT_LIVES): GameModel => ({
+const initialPlayer = (player: PlayerNumber, lives: number, ammo = NO_AMMO): PlayerState =>
+  ({ angle: DEFAULT_ANGLES[player], ready: false, lives, maxLives: lives, hits: 0, ammo, shot: 'standard' });
+
+export const createInitialModel = (
+  mapSeed = randomSeed(),
+  lives = DEFAULT_LIVES,
+  ammo: Partial<Record<PlayerNumber, Ammo>> = {}
+): GameModel => ({
   phase: 'setup',
-  players: { 1: initialPlayer(1, lives[1]), 2: initialPlayer(2, lives[2]) },
+  players: { 1: initialPlayer(1, lives[1], ammo[1]), 2: initialPlayer(2, lives[2], ammo[2]) },
   destroyed: [],
   winner: null,
   mapSeed,
   shotNumber: 0,
   roundNumber: 0,
-  matchShots: 0
+  matchShots: 0,
+  firedShots: STANDARD_SHOTS
 });
 
 const mapPlayers = (model: GameModel, fn: (p: PlayerState, n: PlayerNumber) => PlayerState) =>
@@ -90,13 +104,30 @@ const updatePlayer = (model: GameModel, player: PlayerNumber, changes: Partial<P
   return { ...model, players: { ...model.players, [player]: { ...model.players[player], ...changes } } };
 };
 
-const startShot = (model: GameModel): GameModel =>
-  ({ ...model, phase: 'firing', destroyed: [], shotNumber: model.shotNumber + 1, matchShots: model.matchShots + 1 });
+// A special shot uses up one of its kind when fired
+const fire = (p: PlayerState): PlayerState =>
+  p.shot === 'standard' ? p : { ...p, ammo: { ...p.ammo, [p.shot]: p.ammo[p.shot] - 1 }, shot: 'standard' };
+
+const startShot = (model: GameModel): GameModel => ({
+  ...model,
+  phase: 'firing',
+  destroyed: [],
+  shotNumber: model.shotNumber + 1,
+  matchShots: model.matchShots + 1,
+  firedShots: { 1: model.players[1].shot, 2: model.players[2].shot },
+  players: mapPlayers(model, fire)
+});
+
+const canUse = (p: PlayerState, shot: ShotKind) => shot === 'standard' || p.ammo[shot as SpecialShot] > 0;
 
 // From gameover: new star map and default aim. When the match is over, a new
 // match starts with the same lives as the last one.
 const nextRound = (model: GameModel, mapSeed: number): GameModel => {
-  if (isMatchOver(model)) return newMatch(model, mapSeed, { 1: model.players[1].maxLives, 2: model.players[2].maxLives });
+  // Ammunition is not restored: it is only handed out by the campaign
+  if (isMatchOver(model)) {
+    const { 1: p1, 2: p2 } = model.players;
+    return newMatch(model, mapSeed, { 1: p1.maxLives, 2: p2.maxLives }, { 1: p1.ammo, 2: p2.ammo });
+  }
   return {
     ...model,
     phase: 'setup',
@@ -110,8 +141,8 @@ const nextRound = (model: GameModel, mapSeed: number): GameModel => {
 
 // Keeps shotNumber and bumps roundNumber, so the simulation clears the board
 // without firing
-const newMatch = (model: GameModel, mapSeed: number, lives: Lives): GameModel => ({
-  ...createInitialModel(mapSeed, lives),
+const newMatch = (model: GameModel, mapSeed: number, lives: Lives, ammo: Partial<Record<PlayerNumber, Ammo>> = {}): GameModel => ({
+  ...createInitialModel(mapSeed, lives, ammo),
   shotNumber: model.shotNumber,
   roundNumber: model.roundNumber + 1
 });
@@ -156,6 +187,8 @@ export const gameReducer = (model: GameModel, action: GameAction): GameModel => 
       const current = model.players[action.player].angle;
       return updatePlayer(model, action.player, { angle: adjustAim(action.player, current, action.delta) });
     }
+    case 'selectShot':
+      return canUse(model.players[action.player], action.shot) ? updatePlayer(model, action.player, { shot: action.shot }) : model;
     case 'toggleReady':
       return toggleReady(model, action.player, action.mapSeed);
     case 'planetDestroyed':
@@ -167,6 +200,6 @@ export const gameReducer = (model: GameModel, action: GameAction): GameModel => 
     case 'nextRound':
       return model.phase === 'gameover' && !isAwaitingResult(model) ? nextRound(model, action.mapSeed) : model;
     case 'newMatch':
-      return newMatch(model, action.mapSeed, action.lives);
+      return newMatch(model, action.mapSeed, action.lives, action.ammo);
   }
 };

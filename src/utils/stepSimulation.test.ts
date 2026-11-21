@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ExplosionParticle, GravityBody, PlanetFragment, Projectile } from '../types/game';
 import { initialPlanets, MAX_FLIGHT_STEPS } from '../constants/game';
-import { burnOutProjectiles, createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
+import { burnOutProjectiles, createProjectile, createShot, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
 
 const projectile = (overrides: Partial<Projectile>): Projectile => ({
-  x: 500, y: 300, vx: 0, vy: 0, trail: [], player: 1, active: true, ...overrides
+  x: 500, y: 300, vx: 0, vy: 0, trail: [], player: 1, active: true, kind: 'standard', ...overrides
 });
 
 const noBodies: GravityBody[] = [];
@@ -91,6 +91,42 @@ describe('createProjectile', () => {
   it('does not hit its own planet on the first step', () => {
     const proj = createProjectile(initialPlanets.player1, 0, 1);
     expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
+  });
+});
+
+describe('special shots', () => {
+  const star: GravityBody = { x: 520, y: 300, mass: 8000, radius: 18, color: '#fff', type: 'star' };
+  const hole: GravityBody = { ...star, radius: 12, type: 'blackhole', color: '#000' };
+  // Downward speed after one step next to a body straight below
+  const pull = (kind: 'standard' | 'phase', body: GravityBody) => {
+    const proj = projectile({ y: 280, vx: 0, kind });
+    stepProjectile(proj, [body], initialPlanets, noneDestroyed, 1);
+    return proj.vy;
+  };
+
+  it('steers a homing shot towards the enemy planet, but only within range', () => {
+    const { player2 } = initialPlanets;
+    const near = projectile({ x: player2.x - 100, y: player2.y - 60, vx: 5, vy: 0, kind: 'homing' });
+    stepProjectile(near, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(near.vy).toBeGreaterThan(0);
+    const far = projectile({ x: 300, y: 100, vx: 5, vy: 0, kind: 'homing' });
+    stepProjectile(far, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(far.vy).toBe(0);
+    const targetGone = projectile({ x: player2.x - 100, y: player2.y - 60, vx: 5, vy: 0, kind: 'homing' });
+    stepProjectile(targetGone, noBodies, initialPlanets, new Set([2 as const]), 1);
+    expect(targetGone.vy).toBe(0);
+  });
+
+  it('ignores stars but not black holes in phase', () => {
+    expect(pull('phase', star)).toBe(0);
+    expect(pull('phase', hole)).toBeCloseTo(pull('standard', hole));
+  });
+
+  it('splits into three shots 3° apart', () => {
+    const shots = createShot(initialPlanets.player1, 10, 1, 'splitter');
+    const angles = shots.map(p => Math.round((Math.atan2(p.vy, p.vx) * 180) / Math.PI));
+    expect(angles).toEqual([7, 10, 13]);
+    expect(createShot(initialPlanets.player1, 10, 1, 'homing')).toHaveLength(1);
   });
 });
 

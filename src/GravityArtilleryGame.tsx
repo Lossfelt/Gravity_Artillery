@@ -20,7 +20,7 @@ import { useStats } from './hooks/useStats';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
 import { GameModel, isMatchOver, PlayerNumber, START_LIVES, Winner } from './game/gameReducer';
 import { Difficulty } from './game/ai';
-import { Campaign, CAMPAIGN_LENGTH, canTakeReward, systemConfig } from './game/campaign';
+import { Campaign, CAMPAIGN_LENGTH, rewardFor, systemConfig } from './game/campaign';
 import { recordCampaignStart, recordMatch, recordSystemsConquered } from './game/stats';
 
 type Mode = 'single' | 'campaign';
@@ -44,7 +44,7 @@ const GravityArtilleryGame = () => {
     campaign,
     start: startCampaign,
     recordMatch: recordCampaignMatch,
-    setLives: setCampaignLives,
+    setProgress: setCampaignProgress,
     chooseMap: chooseCampaignMap
   } = useCampaign();
   const { stats, update: updateStats } = useStats();
@@ -64,12 +64,12 @@ const GravityArtilleryGame = () => {
       updateStats(s => recordMatch(s, aiDifficulty, { won: winner === 1, shots: model.matchShots, hits: model.players[1].hits }));
     }
     if (inCampaign && campaign.status === 'active') {
-      const next = recordCampaignMatch(campaign, winner, model.players[1].lives);
+      const next = recordCampaignMatch(campaign, winner, model.players[1].lives, model.players[1].ammo);
       if (winner === 1) updateStats(s => recordSystemsConquered(s, next.difficulty, next.system, next.status === 'won'));
     }
   }, [aiDifficulty, inCampaign, campaign, recordCampaignMatch, updateStats]);
 
-  const { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound, startMatch } =
+  const { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound, startMatch, selectShot } =
     useGravityGame({
       sounds,
       aiDifficulty,
@@ -83,12 +83,13 @@ const GravityArtilleryGame = () => {
   // The last hit has landed, but the result is not shown yet
   const resultPending = gameState === 'gameover' && winner === null && (players[1].lives <= 0 || players[2].lives <= 0);
 
-  // Saves lives as they are lost, so closing the page mid-match cannot undo a lost life
+  // Saves lives and special shots as they are used, so closing the page mid-match cannot undo them
   const campaignInPlay = inCampaign && campaign.status === 'active' && campaign.system === matchSystem;
   const playerLives = players[1].lives;
+  const playerAmmo = players[1].ammo;
   useEffect(() => {
-    if (campaignInPlay) saveCampaign({ ...campaign, playerLives });
-  }, [campaignInPlay, campaign, playerLives]);
+    if (campaignInPlay) saveCampaign({ ...campaign, playerLives, ammo: playerAmmo });
+  }, [campaignInPlay, campaign, playerLives, playerAmmo]);
 
   // Scouting for the next round starts as soon as the round ends, so the maps are ready when asked for
   const needsRoundMap = inCampaign && gameState === 'gameover' && !isMatchOver(model);
@@ -118,7 +119,7 @@ const GravityArtilleryGame = () => {
   const playSystem = (current: Campaign) => {
     setMode('campaign');
     setMatchSystem(current.system);
-    startMatch({ 1: current.playerLives, 2: systemConfig(current.system).opponentLives });
+    startMatch({ 1: current.playerLives, 2: systemConfig(current.system).opponentLives }, undefined, { 1: current.ammo });
     setChoosing('system');
     setSystemChoiceId(id => id + 1);
     play();
@@ -126,8 +127,8 @@ const GravityArtilleryGame = () => {
 
   const chooseMap = (seed: number, harder: boolean) => {
     if (choosing === 'system' && campaign) {
-      const next = chooseCampaignMap(campaign, harder);
-      startMatch({ 1: next.playerLives, 2: systemConfig(next.system).opponentLives }, seed);
+      const next = chooseCampaignMap(campaign, harder ? rewardFor(campaign, seed) : null);
+      startMatch({ 1: next.playerLives, 2: systemConfig(next.system).opponentLives }, seed, { 1: next.ammo });
     } else {
       nextRound(seed);
     }
@@ -148,7 +149,7 @@ const GravityArtilleryGame = () => {
   };
 
   const openMenu = () => {
-    if (campaignInPlay && playerLives > 0) setCampaignLives(campaign, playerLives);
+    if (campaignInPlay && playerLives > 0) setCampaignProgress(campaign, playerLives, playerAmmo);
     setScreen('menu');
   };
 
@@ -196,6 +197,9 @@ const GravityArtilleryGame = () => {
       }}
       gameState={gameState}
       compact={compact}
+      ammo={inCampaign ? players[player].ammo : undefined}
+      shot={players[player].shot}
+      selectShot={shot => selectShot(player, shot)}
     />
   );
 
@@ -230,7 +234,8 @@ const GravityArtilleryGame = () => {
           title={system ? `Approach to system ${campaign.system + 1}` : 'Choose the next battlefield'}
           choices={mapChoices}
           map={scoutRequest.map}
-          reward={!system || !campaign.rewardPending ? null : canTakeReward(campaign) ? 'life' : 'full'}
+          rewardRound={system && campaign.rewardPending}
+          rewardFor={seed => rewardFor(campaign, seed)}
           onChoose={(report, harder) => chooseMap(report.seed, harder)}
           onMenu={openMenu}
           compact={isCompact}

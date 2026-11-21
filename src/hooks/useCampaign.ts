@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Difficulty } from '../game/ai';
-import { Campaign, chooseSystemMap, parseCampaign, recordCampaignMatch, startCampaign } from '../game/campaign';
+import { Campaign, chooseSystemMap, parseCampaign, recordCampaignMatch, Reward, startCampaign } from '../game/campaign';
+import { Ammo } from '../types/game';
 import { Winner } from '../game/gameReducer';
 import { loadJson, removeKey, saveJson } from '../utils/storage';
 
@@ -24,14 +25,14 @@ export const useCampaign = () => {
 
   const start = useCallback((difficulty: Difficulty) => change(startCampaign(difficulty)), [change]);
 
-  const recordMatch = useCallback((current: Campaign, winner: Exclude<Winner, null>, playerLives: number) =>
-    change(recordCampaignMatch(current, winner, playerLives)), [change]);
+  const recordMatch = useCallback((current: Campaign, winner: Exclude<Winner, null>, playerLives: number, ammo: Ammo) =>
+    change(recordCampaignMatch(current, winner, playerLives, ammo)), [change]);
 
-  const setLives = useCallback((current: Campaign, playerLives: number) =>
-    change({ ...current, playerLives }), [change]);
+  const setProgress = useCallback((current: Campaign, playerLives: number, ammo: Ammo) =>
+    change({ ...current, playerLives, ammo }), [change]);
 
-  const chooseMap = useCallback((current: Campaign, harder: boolean) =>
-    change(chooseSystemMap(current, harder)), [change]);
+  const chooseMap = useCallback((current: Campaign, reward: Reward | null) =>
+    change(chooseSystemMap(current, reward)), [change]);
 
-  return { campaign, start, recordMatch, setLives, chooseMap };
+  return { campaign, start, recordMatch, setProgress, chooseMap };
 };

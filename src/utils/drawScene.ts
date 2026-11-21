@@ -1,6 +1,6 @@
-import { ExplosionParticle, GravityBody, Planet, PlanetFragment } from '../types/game';
+import { ExplosionParticle, GravityBody, Planet, PlanetFragment, ShotKind } from '../types/game';
 import { Aim, PlayerNumber } from '../game/gameReducer';
-import { CANVAS_WIDTH } from '../constants/game';
+import { CANVAS_WIDTH, SPLIT_ANGLE } from '../constants/game';
 import { drawGlowingSprite } from './glowSprites';
 import { drawCoronas } from './drawCorona';
 import { drawGlobe, lightDirection } from './drawGlobe';
@@ -113,17 +113,23 @@ export const drawPlanets = (
 
 const AIM_LINE_LENGTH = 40;
 
-const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle }: Aim) => {
-  const angleRad = (angle * Math.PI) / 180;
+// The aim as drawn: a splitter shows all three of its shots
+export type AimLine = Aim & { shot?: ShotKind };
+
+const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle, shot }: AimLine) => {
+  const offsets = shot === 'splitter' ? [-SPLIT_ANGLE, 0, SPLIT_ANGLE] : [0];
   ctx.beginPath();
-  ctx.moveTo(planet.x, planet.y);
-  ctx.lineTo(planet.x + Math.cos(angleRad) * AIM_LINE_LENGTH, planet.y + Math.sin(angleRad) * AIM_LINE_LENGTH);
+  for (const offset of offsets) {
+    const angleRad = ((angle + offset) * Math.PI) / 180;
+    ctx.moveTo(planet.x, planet.y);
+    ctx.lineTo(planet.x + Math.cos(angleRad) * AIM_LINE_LENGTH, planet.y + Math.sin(angleRad) * AIM_LINE_LENGTH);
+  }
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 2;
   ctx.stroke();
 };
 
-export const drawAimLines = (ctx: CanvasRenderingContext2D, planets: Planets, aims: Record<PlayerNumber, Aim>) => {
+export const drawAimLines = (ctx: CanvasRenderingContext2D, planets: Planets, aims: Record<PlayerNumber, AimLine>) => {
   drawAimLine(ctx, planets.player1, aims[1]);
   drawAimLine(ctx, planets.player2, aims[2]);
 };

@@ -1,5 +1,5 @@
-import { ExplosionParticle, GravityBody, Impact, Planet, PlanetFragment, Projectile } from '../types/game';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, MAX_FLIGHT_STEPS, PLANET_RADIUS, PROJECTILE_SPEED } from '../constants/game';
+import { ExplosionParticle, GravityBody, Impact, Planet, PlanetFragment, Projectile, ShotKind } from '../types/game';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, HOMING_PULL, HOMING_RANGE, MAX_FLIGHT_STEPS, PLANET_RADIUS, PROJECTILE_SPEED, SPLIT_ANGLE } from '../constants/game';
 import { calculateGravity } from './calculateGravity';
 import { checkCollision } from './checkCollision';
 
@@ -10,7 +10,7 @@ import { checkCollision } from './checkCollision';
 type PlayerNumber = 1 | 2;
 
 /** Creates a projectile on the edge of a planet, at the fixed launch speed. */
-export const createProjectile = (planet: Planet, angleDeg: number, player: PlayerNumber): Projectile => {
+export const createProjectile = (planet: Planet, angleDeg: number, player: PlayerNumber, kind: ShotKind = 'standard'): Projectile => {
   const angleRad = (angleDeg * Math.PI) / 180;
   return {
     x: planet.x + Math.cos(angleRad) * PLANET_RADIUS,
@@ -19,8 +19,34 @@ export const createProjectile = (planet: Planet, angleDeg: number, player: Playe
     vy: Math.sin(angleRad) * PROJECTILE_SPEED,
     trail: [],
     player,
-    active: true
+    active: true,
+    kind
   };
+};
+
+/** Everything one player fires in a shot: three projectiles for a splitter, otherwise one. */
+export const createShot = (planet: Planet, angleDeg: number, player: PlayerNumber, kind: ShotKind = 'standard'): Projectile[] =>
+  kind === 'splitter'
+    ? [-SPLIT_ANGLE, 0, SPLIT_ANGLE].map(offset => createProjectile(planet, angleDeg + offset, player, kind))
+    : [createProjectile(planet, angleDeg, player, kind)];
+
+// A phase shot only feels the black holes
+const pullOf = (proj: Projectile, bodies: GravityBody[]) =>
+  calculateGravity(proj.x, proj.y, proj.kind === 'phase' ? bodies.filter(b => b.type === 'blackhole') : bodies);
+
+const NO_STEER = { sx: 0, sy: 0 };
+
+/** A homing shot turns towards the enemy planet once within range, with a fixed pull. */
+const steerOf = (proj: Projectile, planets: { player1: Planet; player2: Planet }, destroyed: Set<PlayerNumber>) => {
+  if (proj.kind !== 'homing') return NO_STEER;
+  const target: PlayerNumber = proj.player === 1 ? 2 : 1;
+  if (destroyed.has(target)) return NO_STEER;
+  const planet = target === 1 ? planets.player1 : planets.player2;
+  const dx = planet.x - proj.x;
+  const dy = planet.y - proj.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist > HOMING_RANGE || dist < 1) return NO_STEER;
+  return { sx: (HOMING_PULL * dx) / dist, sy: (HOMING_PULL * dy) / dist };
 };
 
 /**
@@ -35,10 +61,11 @@ export const stepProjectile = (
   destroyed: Set<PlayerNumber>,
   deltaTime: number
 ): PlayerNumber | null => {
-  const { ax, ay } = calculateGravity(proj.x, proj.y, bodies);
+  const { ax, ay } = pullOf(proj, bodies);
+  const { sx, sy } = steerOf(proj, planets, destroyed);
 
-  const newVx = proj.vx + ax * 0.1 * deltaTime;
-  const newVy = proj.vy + ay * 0.1 * deltaTime;
+  const newVx = proj.vx + (ax * 0.1 + sx) * deltaTime;
+  const newVy = proj.vy + (ay * 0.1 + sy) * deltaTime;
   const newX = proj.x + newVx * deltaTime;
   const newY = proj.y + newVy * deltaTime;
 

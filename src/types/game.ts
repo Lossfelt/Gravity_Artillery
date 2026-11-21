@@ -23,6 +23,11 @@ export type TrailPoint = {
   y: number;
 };
 
+// Special shots are scarce campaign ammunition
+export type ShotKind = 'standard' | 'homing' | 'splitter' | 'phase';
+export type SpecialShot = Exclude<ShotKind, 'standard'>;
+export type Ammo = Record<SpecialShot, number>;
+
 export type Projectile = {
   x: number;
   y: number;
@@ -31,6 +36,7 @@ export type Projectile = {
   trail: TrailPoint[];
   player: 1 | 2;
   active: boolean;
+  kind: ShotKind;
 };
 
 export type ExplosionParticle = {

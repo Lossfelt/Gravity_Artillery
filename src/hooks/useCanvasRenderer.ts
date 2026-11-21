@@ -1,9 +1,10 @@
 import { RefObject, useEffect, useRef } from 'react';
 import { GameState, GravityBody, Planet, Simulation } from '../types/game';
-import { Aim, PlayerNumber } from '../game/gameReducer';
+import { PlayerNumber } from '../game/gameReducer';
 import starscapeImage from '../assets/images/Starscape.webp';
 import { createStaticLayer } from '../utils/createStaticLayer';
 import {
+  AimLine,
   Hearts,
   SpriteCache,
   drawAimLines,
@@ -23,7 +24,7 @@ type Params = {
   simulationRef: RefObject<Simulation>;
   destroyed: PlayerNumber[];
   gameState: GameState;
-  aims: Record<PlayerNumber, Aim>;
+  aims: Record<PlayerNumber, AimLine>;
   hearts: Record<PlayerNumber, Hearts>;
 };
 

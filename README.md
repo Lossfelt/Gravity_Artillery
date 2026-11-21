@@ -109,6 +109,19 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   kandidater vises det letteste og det vanskeligste, og bare kart der også
   AI-en kan treffe på hele grader. Scoren er en modell og ikke testet på
   spillere.
+- **Spesialskudd i felttoget.** Du starter med ett av hvert, og det
+  vanskeligste kartet etter en seier gir +1 liv eller et skudd (alltid skudd
+  med fulle liv, maks 3 av hver). Målt over 180 felttogskart, med sikte i
+  femtedels grader:
+  - *Splitter* (tre skudd 3° fra hverandre): treffvindu ca. 14° mot 5° for et
+    vanlig skudd.
+  - *Fase* (bare svarte hull trekker): treffer rett frem på 78 % av kartene i
+    system 1, men bare 13 % i system 8, der det er flere svarte hull. Det
+    avslører også hvor de usynlige svarte hullene er.
+  - *Søkende* (svinger mot fiendeplaneten med fast kraft innenfor 250 px):
+    vindu ca. 8,6°. Det erstattet et planlagt tungt skudd med mindre
+    tyngdekraft, fordi selv 10 % tyngdekraft bare flyttet nærmeste treff fra
+    2,2° til ca. 1,3° og knapt gjorde vinduet bredere.
 - **Ingenting går videre før resultatet vises.** Etter det avgjørende treffet
   går det 2 sekunder før resultatet vises. «Next» er sperret så lenge, ellers
   kunne en ny kamp starte med fulle liv uten at resultatet ble registrert.

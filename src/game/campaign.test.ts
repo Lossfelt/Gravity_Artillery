@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { CAMPAIGN_LENGTH, chooseSystemMap, MAX_PLAYER_LIVES, parseCampaign, recordCampaignMatch, startCampaign, systemConfig } from './campaign';
+import {
+  Campaign,
+  CAMPAIGN_LENGTH,
+  chooseSystemMap,
+  MAX_AMMO,
+  MAX_PLAYER_LIVES,
+  parseCampaign,
+  recordCampaignMatch,
+  rewardFor,
+  SPECIAL_SHOTS,
+  START_AMMO,
+  startCampaign,
+  systemConfig
+} from './campaign';
 
 describe('systemConfig', () => {
   it('gets tougher from the first system to the last', () => {
@@ -24,7 +37,8 @@ describe('systemConfig', () => {
 describe('recordCampaignMatch', () => {
   it('moves on to the next system with the lives left', () => {
     const next = recordCampaignMatch(startCampaign('normal'), 1, 2);
-    expect(next).toEqual({ difficulty: 'normal', system: 1, playerLives: 2, status: 'active', rewardPending: true });
+    expect(next).toEqual({ difficulty: 'normal', system: 1, playerLives: 2, status: 'active', rewardPending: true, ammo: START_AMMO });
+    expect(recordCampaignMatch(startCampaign('normal'), 1, 2, { homing: 0, splitter: 1, phase: 1 }).ammo.homing).toBe(0);
   });
 
   it('caps the lives carried over', () => {
@@ -46,23 +60,43 @@ describe('recordCampaignMatch', () => {
   });
 });
 
+describe('rewardFor', () => {
+  const afterWin = recordCampaignMatch(startCampaign('normal'), 1, 2);
+  const rewards = (campaign: Campaign) => Array.from({ length: 200 }, (_, seed) => rewardFor(campaign, seed));
+
+  it('is the same for the same map', () => {
+    expect(rewardFor(afterWin, 42)).toEqual(rewardFor(afterWin, 42));
+  });
+
+  it('gives a life or one of the special shots', () => {
+    const kinds = new Set(rewards(afterWin).map(r => (r?.kind === 'shot' ? r.shot : r?.kind)));
+    expect(kinds).toEqual(new Set(['life', ...SPECIAL_SHOTS]));
+  });
+
+  it('gives a shot when lives are full, and skips shots in full stock', () => {
+    const full = { ...afterWin, playerLives: MAX_PLAYER_LIVES, ammo: { homing: MAX_AMMO, splitter: 0, phase: MAX_AMMO } };
+    expect(new Set(rewards(full).map(r => JSON.stringify(r)))).toEqual(new Set([JSON.stringify({ kind: 'shot', shot: 'splitter' })]));
+    const nothingFits = { ...full, ammo: { homing: MAX_AMMO, splitter: MAX_AMMO, phase: MAX_AMMO } };
+    expect(rewardFor(nothingFits, 1)).toBeNull();
+  });
+
+  it('gives nothing at the start of a campaign', () => {
+    expect(rewardFor(startCampaign('easy'), 1)).toBeNull();
+  });
+});
+
 describe('chooseSystemMap', () => {
   const afterWin = recordCampaignMatch(startCampaign('normal'), 1, 2);
 
-  it('gives a life for the harder map, once', () => {
-    const chosen = chooseSystemMap(afterWin, true);
+  it('pays the reward once', () => {
+    const chosen = chooseSystemMap(afterWin, { kind: 'life' });
     expect(chosen).toMatchObject({ playerLives: 3, rewardPending: false });
-    expect(chooseSystemMap(chosen, true).playerLives).toBe(3);
+    expect(chooseSystemMap(chosen, { kind: 'life' }).playerLives).toBe(3);
+    expect(chooseSystemMap(afterWin, { kind: 'shot', shot: 'homing' }).ammo.homing).toBe(START_AMMO.homing + 1);
   });
 
   it('gives nothing for the easier map', () => {
-    expect(chooseSystemMap(afterWin, false)).toMatchObject({ playerLives: 2, rewardPending: false });
-  });
-
-  it('gives nothing at the start of a campaign or with full lives', () => {
-    expect(chooseSystemMap(startCampaign('easy'), true).playerLives).toBe(3);
-    const full = { ...afterWin, playerLives: MAX_PLAYER_LIVES };
-    expect(chooseSystemMap(full, true).playerLives).toBe(MAX_PLAYER_LIVES);
+    expect(chooseSystemMap(afterWin, null)).toMatchObject({ playerLives: 2, rewardPending: false, ammo: START_AMMO });
   });
 });
 
@@ -72,10 +106,11 @@ describe('parseCampaign', () => {
     expect(parseCampaign(JSON.parse(JSON.stringify(campaign)))).toEqual(campaign);
   });
 
-  it('reads a save from before map choices as having no reward pending', () => {
+  it('reads older saves: no reward pending, and the starting special shots', () => {
     const old: Record<string, unknown> = { ...startCampaign('normal') };
     delete old.rewardPending;
-    expect(parseCampaign(old)?.rewardPending).toBe(false);
+    delete old.ammo;
+    expect(parseCampaign(old)).toMatchObject({ rewardPending: false, ammo: START_AMMO });
   });
 
   it('rejects anything that cannot be resumed', () => {
@@ -86,5 +121,6 @@ describe('parseCampaign', () => {
     expect(parseCampaign({ ...valid, playerLives: 0 })).toBeNull();
     expect(parseCampaign({ ...valid, system: CAMPAIGN_LENGTH })).toBeNull();
     expect(parseCampaign({ ...valid, status: 'won' })).toBeNull();
+    expect(parseCampaign({ ...valid, ammo: { homing: MAX_AMMO + 1, splitter: 0, phase: 0 } })).toBeNull();
   });
 });
