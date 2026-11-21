@@ -3,6 +3,8 @@ import { Reward } from '../game/campaign';
 import { SHOT_INFO } from './shots';
 import { MapChoices } from '../hooks/useMapScouting';
 import { MapOptions } from '../utils/generateGravitationalBodies';
+import { presetOf } from '../game/presetMaps';
+import { Planet } from '../types/game';
 import { MapPreview } from './MapPreview';
 import { LivesRow, Modal } from './Modal';
 
@@ -10,6 +12,7 @@ type MapChoiceProps = {
   title: string;
   choices: MapChoices | null;
   map: MapOptions;
+  planets: { player1: Planet; player2: Planet };
   // Whether this choice pays a reward (the first map after a win)
   rewardRound: boolean;
   // What the harder map pays, by its seed
@@ -41,7 +44,7 @@ const RewardLine = ({ reward }: { reward: Reward | null }) => {
   return <span className="text-[var(--ink-dim)]">No reward</span>;
 };
 
-export const MapChoice = ({ title, choices, map, rewardRound, rewardFor, onChoose, onMenu, compact = false }: MapChoiceProps) => (
+export const MapChoice = ({ title, choices, map, planets, rewardRound, rewardFor, onChoose, onMenu, compact = false }: MapChoiceProps) => (
   <Modal title={title} compact={compact} wide>
     {choices === null ? (
       <p className={`text-[var(--ink-dim)] ${compact ? 'py-6' : 'py-12'}`} aria-live="polite">Scouting the systems…</p>
@@ -57,9 +60,9 @@ export const MapChoice = ({ title, choices, map, rewardRound, rewardFor, onChoos
               title={tier.hint}
               className="btn btn-step flex-col items-stretch p-1.5 text-left"
             >
-              <MapPreview seed={report.seed} map={map} className="rounded-md" />
+              <MapPreview seed={report.seed} map={map} planets={planets} className="rounded-md" />
               <span className={`flex items-center justify-between gap-2 px-1 ${compact ? 'pt-1 text-xs' : 'pt-2 text-sm'}`}>
-                {tier.label}
+                {presetOf(report.seed) ? `${presetOf(report.seed)?.name} · ${tier.label}` : tier.label}
                 <Pips count={tier.pips} />
               </span>
               {rewardRound && (

@@ -11,8 +11,8 @@ import { createRandom } from '../utils/random';
 export const CAMPAIGN_LENGTH = 8;
 export const MAX_PLAYER_LIVES = 5;
 export const SPECIAL_SHOTS: SpecialShot[] = ['homing', 'splitter', 'phase'];
-// One of each to try them out; rewards add more
-export const START_AMMO: Ammo = { homing: 1, splitter: 1, phase: 1 };
+// Special shots are only won as rewards
+export const START_AMMO: Ammo = { homing: 0, splitter: 0, phase: 0 };
 export const MAX_AMMO = 3;
 
 export type CampaignStatus = 'active' | 'won' | 'lost';
@@ -30,8 +30,17 @@ export type Campaign = {
 
 export type Reward = { kind: 'life' } | { kind: 'shot'; shot: SpecialShot };
 
+// Bosses are smaller targets than a planet: a moon base, then a battle station
+export type BossKind = 'moon' | 'station';
+export const BOSSES: Record<BossKind, { name: string; radius: number }> = {
+  moon: { name: 'Moon Base', radius: 16 },
+  station: { name: 'Battle Station', radius: 13 }
+};
+const BOSS_SYSTEMS: Partial<Record<number, BossKind>> = { 3: 'moon', 7: 'station' };
+
 export type SystemConfig = {
   opponentLives: number;
+  boss: BossKind | null;
   map: MapOptions;
   // Multiplies the computer's aiming error: above 1 is sloppier, below 1 sharper
   aimErrorScale: number;
@@ -50,6 +59,7 @@ export const systemConfig = (index: number): SystemConfig => {
   const t = i / (CAMPAIGN_LENGTH - 1);
   return {
     opponentLives: OPPONENT_LIVES[i],
+    boss: BOSS_SYSTEMS[i] ?? null,
     map: { bodyCount: BODY_COUNT[i], blackHoleChance: lerp(BLACK_HOLE_CHANCE, t) },
     aimErrorScale: lerp(AIM_ERROR_SCALE, t)
   };

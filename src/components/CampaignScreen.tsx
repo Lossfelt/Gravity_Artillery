@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Campaign, CAMPAIGN_LENGTH, systemConfig } from '../game/campaign';
+import { BOSSES, Campaign, CAMPAIGN_LENGTH, systemConfig } from '../game/campaign';
 import { difficultyLabel } from './difficulty';
 import { LivesRow, Modal } from './Modal';
 import { NextArrow } from './icons';
@@ -21,7 +21,9 @@ const Progress = ({ conquered, failed }: { conquered: number; failed: boolean })
         i < conquered ? 'bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]'
         : i === conquered ? (failed ? 'bg-[#ff5c7a]' : 'border-2 border-[var(--accent)]')
         : 'border border-white/25';
-      return <li key={i} className={`w-3 h-3 rounded-full ${style}`} />;
+      // Boss systems are diamonds
+      const shape = systemConfig(i).boss ? 'rotate-45 rounded-[2px]' : 'rounded-full';
+      return <li key={i} className={`w-3 h-3 ${shape} ${style}`} />;
     })}
   </ol>
 );
@@ -66,8 +68,9 @@ export const CampaignScreen = ({ campaign, onContinue, onNewCampaign, onMenu, co
     <Modal title={`System ${campaign.system} conquered`} compact={compact}>
       <Progress conquered={campaign.system} failed={false} />
       <Paragraph>
-        Next: system {campaign.system + 1} of {CAMPAIGN_LENGTH}. The enemy has <LivesRow lives={next.opponentLives} />,
-        you have <LivesRow lives={campaign.playerLives} />.
+        Next: system {campaign.system + 1} of {CAMPAIGN_LENGTH}
+        {next.boss ? <>, guarded by the <strong className="text-[var(--ink)]">{BOSSES[next.boss].name}</strong>: a much smaller target</> : ''}.
+        The enemy has <LivesRow lives={next.opponentLives} />, you have <LivesRow lives={campaign.playerLives} />.
       </Paragraph>
       <div className="flex justify-center gap-3">
         {menuButton}

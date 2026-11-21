@@ -6,6 +6,8 @@ export type Planet = {
   radius: number;
   color: string;
   sprite?: string;
+  // Bosses: a moon turns like a planet, a station spins as a whole
+  kind?: 'planet' | 'moon' | 'station';
 };
 
 export type GravityBody = {

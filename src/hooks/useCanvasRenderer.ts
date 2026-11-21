@@ -95,7 +95,7 @@ export const useCanvasRenderer = (params: Params) => {
       drawGravityBodies(ctx, p.gravitationalBodies, sprites, pulse, ambient);
       drawPlanets(ctx, p.planets, p.destroyed, sprites, p.hearts, { bodies: p.gravitationalBodies, time: ambient });
       if (p.gameState === 'setup') drawAimLines(ctx, p.planets, p.aims);
-      drawProjectiles(ctx, simulation.projectiles, trailPaths);
+      drawProjectiles(ctx, simulation.projectiles, trailPaths, p.planets, p.destroyed, now / 1000);
       drawShockwaves(ctx, simulation.impacts);
       drawParticles(ctx, simulation.explosionParticles);
       drawFragments(ctx, simulation.planetFragments, sprites);

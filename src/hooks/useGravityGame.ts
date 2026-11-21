@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { initialPlanets } from '../constants/game';
 import { createInitialModel, GameModel, gameReducer, isMatchOver, Lives, matchWinner, PlayerNumber, Winner } from '../game/gameReducer';
 import { Ammo, ShotKind } from '../types/game';
-import { DEFAULT_MAP, generateGravitationalBodies, MapOptions } from '../utils/generateGravitationalBodies';
-import { createRandom, randomSeed } from '../utils/random';
+import { DEFAULT_MAP, MapOptions } from '../utils/generateGravitationalBodies';
+import { randomSeed } from '../utils/random';
+import { bodiesFor } from '../game/presetMaps';
+import { Planet } from '../types/game';
 import { SimulationSounds, useSimulation } from './useSimulation';
 import { useAiOpponent } from './useAiOpponent';
 import { Difficulty } from '../game/ai';
@@ -15,6 +17,8 @@ type UseGravityGameProps = {
   // Multiplies the computer's aiming error (see aimWithError)
   aiErrorScale?: number;
   map?: MapOptions;
+  // A boss replaces player 2's planet
+  planets?: { player1: Planet; player2: Planet };
   // Stops the computer from playing, e.g. while a menu is open
   paused?: boolean;
   // Called once per match, when the result is shown
@@ -28,16 +32,15 @@ export const useGravityGame = ({
   aiDifficulty = null,
   aiErrorScale = 1,
   map = DEFAULT_MAP,
+  planets = initialPlanets,
   paused = false,
   onMatchEnd
 }: UseGravityGameProps = {}) => {
   const [model, dispatch] = useReducer(gameReducer, undefined, () => createInitialModel());
-  const planets = initialPlanets;
-
-  // The star map is derived from a seed, so the same seed recreates the same map
+  // The star map is derived from a seed (or names a preset map), so the same seed recreates the same map
   const { bodyCount, blackHoleChance } = map;
   const gravitationalBodies = useMemo(
-    () => generateGravitationalBodies(planets, createRandom(model.mapSeed), { bodyCount, blackHoleChance }),
+    () => bodiesFor(model.mapSeed, { bodyCount, blackHoleChance }, planets),
     [planets, model.mapSeed, bodyCount, blackHoleChance]
   );
 

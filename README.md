@@ -27,6 +27,7 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 | `src/game/ai.ts` + `src/hooks/useAiOpponent.ts` | AI-motstander: simulerer skudd for å finne beste sikte, og legger på siktefeil etter vanskelighetsgrad |
 | `src/game/campaign.ts` + `src/hooks/useCampaign.ts` | Felttoget: hvor tøft hvert system er, liv som følger med, og lagring |
 | `src/game/mapScouting.ts` + `src/hooks/useMapScouting.ts` | Kartvalget i felttoget: hvor vanskelig et kart er å treffe, og to kart å velge mellom |
+| `src/game/presetMaps.ts` + `src/utils/bossPlanets.ts` | Sjefene (måne og romstasjon, tegnet i kode) og de ferdiglagde kartene til sjefskampene |
 | `src/game/stats.ts` + `src/hooks/useStats.ts` | Statistikk mot datamaskinen, per vanskelighetsgrad |
 | `src/hooks/useSimulation.ts` | Fysikkløkka. Prosjektiler, partikler og fragmenter ligger i en ref, ikke i React-state |
 | `src/hooks/useCanvasRenderer.ts` | Tegneløkka, som leser simuleringen direkte hver frame |
@@ -109,8 +110,8 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   kandidater vises det letteste og det vanskeligste, og bare kart der også
   AI-en kan treffe på hele grader. Scoren er en modell og ikke testet på
   spillere.
-- **Spesialskudd i felttoget.** Du starter med ett av hvert, og det
-  vanskeligste kartet etter en seier gir +1 liv eller et skudd (alltid skudd
+- **Spesialskudd i felttoget.** Du starter uten, og det vanskeligste kartet
+  etter en seier gir +1 liv eller et skudd (alltid skudd
   med fulle liv, maks 3 av hver). Målt over 180 felttogskart, med sikte i
   femtedels grader:
   - *Splitter* (tre skudd 3° fra hverandre): treffvindu ca. 14° mot 5° for et
@@ -122,6 +123,18 @@ npm run build    # typesjekk og produksjonsbygg til dist/
     vindu ca. 8,6°. Det erstattet et planlagt tungt skudd med mindre
     tyngdekraft, fordi selv 10 % tyngdekraft bare flyttet nærmeste treff fra
     2,2° til ca. 1,3° og knapt gjorde vinduet bredere.
+- **Sjefer er mindre mål.** System 4 voktes av en månebase (radius 16) og
+  system 8 av en kampstasjon (radius 13), mot planetens 25. Målt over 60 kart
+  krymper treffvinduet fra 3,7° til 2,2° mot månen, og fra 2,9° til ca. 1,1°
+  mot stasjonen. Sjefene er tegnet i kode: månen som en kratertekstur som
+  roteres som en globus, og stasjonen som en ring sett ovenfra som snurrer.
+  Begge blir data-URL-er, så de lastes og sprenges som vanlige planetbilder.
+- **Ferdiglagde kart** til sjefskampene, tre per sjef, lagret som lister med
+  kropper. De bruker kartnumre fra 2^32 og oppover, så ett tall i spillmodellen
+  dekker både tilfeldige og ferdiglagde kart. Sjefskampen åpner med valg mellom
+  to tilfeldige av de tre. Senere runder bruker tilfeldige kart, siden et kart
+  man har truffet før kan treffes igjen med samme vinkel. En test sjekker at
+  alle kartene er rettferdige mot sin sjef.
 - **Ingenting går videre før resultatet vises.** Etter det avgjørende treffet
   går det 2 sekunder før resultatet vises. «Next» er sperret så lenge, ellers
   kunne en ny kamp starte med fulle liv uten at resultatet ble registrert.

@@ -39,8 +39,30 @@ export const drawGravityBodies = (
 
 type SceneTime = { bodies: GravityBody[]; time: number };
 
+const STATION_SPIN_S = 40; // Seconds per turn
+
+/** A station spins as a whole, with a light blinking on its ring. */
+const drawStation = (ctx: CanvasRenderingContext2D, planet: Planet, sprite: HTMLImageElement, time: number) => {
+  const turn = (time / STATION_SPIN_S) * Math.PI * 2;
+  ctx.save();
+  ctx.translate(planet.x, planet.y);
+  ctx.rotate(turn);
+  ctx.drawImage(sprite, -planet.radius, -planet.radius, planet.radius * 2, planet.radius * 2);
+  if (Math.floor(time * 1.5) % 2 === 0) {
+    ctx.fillStyle = '#ff5c5c';
+    ctx.beginPath();
+    ctx.arc(planet.radius * 0.8, 0, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
 const drawPlanet = (ctx: CanvasRenderingContext2D, planet: Planet, sprites: SpriteCache, spin: number, scene: SceneTime) => {
   const sprite = planet.sprite ? sprites[planet.sprite] : null;
+  if (sprite && planet.kind === 'station') {
+    drawStation(ctx, planet, sprite, scene.time);
+    return;
+  }
   if (sprite) {
     drawGlobe(ctx, planet, sprite, lightDirection(planet, scene.bodies), scene.time, spin);
     return;

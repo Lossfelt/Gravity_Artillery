@@ -23,8 +23,11 @@ En kjede av 8 systemer mot datamaskinen. Enkeltkamp blir igjen som eget valg i s
 - [X] Faseskudd: ikke påvirket av stjernenes tyngdekraft, bare svarte hull (skudd går allerede gjennom stjerner)
 
 ### Steg 4: sjefer og ferdiglagde kart
-- [ ] Sjefer i system 4 og 8, med egne regler (f.eks. 5 liv, to skudd per runde, planet i bane)
-- [ ] Ferdiglagde kart lagret som data (ikke seeds), brukt til sjefskamper og nøkkelsystemer
+- [X] Sjefer i system 4 og 8 som er mindre mål: månebase (radius 16) og kampstasjon (radius 13), mot planetens 25
+- [X] Ferdiglagde kart lagret som data, tre per sjef. Sjefskampen åpner med valg mellom to av dem
+- [X] Visuell markering av spesialskudd: søkende er gyllent og låser seg på målet, fase er stiplet og flimrer, splitter har mindre hoder
+- [X] Ingen spesialskudd ved start, bare som belønning
+- [ ] Mulige ekstra sjefsregler: flere liv, to skudd per runde, planet i bane, eller at sjefen bruker spesialskudd
 
 ## Backlog: spillvarianter (når vi er fornøyd med spillet som det er)
 - [ ] Flere elementer: kraft tilbake, flere stjerner samtidig, nye romobjekter og flere typer prosjektiler, slik at man må variere både vinkel og kraft. Kraft ble fjernet fordi målinger viste at vinkelen alene løste nesten alle kart, så kartene må gjøre kraft nødvendig.

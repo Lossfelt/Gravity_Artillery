@@ -130,6 +130,21 @@ describe('special shots', () => {
   });
 });
 
+describe('target size', () => {
+  it('uses each planet\'s own radius, so a boss is a smaller target', () => {
+    const { player2 } = initialPlanets;
+    const passBy = () => projectile({ x: player2.x - 20, y: player2.y - 18, vx: 5, vy: 0 });
+    expect(stepProjectile(passBy(), noBodies, initialPlanets, noneDestroyed, 1)).toBe(2);
+    const moon = { ...initialPlanets, player2: { ...player2, radius: 16 } };
+    expect(stepProjectile(passBy(), noBodies, moon, noneDestroyed, 1)).toBeNull();
+  });
+
+  it('launches from the edge of a small planet too', () => {
+    const moon = { ...initialPlanets.player2, radius: 16 };
+    expect(createProjectile(moon, 180, 2).x).toBeCloseTo(moon.x - 16);
+  });
+});
+
 describe('burnOutProjectiles', () => {
   it('stops only the shots still flying, and only once the time is up', () => {
     const flying = projectile({});

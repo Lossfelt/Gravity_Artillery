@@ -20,13 +20,20 @@ import { useStats } from './hooks/useStats';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
 import { GameModel, isMatchOver, PlayerNumber, START_LIVES, Winner } from './game/gameReducer';
 import { Difficulty } from './game/ai';
-import { Campaign, CAMPAIGN_LENGTH, rewardFor, systemConfig } from './game/campaign';
+import { BOSSES, Campaign, CAMPAIGN_LENGTH, rewardFor, systemConfig } from './game/campaign';
+import { presetSeeds } from './game/presetMaps';
+import { planetsFor } from './utils/bossPlanets';
 import { recordCampaignStart, recordMatch, recordSystemsConquered } from './game/stats';
 
 type Mode = 'single' | 'campaign';
 type Screen = 'menu' | 'stats' | null;
 
 const SINGLE_MATCH_LIVES = { 1: START_LIVES, 2: START_LIVES };
+
+const systemTitle = (system: number) => {
+  const { boss } = systemConfig(system);
+  return boss ? `Boss: the ${BOSSES[boss].name}` : `Approach to system ${system + 1}`;
+};
 
 const GravityArtilleryGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -57,6 +64,7 @@ const GravityArtilleryGame = () => {
 
   const inCampaign = mode === 'campaign' && campaign !== null;
   const config = inCampaign ? systemConfig(matchSystem) : null;
+  const matchPlanets = planetsFor(config?.boss ?? null);
   const aiDifficulty = inCampaign ? campaign.difficulty : opponent;
 
   const handleMatchEnd = useCallback((winner: Exclude<Winner, null>, model: GameModel) => {
@@ -75,6 +83,7 @@ const GravityArtilleryGame = () => {
       aiDifficulty,
       aiErrorScale: config?.aimErrorScale,
       map: config?.map,
+      planets: matchPlanets,
       paused: screen !== null || choosing !== null,
       onMatchEnd: handleMatchEnd
     });
@@ -93,10 +102,15 @@ const GravityArtilleryGame = () => {
 
   // Scouting for the next round starts as soon as the round ends, so the maps are ready when asked for
   const needsRoundMap = inCampaign && gameState === 'gameover' && !isMatchOver(model);
-  const scoutRequest: ScoutRequest | null =
-    choosing === 'system' && campaign ? { key: `system-${systemChoiceId}`, map: systemConfig(campaign.system).map }
-    : needsRoundMap && config ? { key: `round-${model.shotNumber}`, map: config.map }
-    : null;
+  const scoutRequest = ((): ScoutRequest | null => {
+    if (choosing === 'system' && campaign) {
+      // A boss fight opens on two of its hand-made maps
+      const { map, boss } = systemConfig(campaign.system);
+      return { key: `system-${systemChoiceId}`, map, planets: planetsFor(boss), presets: boss ? presetSeeds(boss) : undefined };
+    }
+    if (needsRoundMap && config) return { key: `round-${model.shotNumber}`, map: config.map, planets: matchPlanets };
+    return null;
+  })();
   const mapChoices = useMapScouting(scoutRequest);
 
   useCanvasRenderer({
@@ -168,7 +182,9 @@ const GravityArtilleryGame = () => {
       difficulty={aiDifficulty}
       setDifficulty={setOpponent}
       onSwitchToHuman={() => setOpponent(null)}
-      campaignLabel={inCampaign ? `System ${matchSystem + 1}/${CAMPAIGN_LENGTH} · ${difficultyLabel(campaign.difficulty)}` : undefined}
+      campaignLabel={inCampaign
+        ? `${config?.boss ? BOSSES[config.boss].name : 'System'} ${matchSystem + 1}/${CAMPAIGN_LENGTH} · ${difficultyLabel(campaign.difficulty)}`
+        : undefined}
       compact={compact}
     />
   ) : (
@@ -231,9 +247,10 @@ const GravityArtilleryGame = () => {
       const system = choosing === 'system';
       return (
         <MapChoice
-          title={system ? `Approach to system ${campaign.system + 1}` : 'Choose the next battlefield'}
+          title={!system ? 'Choose the next battlefield' : systemTitle(campaign.system)}
           choices={mapChoices}
           map={scoutRequest.map}
+          planets={scoutRequest.planets}
           rewardRound={system && campaign.rewardPending}
           rewardFor={seed => rewardFor(campaign, seed)}
           onChoose={(report, harder) => chooseMap(report.seed, harder)}

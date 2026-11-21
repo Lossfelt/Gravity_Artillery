@@ -1,5 +1,5 @@
 import { ExplosionParticle, GravityBody, Impact, Planet, PlanetFragment, Projectile, ShotKind } from '../types/game';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, HOMING_PULL, HOMING_RANGE, MAX_FLIGHT_STEPS, PLANET_RADIUS, PROJECTILE_SPEED, SPLIT_ANGLE } from '../constants/game';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, HOMING_PULL, HOMING_RANGE, MAX_FLIGHT_STEPS, PROJECTILE_SPEED, SPLIT_ANGLE } from '../constants/game';
 import { calculateGravity } from './calculateGravity';
 import { checkCollision } from './checkCollision';
 
@@ -13,8 +13,8 @@ type PlayerNumber = 1 | 2;
 export const createProjectile = (planet: Planet, angleDeg: number, player: PlayerNumber, kind: ShotKind = 'standard'): Projectile => {
   const angleRad = (angleDeg * Math.PI) / 180;
   return {
-    x: planet.x + Math.cos(angleRad) * PLANET_RADIUS,
-    y: planet.y + Math.sin(angleRad) * PLANET_RADIUS,
+    x: planet.x + Math.cos(angleRad) * planet.radius,
+    y: planet.y + Math.sin(angleRad) * planet.radius,
     vx: Math.cos(angleRad) * PROJECTILE_SPEED,
     vy: Math.sin(angleRad) * PROJECTILE_SPEED,
     trail: [],
@@ -78,7 +78,7 @@ export const stepProjectile = (
   // already puts them outside it and they cannot hit themselves at launch.
   const targets: [PlayerNumber, Planet][] = [[1, planets.player1], [2, planets.player2]];
   for (const [player, planet] of targets) {
-    if (!destroyed.has(player) && checkCollision({ x: newX, y: newY }, planet, PLANET_RADIUS)) {
+    if (!destroyed.has(player) && checkCollision({ x: newX, y: newY }, planet, planet.radius)) {
       proj.active = false;
       return player;
     }
