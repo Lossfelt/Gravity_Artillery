@@ -80,7 +80,7 @@ export const useSimulation = (params: Params) => {
     resolvedRef.current = true;
   }, [roundNumber]);
 
-  const destroyPlanet = useCallback((player: PlayerNumber, planet: Planet) => {
+  const destroyPlanet = useCallback((player: PlayerNumber, planet: Planet, shooter: PlayerNumber) => {
     const simulation = simulationRef.current;
     const decisive = latestRef.current.lives[player] <= 1;
     latestRef.current.sounds?.onExplosion?.(planet.x, decisive);
@@ -97,7 +97,7 @@ export const useSimulation = (params: Params) => {
     if (decisive) slowMotionUntilRef.current = performance.now() + SLOW_MOTION_MS;
 
     destroyedRef.current.add(player);
-    dispatch({ type: 'planetDestroyed', player });
+    dispatch({ type: 'planetDestroyed', player, shooter });
   }, [dispatch]);
 
   const stepRound = useCallback(() => {
@@ -107,7 +107,7 @@ export const useSimulation = (params: Params) => {
     for (const proj of projectiles) {
       if (!proj.active) continue;
       const hitPlayer = stepProjectile(proj, gravitationalBodies, planets, destroyedRef.current, 1);
-      if (hitPlayer !== null) destroyPlanet(hitPlayer, planetOf(planets, hitPlayer));
+      if (hitPlayer !== null) destroyPlanet(hitPlayer, planetOf(planets, hitPlayer), proj.player);
     }
 
     flightStepsRef.current++;

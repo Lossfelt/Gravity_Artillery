@@ -2,8 +2,9 @@
 
 *A conflict in the Dark Forest.* To spillere stiller inn vinkel og skyter samtidig mot hverandres
 planet, og stjerner og usynlige svarte hull bøyer banene. Hver planet har tre
-liv. Et skudd kan også slynges tilbake og ødelegge sin egen planet. Med
-«Play vs computer» spiller du alene mot en AI (Easy, Normal eller Hard).
+liv. Et skudd kan også slynges tilbake og ødelegge sin egen planet. Alene
+kan du spille et felttog gjennom åtte systemer eller en enkeltkamp mot en AI
+(Easy, Normal eller Hard).
 
 ## Kom i gang
 
@@ -24,6 +25,8 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 | `src/game/gameReducer.ts` | Spillflyten som en ren tilstandsmaskin: oppsett, skyting, runde slutt, neste runde |
 | `src/game/aim.ts` | Sikting relativt til motstanderen (0 = rett frem, negativt = opp) |
 | `src/game/ai.ts` + `src/hooks/useAiOpponent.ts` | AI-motstander: simulerer skudd for å finne beste sikte, og legger på siktefeil etter vanskelighetsgrad |
+| `src/game/campaign.ts` + `src/hooks/useCampaign.ts` | Felttoget: hvor tøft hvert system er, liv som følger med, og lagring |
+| `src/game/stats.ts` + `src/hooks/useStats.ts` | Statistikk mot datamaskinen, per vanskelighetsgrad |
 | `src/hooks/useSimulation.ts` | Fysikkløkka. Prosjektiler, partikler og fragmenter ligger i en ref, ikke i React-state |
 | `src/hooks/useCanvasRenderer.ts` | Tegneløkka, som leser simuleringen direkte hver frame |
 | `src/utils/stepSimulation.ts` | Ett fysikksteg for prosjektiler, partikler og fragmenter |
@@ -81,6 +84,21 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   Siktefeilen krymper for hvert skudd på samme kart, omtrent som når et
   menneske justerer seg etter sporet. Målt over 60 kart treffer den i snitt
   etter ca. 8 skudd på Easy, 4 på Normal og 2-3 på Hard.
+
+- **Felttog over 8 systemer.** Livene dine følger med fra system til system
+  (maks 5), mens motstanderen starter hvert system med 1, 2 eller 3 liv.
+  Kartene får flere kropper (4 → 7) og større sjanse for svarte hull
+  (6 → 25 %). AI-en skjerpes innenfor valgt nivå med en skala på siktefeilen
+  (2,0 → 0,5) som virker både på startfeilen og på hvor sakte den krymper. Å
+  skalere bare startfeilen ga nesten ingen forskjell: målt over 40 kart per
+  system gikk Normal bare fra 4,4 til 3,5 skudd før treff. Med begge, målt på
+  de samme 40 kartene, går Normal fra 7,0 til 2,4 (Easy 11,6 → 4,4, Hard
+  3,8 → 1,6). Felttoget og statistikken lagres i
+  `localStorage`, og liv lagres så snart de mistes, så det hjelper ikke å
+  lukke siden midt i en kamp.
+- **Ingenting går videre før resultatet vises.** Etter det avgjørende treffet
+  går det 2 sekunder før resultatet vises. «Next» er sperret så lenge, ellers
+  kunne en ny kamp starte med fulle liv uten at resultatet ble registrert.
 
 ## Kreditering
 

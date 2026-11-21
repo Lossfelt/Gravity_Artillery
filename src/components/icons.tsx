@@ -32,3 +32,10 @@ export const Crosshair = () => (
 export const Check = () => <Icon><path d="M5 12.5l4.5 4.5L19 7.5" /></Icon>;
 
 export const NextArrow = () => <Icon><path d="M5 12h13M13 6l6 6-6 6" /></Icon>;
+
+// Filled, like the hearts on the canvas
+export const Heart = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="w-[1em] h-[1em]">
+    <path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3.1 1.6-1.9 3-3.1 5.2-3.1 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z" />
+  </svg>
+);

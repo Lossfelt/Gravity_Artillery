@@ -1,5 +1,29 @@
 # TODO - Gravity Artillery
 
+## Felttog (enspiller)
+En kjede av 8 systemer mot datamaskinen. Enkeltkamp blir igjen som eget valg i startmenyen.
+
+### Steg 1: grunnmur
+- [X] Startmeny med Enkeltkamp og Felttog, begge med valg av Easy/Normal/Hard
+- [X] 8 systemer. Motstanderen blir gradvis sterkere innenfor valgt nivå (siktefeilen krymper)
+- [X] Kartene blir gradvis tøffere: flere kropper og større sjanse for svarte hull
+- [X] Livene dine følger med fra system til system (maks 5). Motstanderen har 1 → 3 liv utover i felttoget
+- [X] Autolagring i localStorage, så felttoget kan fortsettes senere
+- [X] Statistikk per vanskelighetsgrad: felttog fullført, lengst kommet, treffprosent, antall skudd, seiersrekke
+
+### Steg 2: kartvalg
+- [ ] Etter hver seier: velg neste kart blant to miniatyrer (nedskalert statisk lag)
+- [ ] Hvert kort viser vanskelighet (bredden på treffvinduet fra `findBestAim`) og belønning: +1 liv, spesialprosjektil eller ingenting
+
+### Steg 3: spesialprosjektiler (få av hver)
+- [ ] Tungt skudd: halvparten så påvirket av gravitasjon
+- [ ] Splitter: tre skudd med ±3° spredning
+- [ ] Faseskudd: går gjennom stjerner, men ikke svarte hull
+
+### Steg 4: sjefer og ferdiglagde kart
+- [ ] Sjefer i system 4 og 8, med egne regler (f.eks. 5 liv, to skudd per runde, planet i bane)
+- [ ] Ferdiglagde kart lagret som data (ikke seeds), brukt til sjefskamper og nøkkelsystemer
+
 ## Backlog: spillvarianter (når vi er fornøyd med spillet som det er)
 - [ ] Flere elementer: kraft tilbake, flere stjerner samtidig, nye romobjekter og flere typer prosjektiler, slik at man må variere både vinkel og kraft. Kraft ble fjernet fordi målinger viste at vinkelen alene løste nesten alle kart, så kartene må gjøre kraft nødvendig.
 - [ ] Solsystemer: hver spiller er et solsystem med tre bebodde planeter i bane rundt en stjerne. Planetene beveger seg og må tas med i beregningen, og hver planet er ett liv.

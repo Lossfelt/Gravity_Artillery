@@ -4,6 +4,7 @@ import { Aim, PlayerNumber } from '../game/gameReducer';
 import starscapeImage from '../assets/images/Starscape.webp';
 import { createStaticLayer } from '../utils/createStaticLayer';
 import {
+  Hearts,
   SpriteCache,
   drawAimLines,
   drawFragments,
@@ -23,7 +24,7 @@ type Params = {
   destroyed: PlayerNumber[];
   gameState: GameState;
   aims: Record<PlayerNumber, Aim>;
-  lives: Record<PlayerNumber, number>;
+  hearts: Record<PlayerNumber, Hearts>;
 };
 
 // Star glow pulse speed in radians per second (was 0.02 per frame at 60 FPS)
@@ -91,7 +92,7 @@ export const useCanvasRenderer = (params: Params) => {
 
       const pulse = Math.sin((now / 1000) * PULSE_SPEED) * 0.3 + 0.7; // Oscillates between 0.4 and 1.0
       drawGravityBodies(ctx, p.gravitationalBodies, sprites, pulse, ambient);
-      drawPlanets(ctx, p.planets, p.destroyed, sprites, p.lives, { bodies: p.gravitationalBodies, time: ambient });
+      drawPlanets(ctx, p.planets, p.destroyed, sprites, p.hearts, { bodies: p.gravitationalBodies, time: ambient });
       if (p.gameState === 'setup') drawAimLines(ctx, p.planets, p.aims);
       drawProjectiles(ctx, simulation.projectiles, trailPaths);
       drawShockwaves(ctx, simulation.impacts);

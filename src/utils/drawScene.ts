@@ -65,11 +65,16 @@ const heartPath = (x: number, y: number, s: number) => {
   return path;
 };
 
-const drawHearts = (ctx: CanvasRenderingContext2D, planetY: number, lives: number, isPlayer1: boolean) => {
+// Filled hearts for lives left, outlines for the rest of the slots
+export type Hearts = { lives: number; maxLives: number };
+
+const drawHearts = (ctx: CanvasRenderingContext2D, planetY: number, { lives, maxLives }: Hearts, isPlayer1: boolean) => {
   const x = isPlayer1 ? 15 : CANVAS_WIDTH - 15;
+  const slots = Math.max(lives, maxLives);
   ctx.save();
-  for (let i = 0; i < 3; i++) {
-    const y = planetY - HEART_SPACING + i * HEART_SPACING;
+  for (let i = 0; i < slots; i++) {
+    // Centred on the planet
+    const y = planetY + (i - (slots - 1) / 2) * HEART_SPACING;
     const heart = heartPath(x, y, HEART_SIZE);
     if (i < lives) {
       // A larger, faint heart behind gives a cheap glow (shadowBlur is slow on mobile)
@@ -92,17 +97,17 @@ export const drawPlanets = (
   planets: Planets,
   destroyed: PlayerNumber[],
   sprites: SpriteCache,
-  lives: Record<PlayerNumber, number>,
+  hearts: Record<PlayerNumber, Hearts>,
   scene: SceneTime
 ) => {
   // The planets turn in opposite directions, mirroring each other
   if (!destroyed.includes(1)) {
     drawPlanet(ctx, planets.player1, sprites, 1, scene);
-    drawHearts(ctx, planets.player1.y, lives[1], true);
+    drawHearts(ctx, planets.player1.y, hearts[1], true);
   }
   if (!destroyed.includes(2)) {
     drawPlanet(ctx, planets.player2, sprites, -1, scene);
-    drawHearts(ctx, planets.player2.y, lives[2], false);
+    drawHearts(ctx, planets.player2.y, hearts[2], false);
   }
 };
 
