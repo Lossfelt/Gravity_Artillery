@@ -26,6 +26,7 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 | `src/game/aim.ts` | Sikting relativt til motstanderen (0 = rett frem, negativt = opp) |
 | `src/game/ai.ts` + `src/hooks/useAiOpponent.ts` | AI-motstander: simulerer skudd for å finne beste sikte, og legger på siktefeil etter vanskelighetsgrad |
 | `src/game/campaign.ts` + `src/hooks/useCampaign.ts` | Felttoget: hvor tøft hvert system er, liv som følger med, og lagring |
+| `src/game/mapScouting.ts` + `src/hooks/useMapScouting.ts` | Kartvalget i felttoget: hvor vanskelig et kart er å treffe, og to kart å velge mellom |
 | `src/game/stats.ts` + `src/hooks/useStats.ts` | Statistikk mot datamaskinen, per vanskelighetsgrad |
 | `src/hooks/useSimulation.ts` | Fysikkløkka. Prosjektiler, partikler og fragmenter ligger i en ref, ikke i React-state |
 | `src/hooks/useCanvasRenderer.ts` | Tegneløkka, som leser simuleringen direkte hver frame |
@@ -96,6 +97,18 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   3,8 → 1,6). Felttoget og statistikken lagres i
   `localStorage`, og liv lagres så snart de mistes, så det hjelper ikke å
   lukke siden midt i en kamp.
+- **Kartvalg i felttoget.** Hvert nytt kart velges blant to: ved systemstart og
+  etter hvert treff. Etter en seier gir det vanskeligste kartet +1 liv. Samme
+  kart hele systemet ble forkastet, fordi den som treffer først da bare kan
+  gjenta vinkelen. Vanskeligheten måles for spiller 1 ved å fly skuddene: et
+  grovsøk i halve grader og forfining til tideler rundt treffene. Treffvinduene
+  er stort sett bare 1–2° brede, så hele grader var for grovt. Bredden alene
+  skilte lite (median 3–4°), mens hvor langt fra rett frem nærmeste treff
+  ligger varierte fra ca. 1° til 12°. Scoren er derfor avstand + 10 / bredde,
+  og grensene (6 og 11) deler 240 kart omtrent i tredjedeler. Av fire
+  kandidater vises det letteste og det vanskeligste, og bare kart der også
+  AI-en kan treffe på hele grader. Scoren er en modell og ikke testet på
+  spillere.
 - **Ingenting går videre før resultatet vises.** Etter det avgjørende treffet
   går det 2 sekunder før resultatet vises. «Next» er sperret så lenge, ellers
   kunne en ny kamp starte med fulle liv uten at resultatet ble registrert.

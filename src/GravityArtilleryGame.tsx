@@ -11,14 +11,16 @@ import { AiPanel } from './components/AiPanel';
 import { StartMenu } from './components/StartMenu';
 import { CampaignScreen } from './components/CampaignScreen';
 import { StatsScreen } from './components/StatsScreen';
+import { MapChoice } from './components/MapChoice';
+import { ScoutRequest, useMapScouting } from './hooks/useMapScouting';
 import { difficultyLabel } from './components/difficulty';
 import { useOpponentSetting } from './hooks/useOpponentSetting';
 import { saveCampaign, useCampaign } from './hooks/useCampaign';
 import { useStats } from './hooks/useStats';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
-import { GameModel, PlayerNumber, START_LIVES, Winner } from './game/gameReducer';
+import { GameModel, isMatchOver, PlayerNumber, START_LIVES, Winner } from './game/gameReducer';
 import { Difficulty } from './game/ai';
-import { Campaign, CAMPAIGN_LENGTH, systemConfig } from './game/campaign';
+import { Campaign, CAMPAIGN_LENGTH, canTakeReward, systemConfig } from './game/campaign';
 import { recordCampaignStart, recordMatch, recordSystemsConquered } from './game/stats';
 
 type Mode = 'single' | 'campaign';
@@ -38,10 +40,20 @@ const GravityArtilleryGame = () => {
   const [started, setStarted] = useState(false);
   const [opponent, setOpponent] = useOpponentSetting();
   const [menuDifficulty, setMenuDifficulty] = useState<Difficulty>(opponent ?? 'normal');
-  const { campaign, start: startCampaign, recordMatch: recordCampaignMatch, setLives: setCampaignLives } = useCampaign();
+  const {
+    campaign,
+    start: startCampaign,
+    recordMatch: recordCampaignMatch,
+    setLives: setCampaignLives,
+    chooseMap: chooseCampaignMap
+  } = useCampaign();
   const { stats, update: updateStats } = useStats();
   // The campaign system being fought. Fixed for the match, even after a win moves the campaign on.
   const [matchSystem, setMatchSystem] = useState(0);
+  // In a campaign, every new map is chosen from two: the first map of a system, or the next map after a hit
+  const [choosing, setChoosing] = useState<'system' | 'round' | null>(null);
+  // Makes each system choice a new scouting request
+  const [systemChoiceId, setSystemChoiceId] = useState(0);
 
   const inCampaign = mode === 'campaign' && campaign !== null;
   const config = inCampaign ? systemConfig(matchSystem) : null;
@@ -63,7 +75,7 @@ const GravityArtilleryGame = () => {
       aiDifficulty,
       aiErrorScale: config?.aimErrorScale,
       map: config?.map,
-      paused: screen !== null,
+      paused: screen !== null || choosing !== null,
       onMatchEnd: handleMatchEnd
     });
   useGravityHum(engine, simulationRef, gravitationalBodies);
@@ -77,6 +89,14 @@ const GravityArtilleryGame = () => {
   useEffect(() => {
     if (campaignInPlay) saveCampaign({ ...campaign, playerLives });
   }, [campaignInPlay, campaign, playerLives]);
+
+  // Scouting for the next round starts as soon as the round ends, so the maps are ready when asked for
+  const needsRoundMap = inCampaign && gameState === 'gameover' && !isMatchOver(model);
+  const scoutRequest: ScoutRequest | null =
+    choosing === 'system' && campaign ? { key: `system-${systemChoiceId}`, map: systemConfig(campaign.system).map }
+    : needsRoundMap && config ? { key: `round-${model.shotNumber}`, map: config.map }
+    : null;
+  const mapChoices = useMapScouting(scoutRequest);
 
   useCanvasRenderer({
     canvasRef,
@@ -94,11 +114,24 @@ const GravityArtilleryGame = () => {
     setScreen(null);
   };
 
+  // Starts the system on a random map behind the choice, so lives are saved from the start
   const playSystem = (current: Campaign) => {
     setMode('campaign');
     setMatchSystem(current.system);
     startMatch({ 1: current.playerLives, 2: systemConfig(current.system).opponentLives });
+    setChoosing('system');
+    setSystemChoiceId(id => id + 1);
     play();
+  };
+
+  const chooseMap = (seed: number, harder: boolean) => {
+    if (choosing === 'system' && campaign) {
+      const next = chooseCampaignMap(campaign, harder);
+      startMatch({ 1: next.playerLives, 2: systemConfig(next.system).opponentLives }, seed);
+    } else {
+      nextRound(seed);
+    }
+    setChoosing(null);
   };
 
   const newCampaign = (difficulty: Difficulty) => {
@@ -108,6 +141,7 @@ const GravityArtilleryGame = () => {
 
   const playSingle = (difficulty: Difficulty | null) => {
     setMode('single');
+    setChoosing(null);
     setOpponent(difficulty);
     startMatch(SINGLE_MATCH_LIVES);
     play();
@@ -153,8 +187,13 @@ const GravityArtilleryGame = () => {
       angle={players[player].angle}
       adjustAngle={delta => adjustAngle(player, delta)}
       ready={players[player].ready}
-      // Audio starts on the Fire press (a user gesture, which mobile browsers require)
-      toggleReady={() => { startAudio(); toggleReady(player); }}
+      // Audio starts on the Fire press (a user gesture, which mobile browsers require).
+      // In a campaign, Next after a hit opens the choice of the next map.
+      toggleReady={() => {
+        startAudio();
+        if (needsRoundMap) setChoosing('round');
+        else toggleReady(player);
+      }}
       gameState={gameState}
       compact={compact}
     />
@@ -184,6 +223,20 @@ const GravityArtilleryGame = () => {
       );
     }
     if (screen === 'stats') return <StatsScreen stats={stats} onBack={() => setScreen('menu')} compact={isCompact} />;
+    if (choosing !== null && scoutRequest && campaign) {
+      const system = choosing === 'system';
+      return (
+        <MapChoice
+          title={system ? `Approach to system ${campaign.system + 1}` : 'Choose the next battlefield'}
+          choices={mapChoices}
+          map={scoutRequest.map}
+          reward={!system || !campaign.rewardPending ? null : canTakeReward(campaign) ? 'life' : 'full'}
+          onChoose={(report, harder) => chooseMap(report.seed, harder)}
+          onMenu={openMenu}
+          compact={isCompact}
+        />
+      );
+    }
     if (inCampaign && winner !== null) {
       return (
         <CampaignScreen
@@ -230,7 +283,7 @@ const GravityArtilleryGame = () => {
               <GameOverOverlay
                 winner={winner}
                 winnerLives={winner === 'draw' ? null : players[winner].lives}
-                onPlayAgain={nextRound}
+                onPlayAgain={() => nextRound()}
                 onMenu={() => setScreen('menu')}
               />
             )}

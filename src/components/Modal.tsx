@@ -5,10 +5,12 @@ type ModalProps = {
   title: string;
   children: ReactNode;
   compact?: boolean;
+  // Room for side-by-side pictures
+  wide?: boolean;
 };
 
 /** A panel over the whole screen. Scrolls if the screen is too low for it. */
-export const Modal = ({ title, children, compact = false }: ModalProps) => (
+export const Modal = ({ title, children, compact = false, wide = false }: ModalProps) => (
   <div
     role="dialog"
     aria-modal="true"
@@ -16,7 +18,7 @@ export const Modal = ({ title, children, compact = false }: ModalProps) => (
     className={`fixed inset-0 z-10 flex overflow-y-auto bg-black/70 backdrop-blur-[2px] ${compact ? 'p-2' : 'p-4'}`}
   >
     {/* m-auto centres the panel, but lets it scroll from the top when it is taller than the screen */}
-    <div className={`panel m-auto w-full max-w-lg text-center ${compact ? 'p-3' : 'p-5 md:p-7'}`}>
+    <div className={`panel m-auto w-full ${wide ? 'max-w-2xl' : 'max-w-lg'} text-center ${compact ? 'p-3' : 'p-5 md:p-7'}`}>
       <h2
         className={`font-bold uppercase tracking-[0.08em] ${compact ? 'text-lg mb-2' : 'text-2xl md:text-3xl mb-4'}`}
         style={{ textShadow: '0 0 20px var(--accent)' }}

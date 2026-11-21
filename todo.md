@@ -12,10 +12,12 @@ En kjede av 8 systemer mot datamaskinen. Enkeltkamp blir igjen som eget valg i s
 - [X] Statistikk per vanskelighetsgrad: felttog fullført, lengst kommet, treffprosent, antall skudd, seiersrekke
 
 ### Steg 2: kartvalg
-- [ ] Etter hver seier: velg neste kart blant to miniatyrer (nedskalert statisk lag)
-- [ ] Hvert kort viser vanskelighet (bredden på treffvinduet fra `findBestAim`) og belønning: +1 liv, spesialprosjektil eller ingenting
+- [X] Velg hvert nytt kart i felttoget blant to miniatyrer: ved systemstart og etter hvert treff
+- [X] Hvert kort viser vanskelighet (Open / Winding / Treacherous, ut fra treffvinduene for spiller 1)
+- [X] Ved systemstart etter en seier gir det vanskeligste kartet +1 liv (ingenting med fulle liv)
 
 ### Steg 3: spesialprosjektiler (få av hver)
+- [ ] Belønning ved systemstart blir +1 liv eller et spesialprosjektil (med fulle liv: prosjektil)
 - [ ] Tungt skudd: halvparten så påvirket av gravitasjon
 - [ ] Splitter: tre skudd med ±3° spredning
 - [ ] Faseskudd: går gjennom stjerner, men ikke svarte hull

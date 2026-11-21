@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CAMPAIGN_LENGTH, MAX_PLAYER_LIVES, parseCampaign, recordCampaignMatch, startCampaign, systemConfig } from './campaign';
+import { CAMPAIGN_LENGTH, chooseSystemMap, MAX_PLAYER_LIVES, parseCampaign, recordCampaignMatch, startCampaign, systemConfig } from './campaign';
 
 describe('systemConfig', () => {
   it('gets tougher from the first system to the last', () => {
@@ -24,7 +24,7 @@ describe('systemConfig', () => {
 describe('recordCampaignMatch', () => {
   it('moves on to the next system with the lives left', () => {
     const next = recordCampaignMatch(startCampaign('normal'), 1, 2);
-    expect(next).toEqual({ difficulty: 'normal', system: 1, playerLives: 2, status: 'active' });
+    expect(next).toEqual({ difficulty: 'normal', system: 1, playerLives: 2, status: 'active', rewardPending: true });
   });
 
   it('caps the lives carried over', () => {
@@ -46,10 +46,36 @@ describe('recordCampaignMatch', () => {
   });
 });
 
+describe('chooseSystemMap', () => {
+  const afterWin = recordCampaignMatch(startCampaign('normal'), 1, 2);
+
+  it('gives a life for the harder map, once', () => {
+    const chosen = chooseSystemMap(afterWin, true);
+    expect(chosen).toMatchObject({ playerLives: 3, rewardPending: false });
+    expect(chooseSystemMap(chosen, true).playerLives).toBe(3);
+  });
+
+  it('gives nothing for the easier map', () => {
+    expect(chooseSystemMap(afterWin, false)).toMatchObject({ playerLives: 2, rewardPending: false });
+  });
+
+  it('gives nothing at the start of a campaign or with full lives', () => {
+    expect(chooseSystemMap(startCampaign('easy'), true).playerLives).toBe(3);
+    const full = { ...afterWin, playerLives: MAX_PLAYER_LIVES };
+    expect(chooseSystemMap(full, true).playerLives).toBe(MAX_PLAYER_LIVES);
+  });
+});
+
 describe('parseCampaign', () => {
   it('accepts a saved active campaign', () => {
     const campaign = { ...startCampaign('hard'), system: 3, playerLives: 4 };
     expect(parseCampaign(JSON.parse(JSON.stringify(campaign)))).toEqual(campaign);
+  });
+
+  it('reads a save from before map choices as having no reward pending', () => {
+    const old: Record<string, unknown> = { ...startCampaign('normal') };
+    delete old.rewardPending;
+    expect(parseCampaign(old)?.rewardPending).toBe(false);
   });
 
   it('rejects anything that cannot be resumed', () => {

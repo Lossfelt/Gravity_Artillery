@@ -83,8 +83,9 @@ export const useGravityGame = ({
     dispatch({ type: 'adjustAngle', player, delta }), []);
   const toggleReady = useCallback((player: PlayerNumber) =>
     dispatch({ type: 'toggleReady', player, mapSeed: randomSeed() }), []);
-  const nextRound = useCallback(() => dispatch({ type: 'nextRound', mapSeed: randomSeed() }), []);
-  const startMatch = useCallback((lives: Lives) => dispatch({ type: 'newMatch', mapSeed: randomSeed(), lives }), []);
+  // Without a seed, the next map is random
+  const nextRound = useCallback((mapSeed = randomSeed()) => dispatch({ type: 'nextRound', mapSeed }), []);
+  const startMatch = useCallback((lives: Lives, mapSeed = randomSeed()) => dispatch({ type: 'newMatch', mapSeed, lives }), []);
 
   return { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound, startMatch };
 };

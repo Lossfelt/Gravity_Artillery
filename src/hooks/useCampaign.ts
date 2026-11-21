@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Difficulty } from '../game/ai';
-import { Campaign, parseCampaign, recordCampaignMatch, startCampaign } from '../game/campaign';
+import { Campaign, chooseSystemMap, parseCampaign, recordCampaignMatch, startCampaign } from '../game/campaign';
 import { Winner } from '../game/gameReducer';
 import { loadJson, removeKey, saveJson } from '../utils/storage';
 
@@ -30,5 +30,8 @@ export const useCampaign = () => {
   const setLives = useCallback((current: Campaign, playerLives: number) =>
     change({ ...current, playerLives }), [change]);
 
-  return { campaign, start, recordMatch, setLives };
+  const chooseMap = useCallback((current: Campaign, harder: boolean) =>
+    change(chooseSystemMap(current, harder)), [change]);
+
+  return { campaign, start, recordMatch, setLives, chooseMap };
 };
