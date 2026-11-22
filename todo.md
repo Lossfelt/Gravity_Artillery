@@ -14,7 +14,7 @@ En kjede av 8 systemer mot datamaskinen. Enkeltkamp blir igjen som eget valg i s
 ### Steg 2: kartvalg
 - [X] Velg hvert nytt kart i felttoget blant to miniatyrer: ved systemstart og etter hvert treff
 - [X] Hvert kort viser vanskelighet (Open / Winding / Treacherous, ut fra treffvinduene for spiller 1)
-- [X] Ved systemstart etter en seier gir det vanskeligste kartet +1 liv (ingenting med fulle liv)
+- [X] Ved systemstart etter en seier har det vanskeligste kartet en dusør, som først betales når du treffer fienden på det kartet
 
 ### Steg 3: spesialprosjektiler (få av hver)
 - [X] Belønning ved systemstart blir +1 liv eller et spesialprosjektil (med fulle liv: prosjektil)

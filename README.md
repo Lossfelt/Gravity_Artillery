@@ -99,7 +99,12 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   `localStorage`, og liv lagres så snart de mistes, så det hjelper ikke å
   lukke siden midt i en kamp.
 - **Kartvalg i felttoget.** Hvert nytt kart velges blant to: ved systemstart og
-  etter hvert treff. Etter en seier gir det vanskeligste kartet +1 liv. Samme
+  etter hvert treff. Etter en seier har det vanskeligste kartet en dusør (+1 liv
+  eller et spesialskudd), som først betales når du ødelegger fiendens planet på
+  det kartet, også om du blir truffet samtidig. Treffer bare fienden, byttes
+  kartet og dusøren er tapt; bommer begge, står den fortsatt på spill. Den
+  lagres som ventende til den er avgjort, så den ikke kan hentes på nytt via
+  menyen. Samme
   kart hele systemet ble forkastet, fordi den som treffer først da bare kan
   gjenta vinkelen. Vanskeligheten måles for spiller 1 ved å fly skuddene: et
   grovsøk i halve grader og forfining til tideler rundt treffene. Treffvinduene

@@ -1,12 +1,12 @@
 import { MapReport, MapTier } from '../game/mapScouting';
 import { Reward } from '../game/campaign';
-import { SHOT_INFO } from './shots';
+import { RewardText } from './RewardText';
 import { MapChoices } from '../hooks/useMapScouting';
 import { MapOptions } from '../utils/generateGravitationalBodies';
 import { presetOf } from '../game/presetMaps';
 import { Planet } from '../types/game';
 import { MapPreview } from './MapPreview';
-import { LivesRow, Modal } from './Modal';
+import { Modal } from './Modal';
 
 type MapChoiceProps = {
   title: string;
@@ -36,12 +36,11 @@ const Pips = ({ count }: { count: number }) => (
   </span>
 );
 
+// The reward is paid only once the player hits the enemy on that map
 const RewardLine = ({ reward }: { reward: Reward | null }) => {
-  if (reward?.kind === 'life') return <span className="text-[#ff9db0]">Reward: +<LivesRow lives={1} /></span>;
-  if (reward?.kind === 'shot') {
-    return <span className="text-[var(--accent)]" title={SHOT_INFO[reward.shot].hint}>Reward: +1 {SHOT_INFO[reward.shot].label} shot</span>;
-  }
-  return <span className="text-[var(--ink-dim)]">No reward</span>;
+  if (reward === null) return <span className="text-[var(--ink-dim)]">No reward</span>;
+  const color = reward.kind === 'life' ? 'text-[#ff9db0]' : 'text-[var(--accent)]';
+  return <span className={color}>Hit the enemy here: <RewardText reward={reward} /></span>;
 };
 
 export const MapChoice = ({ title, choices, map, planets, rewardRound, rewardFor, onChoose, onMenu, compact = false }: MapChoiceProps) => (

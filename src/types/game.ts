@@ -30,6 +30,9 @@ export type ShotKind = 'standard' | 'homing' | 'splitter' | 'phase';
 export type SpecialShot = Exclude<ShotKind, 'standard'>;
 export type Ammo = Record<SpecialShot, number>;
 
+// What the harder map pays in the campaign, once the player hits the enemy on it
+export type Reward = { kind: 'life' } | { kind: 'shot'; shot: SpecialShot };
+
 export type Projectile = {
   x: number;
   y: number;

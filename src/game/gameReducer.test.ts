@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialModel, GameAction, gameReducer, GameModel } from './gameReducer';
+import { createInitialModel, GameAction, gameReducer, GameModel, MapReward } from './gameReducer';
 import { formatAim } from './aim';
 
 const run = (model: GameModel, ...actions: GameAction[]) => actions.reduce(gameReducer, model);
@@ -171,6 +171,47 @@ describe('special shots', () => {
   it('keeps the ammunition left between rounds', () => {
     const model = run(armed(), { type: 'selectShot', player: 1, shot: 'phase' }, ...fire,
       { type: 'planetDestroyed', player: 2, shooter: 1 }, { type: 'roundEnded' }, { type: 'nextRound', mapSeed: 4 });
+    expect(model.players[1].ammo.phase).toBe(1);
+  });
+});
+
+describe('map reward', () => {
+  const atStake = (reward: MapReward['reward'] = { kind: 'life' }, lives = { 1: 2, 2: 3 }) =>
+    run(createInitialModel(1), { type: 'newMatch', mapSeed: 5, lives, mapReward: { reward, lifeCap: 5, ammoCap: 3 } });
+
+  it('is paid when player 1 destroys the enemy planet on that map', () => {
+    const model = run(atStake(), ...fire, { type: 'planetDestroyed', player: 2, shooter: 1 }, { type: 'roundEnded' });
+    expect(lives(model)).toEqual([3, 2]);
+    expect(model.mapReward).toBeNull();
+    expect(model.paidReward).toEqual({ kind: 'life' });
+    expect(run(model, { type: 'nextRound', mapSeed: 6 }).paidReward).toBeNull();
+  });
+
+  it('is paid even when player 1 is hit in the same round', () => {
+    const model = run(atStake(), ...fire,
+      { type: 'planetDestroyed', player: 2, shooter: 1 },
+      { type: 'planetDestroyed', player: 1, shooter: 2 },
+      { type: 'roundEnded' });
+    expect(lives(model)).toEqual([2, 2]);
+  });
+
+  it('is lost when only the enemy hits, since the map changes', () => {
+    const model = run(atStake(), ...fire, { type: 'planetDestroyed', player: 1, shooter: 2 }, { type: 'roundEnded' });
+    expect(lives(model)).toEqual([1, 3]);
+    expect(model.mapReward).toBeNull();
+  });
+
+  it('stays at stake while both miss, and does not count the enemy destroying itself', () => {
+    let model = run(atStake(), ...fire, { type: 'roundEnded' });
+    expect(model.mapReward).toMatchObject({ earned: false });
+    model = run(model, ...fire, { type: 'planetDestroyed', player: 2, shooter: 2 }, { type: 'roundEnded' });
+    expect(lives(model)).toEqual([2, 2]);
+    expect(model.mapReward).toBeNull();
+  });
+
+  it('can pay a special shot, within the cap', () => {
+    const model = run(atStake({ kind: 'shot', shot: 'phase' }), ...fire,
+      { type: 'planetDestroyed', player: 2, shooter: 1 }, { type: 'roundEnded' });
     expect(model.players[1].ammo.phase).toBe(1);
   });
 });

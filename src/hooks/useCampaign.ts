@@ -28,8 +28,8 @@ export const useCampaign = () => {
   const recordMatch = useCallback((current: Campaign, winner: Exclude<Winner, null>, playerLives: number, ammo: Ammo) =>
     change(recordCampaignMatch(current, winner, playerLives, ammo)), [change]);
 
-  const setProgress = useCallback((current: Campaign, playerLives: number, ammo: Ammo) =>
-    change({ ...current, playerLives, ammo }), [change]);
+  const setProgress = useCallback((current: Campaign, playerLives: number, ammo: Ammo, rewardPending: boolean) =>
+    change({ ...current, playerLives, ammo, rewardPending }), [change]);
 
   const chooseMap = useCallback((current: Campaign, reward: Reward | null) =>
     change(chooseSystemMap(current, reward)), [change]);

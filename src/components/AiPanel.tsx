@@ -4,6 +4,8 @@ import { formatAim } from '../game/aim';
 import { accentStyle } from './theme';
 import { Check } from './icons';
 import { DIFFICULTIES } from './difficulty';
+import { Reward } from '../types/game';
+import { RewardText } from './RewardText';
 
 type AiPanelProps = {
   angle: number;
@@ -14,6 +16,8 @@ type AiPanelProps = {
   onSwitchToHuman: () => void;
   // In a campaign the opponent is fixed: shows e.g. "System 3/8 · Normal" instead of the choices
   campaignLabel?: string;
+  // A campaign reward at stake: paid if the player hits this opponent on the current map
+  bounty?: Reward | null;
   compact?: boolean;
 };
 
@@ -32,6 +36,7 @@ export const AiPanel = ({
   setDifficulty,
   onSwitchToHuman,
   campaignLabel,
+  bounty,
   compact = false
 }: AiPanelProps) => {
   const text = compact ? 'text-xs' : 'text-sm md:text-base';
@@ -59,6 +64,12 @@ export const AiPanel = ({
             </button>
           ))}
         </div>
+      )}
+
+      {bounty && (
+        <p className={`text-[#ffc446] ${compact ? '-mt-1 mb-2 text-[11px]' : '-mt-2 mb-4 text-xs'}`}>
+          Bounty on hit: <RewardText reward={bounty} />
+        </p>
       )}
 
       <p className={`readout ${text} ${compact ? 'mb-2' : 'mb-4'}`}>

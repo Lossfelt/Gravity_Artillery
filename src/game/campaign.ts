@@ -1,7 +1,9 @@
 import { Difficulty } from './ai';
 import { START_LIVES, Winner } from './gameReducer';
 import { MapOptions } from '../utils/generateGravitationalBodies';
-import { Ammo, SpecialShot } from '../types/game';
+import { Ammo, Reward, SpecialShot } from '../types/game';
+
+export type { Reward };
 import { createRandom } from '../utils/random';
 
 // A campaign is a chain of matches against the computer. Your lives carry
@@ -23,12 +25,12 @@ export type Campaign = {
   system: number;
   playerLives: number;
   status: CampaignStatus;
-  // Won a system and has not chosen the next map yet: the harder map pays a reward
+  // A reward is on offer (won a system, next map not chosen yet) or at stake
+  // (chose the harder map and has not hit the enemy on it yet)
   rewardPending: boolean;
   ammo: Ammo;
 };
 
-export type Reward = { kind: 'life' } | { kind: 'shot'; shot: SpecialShot };
 
 // Bosses are smaller targets than a planet: a moon base, then a battle station
 export type BossKind = 'moon' | 'station';
@@ -103,13 +105,12 @@ export const rewardFor = (campaign: Campaign, seed: number): Reward | null => {
   return shots.length > 0 ? { kind: 'shot', shot: shots[Math.floor(random() * shots.length)] } : null;
 };
 
-/** After choosing the first map of a system, with the reward it carried. */
-export const chooseSystemMap = (campaign: Campaign, reward: Reward | null): Campaign => {
-  const next = { ...campaign, rewardPending: false };
-  if (!campaign.rewardPending || reward === null) return next;
-  if (reward.kind === 'life') return { ...next, playerLives: Math.min(MAX_PLAYER_LIVES, campaign.playerLives + 1) };
-  return { ...next, ammo: { ...campaign.ammo, [reward.shot]: Math.min(MAX_AMMO, campaign.ammo[reward.shot] + 1) } };
-};
+/**
+ * After choosing the first map of a system. A reward is not paid here: it is
+ * at stake until the player hits the enemy on that map (see the game reducer).
+ */
+export const chooseSystemMap = (campaign: Campaign, reward: Reward | null): Campaign =>
+  ({ ...campaign, rewardPending: campaign.rewardPending && reward !== null });
 
 const parseAmmo = (value: unknown): Ammo | null => {
   // Saves from before special shots have none

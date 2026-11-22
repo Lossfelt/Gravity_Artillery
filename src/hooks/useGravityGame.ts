@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { initialPlanets } from '../constants/game';
-import { createInitialModel, GameModel, gameReducer, isMatchOver, Lives, matchWinner, PlayerNumber, Winner } from '../game/gameReducer';
+import { createInitialModel, GameModel, gameReducer, isMatchOver, Lives, MapReward, matchWinner, PlayerNumber, Winner } from '../game/gameReducer';
 import { Ammo, ShotKind } from '../types/game';
 import { DEFAULT_MAP, MapOptions } from '../utils/generateGravitationalBodies';
 import { randomSeed } from '../utils/random';
@@ -90,8 +90,12 @@ export const useGravityGame = ({
     dispatch({ type: 'toggleReady', player, mapSeed: randomSeed() }), []);
   // Without a seed, the next map is random
   const nextRound = useCallback((mapSeed = randomSeed()) => dispatch({ type: 'nextRound', mapSeed }), []);
-  const startMatch = useCallback((lives: Lives, mapSeed = randomSeed(), ammo?: Partial<Record<PlayerNumber, Ammo>>) =>
-    dispatch({ type: 'newMatch', mapSeed, lives, ammo }), []);
+  const startMatch = useCallback((
+    lives: Lives,
+    mapSeed = randomSeed(),
+    ammo?: Partial<Record<PlayerNumber, Ammo>>,
+    mapReward?: Omit<MapReward, 'earned'>
+  ) => dispatch({ type: 'newMatch', mapSeed, lives, ammo, mapReward }), []);
   const selectShot = useCallback((player: PlayerNumber, shot: ShotKind) => dispatch({ type: 'selectShot', player, shot }), []);
 
   return { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound, startMatch, selectShot };

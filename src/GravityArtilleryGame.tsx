@@ -12,6 +12,7 @@ import { StartMenu } from './components/StartMenu';
 import { CampaignScreen } from './components/CampaignScreen';
 import { StatsScreen } from './components/StatsScreen';
 import { MapChoice } from './components/MapChoice';
+import { RewardText } from './components/RewardText';
 import { ScoutRequest, useMapScouting } from './hooks/useMapScouting';
 import { difficultyLabel } from './components/difficulty';
 import { useOpponentSetting } from './hooks/useOpponentSetting';
@@ -20,7 +21,7 @@ import { useStats } from './hooks/useStats';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants/game';
 import { GameModel, isMatchOver, PlayerNumber, START_LIVES, Winner } from './game/gameReducer';
 import { Difficulty } from './game/ai';
-import { BOSSES, Campaign, CAMPAIGN_LENGTH, rewardFor, systemConfig } from './game/campaign';
+import { BOSSES, Campaign, CAMPAIGN_LENGTH, MAX_AMMO, MAX_PLAYER_LIVES, rewardFor, systemConfig } from './game/campaign';
 import { presetSeeds } from './game/presetMaps';
 import { planetsFor } from './utils/bossPlanets';
 import { recordCampaignStart, recordMatch, recordSystemsConquered } from './game/stats';
@@ -92,13 +93,15 @@ const GravityArtilleryGame = () => {
   // The last hit has landed, but the result is not shown yet
   const resultPending = gameState === 'gameover' && winner === null && (players[1].lives <= 0 || players[2].lives <= 0);
 
-  // Saves lives and special shots as they are used, so closing the page mid-match cannot undo them
+  // Saves lives and special shots as they are used, so closing the page mid-match cannot undo them.
+  // A reward stays pending while it is on offer in the map choice or still at stake in the match.
   const campaignInPlay = inCampaign && campaign.status === 'active' && campaign.system === matchSystem;
   const playerLives = players[1].lives;
   const playerAmmo = players[1].ammo;
+  const rewardPending = campaign !== null && (choosing === 'system' ? campaign.rewardPending : model.mapReward !== null);
   useEffect(() => {
-    if (campaignInPlay) saveCampaign({ ...campaign, playerLives, ammo: playerAmmo });
-  }, [campaignInPlay, campaign, playerLives, playerAmmo]);
+    if (campaignInPlay) saveCampaign({ ...campaign, playerLives, ammo: playerAmmo, rewardPending });
+  }, [campaignInPlay, campaign, playerLives, playerAmmo, rewardPending]);
 
   // Scouting for the next round starts as soon as the round ends, so the maps are ready when asked for
   const needsRoundMap = inCampaign && gameState === 'gameover' && !isMatchOver(model);
@@ -141,8 +144,15 @@ const GravityArtilleryGame = () => {
 
   const chooseMap = (seed: number, harder: boolean) => {
     if (choosing === 'system' && campaign) {
-      const next = chooseCampaignMap(campaign, harder ? rewardFor(campaign, seed) : null);
-      startMatch({ 1: next.playerLives, 2: systemConfig(next.system).opponentLives }, seed, { 1: next.ammo });
+      // The reward is only at stake now; it is paid when the player hits the enemy on this map
+      const reward = harder ? rewardFor(campaign, seed) : null;
+      const next = chooseCampaignMap(campaign, reward);
+      startMatch(
+        { 1: next.playerLives, 2: systemConfig(next.system).opponentLives },
+        seed,
+        { 1: next.ammo },
+        reward ? { reward, lifeCap: MAX_PLAYER_LIVES, ammoCap: MAX_AMMO } : undefined
+      );
     } else {
       nextRound(seed);
     }
@@ -163,7 +173,7 @@ const GravityArtilleryGame = () => {
   };
 
   const openMenu = () => {
-    if (campaignInPlay && playerLives > 0) setCampaignProgress(campaign, playerLives, playerAmmo);
+    if (campaignInPlay && playerLives > 0) setCampaignProgress(campaign, playerLives, playerAmmo, rewardPending);
     setScreen('menu');
   };
 
@@ -182,6 +192,7 @@ const GravityArtilleryGame = () => {
       difficulty={aiDifficulty}
       setDifficulty={setOpponent}
       onSwitchToHuman={() => setOpponent(null)}
+      bounty={inCampaign ? model.mapReward?.reward : null}
       campaignLabel={inCampaign
         ? `${config?.boss ? BOSSES[config.boss].name : 'System'} ${matchSystem + 1}/${CAMPAIGN_LENGTH} · ${difficultyLabel(campaign.difficulty)}`
         : undefined}
@@ -301,6 +312,14 @@ const GravityArtilleryGame = () => {
               displayWidth={displayWidth}
               displayHeight={displayHeight}
             />
+            {model.paidReward && winner === null && (
+              <p
+                className="absolute top-3 left-1/2 -translate-x-1/2 chip btn cursor-default px-4 py-1.5 text-sm text-[#ffc446] whitespace-nowrap"
+                role="status"
+              >
+                Bounty claimed: <RewardText reward={model.paidReward} />
+              </p>
+            )}
             {winner !== null && !inCampaign && (
               <GameOverOverlay
                 winner={winner}

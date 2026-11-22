@@ -88,15 +88,17 @@ describe('rewardFor', () => {
 describe('chooseSystemMap', () => {
   const afterWin = recordCampaignMatch(startCampaign('normal'), 1, 2);
 
-  it('pays the reward once', () => {
+  it('keeps the reward pending for the harder map, but does not pay it yet', () => {
     const chosen = chooseSystemMap(afterWin, { kind: 'life' });
-    expect(chosen).toMatchObject({ playerLives: 3, rewardPending: false });
-    expect(chooseSystemMap(chosen, { kind: 'life' }).playerLives).toBe(3);
-    expect(chooseSystemMap(afterWin, { kind: 'shot', shot: 'homing' }).ammo.homing).toBe(START_AMMO.homing + 1);
+    expect(chosen).toMatchObject({ playerLives: 2, rewardPending: true, ammo: START_AMMO });
   });
 
-  it('gives nothing for the easier map', () => {
-    expect(chooseSystemMap(afterWin, null)).toMatchObject({ playerLives: 2, rewardPending: false, ammo: START_AMMO });
+  it('drops the reward for the easier map', () => {
+    expect(chooseSystemMap(afterWin, null)).toMatchObject({ playerLives: 2, rewardPending: false });
+  });
+
+  it('has nothing at stake at the start of a campaign', () => {
+    expect(chooseSystemMap(startCampaign('easy'), { kind: 'life' }).rewardPending).toBe(false);
   });
 });
 

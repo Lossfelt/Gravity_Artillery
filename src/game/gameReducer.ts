@@ -1,4 +1,4 @@
-import { Ammo, GameState, ShotKind, SpecialShot } from '../types/game';
+import { Ammo, GameState, Reward, ShotKind, SpecialShot } from '../types/game';
 import { randomSeed } from '../utils/random';
 import { adjustAim } from './aim';
 
@@ -22,6 +22,11 @@ type PlayerState = {
 
 export type Lives = Record<PlayerNumber, number>;
 
+// A campaign reward at stake for player 1 on the current map: paid when the
+// round ends if player 1 destroyed the enemy planet on it, lost if the map
+// changes otherwise (the enemy hit), kept while both miss
+export type MapReward = { reward: Reward; lifeCap: number; ammoCap: number; earned: boolean };
+
 export type GameModel = {
   phase: GameState;
   players: Record<PlayerNumber, PlayerState>;
@@ -37,6 +42,9 @@ export type GameModel = {
   matchShots: number;
   // What each player fired in the latest shot
   firedShots: Record<PlayerNumber, ShotKind>;
+  mapReward: MapReward | null;
+  // Paid when the last round ended, so it can be shown until the next round
+  paidReward: Reward | null;
 };
 
 export type GameAction =
@@ -51,7 +59,7 @@ export type GameAction =
   | { type: 'revealWinner' }
   | { type: 'nextRound'; mapSeed: number }
   // Throws away the current match and starts a new one with the given lives
-  | { type: 'newMatch'; mapSeed: number; lives: Lives; ammo?: Partial<Record<PlayerNumber, Ammo>> };
+  | { type: 'newMatch'; mapSeed: number; lives: Lives; ammo?: Partial<Record<PlayerNumber, Ammo>>; mapReward?: Omit<MapReward, 'earned'> };
 
 export const START_LIVES = 3;
 const DEFAULT_LIVES: Lives = { 1: START_LIVES, 2: START_LIVES };
@@ -76,7 +84,9 @@ export const createInitialModel = (
   shotNumber: 0,
   roundNumber: 0,
   matchShots: 0,
-  firedShots: STANDARD_SHOTS
+  firedShots: STANDARD_SHOTS,
+  mapReward: null,
+  paidReward: null
 });
 
 const mapPlayers = (model: GameModel, fn: (p: PlayerState, n: PlayerNumber) => PlayerState) =>
@@ -135,7 +145,8 @@ const nextRound = (model: GameModel, mapSeed: number): GameModel => {
     destroyed: [],
     winner: null,
     mapSeed,
-    roundNumber: model.roundNumber + 1
+    roundNumber: model.roundNumber + 1,
+    paidReward: null
   };
 };
 
@@ -152,8 +163,15 @@ const destroyPlanet = (model: GameModel, player: PlayerNumber, shooter: PlayerNu
   const destroyed = [...model.destroyed, player];
   if (shooter === player) return { ...model, destroyed };
   const players = { ...model.players, [shooter]: { ...model.players[shooter], hits: model.players[shooter].hits + 1 } };
-  return { ...model, destroyed, players };
+  // A reward at stake belongs to player 1
+  const mapReward = model.mapReward && shooter === 1 ? { ...model.mapReward, earned: true } : model.mapReward;
+  return { ...model, destroyed, players, mapReward };
 };
+
+const payReward = (p: PlayerState, { reward, lifeCap, ammoCap }: MapReward): PlayerState =>
+  reward.kind === 'life'
+    ? { ...p, lives: Math.min(lifeCap, p.lives + 1) }
+    : { ...p, ammo: { ...p.ammo, [reward.shot]: Math.min(ammoCap, p.ammo[reward.shot] + 1) } };
 
 const toggleReady = (model: GameModel, player: PlayerNumber, mapSeed: number): GameModel => {
   if (model.phase === 'firing' || isAwaitingResult(model)) return model;
@@ -165,14 +183,16 @@ const toggleReady = (model: GameModel, player: PlayerNumber, mapSeed: number): G
 
 // Each destroyed planet costs its owner one life, no matter whose shot hit it.
 // A miss by both returns to setup with the same map so players can adjust.
+// A hit means a new map, which settles a reward at stake: paid if earned, otherwise lost.
 const endRound = (model: GameModel): GameModel => {
   if (model.phase !== 'firing') return model;
-  const players = mapPlayers(model, (p, n) => ({
-    ...p,
-    ready: false,
-    lives: Math.max(0, p.lives - (model.destroyed.includes(n) ? 1 : 0))
-  }));
-  return { ...model, players, phase: model.destroyed.length > 0 ? 'gameover' : 'setup' };
+  const hit = model.destroyed.length > 0;
+  const reward = hit && model.mapReward?.earned ? model.mapReward : null;
+  const players = mapPlayers(model, (p, n) => {
+    const after = { ...p, ready: false, lives: Math.max(0, p.lives - (model.destroyed.includes(n) ? 1 : 0)) };
+    return n === 1 && reward ? payReward(after, reward) : after;
+  });
+  return { ...model, players, phase: hit ? 'gameover' : 'setup', mapReward: hit ? null : model.mapReward, paidReward: reward?.reward ?? null };
 };
 
 /**
@@ -200,6 +220,9 @@ export const gameReducer = (model: GameModel, action: GameAction): GameModel => 
     case 'nextRound':
       return model.phase === 'gameover' && !isAwaitingResult(model) ? nextRound(model, action.mapSeed) : model;
     case 'newMatch':
-      return newMatch(model, action.mapSeed, action.lives, action.ammo);
+      return {
+        ...newMatch(model, action.mapSeed, action.lives, action.ammo),
+        mapReward: action.mapReward ? { ...action.mapReward, earned: false } : null
+      };
   }
 };
