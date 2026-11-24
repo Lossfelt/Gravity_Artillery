@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ExplosionParticle, GravityBody, PlanetFragment, Projectile } from '../types/game';
-import { initialPlanets, MAX_FLIGHT_STEPS } from '../constants/game';
+import { CANVAS_HEIGHT, initialPlanets, MAX_FLIGHT_STEPS, OFFSCREEN_MARGIN } from '../constants/game';
 import { burnOutProjectiles, createProjectile, createShot, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
 
 const projectile = (overrides: Partial<Projectile>): Projectile => ({
@@ -26,10 +26,20 @@ describe('stepProjectile', () => {
     expect(proj.vy).toBe(0);
   });
 
-  it('deactivates when leaving the canvas', () => {
+  it('deactivates when leaving through a side', () => {
     const proj = projectile({ x: 998, vx: 5 });
     expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
     expect(proj.active).toBe(false);
+  });
+
+  it('keeps flying a little above or below the board, but not beyond the margin', () => {
+    const above = projectile({ y: 2, vy: -5 });
+    stepProjectile(above, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(above).toMatchObject({ y: -3, active: true });
+
+    const below = projectile({ y: CANVAS_HEIGHT + OFFSCREEN_MARGIN - 2, vy: 5 });
+    stepProjectile(below, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(below.active).toBe(false);
   });
 
   it('hits the enemy planet', () => {

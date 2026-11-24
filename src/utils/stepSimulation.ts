@@ -1,5 +1,5 @@
 import { ExplosionParticle, GravityBody, Impact, Planet, PlanetFragment, Projectile, ShotKind } from '../types/game';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, HOMING_PULL, HOMING_RANGE, MAX_FLIGHT_STEPS, PROJECTILE_SPEED, SPLIT_ANGLE } from '../constants/game';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, HOMING_PULL, HOMING_RANGE, MAX_FLIGHT_STEPS, OFFSCREEN_MARGIN, PROJECTILE_SPEED, SPLIT_ANGLE } from '../constants/game';
 import { calculateGravity } from './calculateGravity';
 import { checkCollision } from './checkCollision';
 
@@ -69,7 +69,7 @@ export const stepProjectile = (
   const newX = proj.x + newVx * deltaTime;
   const newY = proj.y + newVy * deltaTime;
 
-  if (newX < 0 || newX > CANVAS_WIDTH || newY < 0 || newY > CANVAS_HEIGHT) {
+  if (newX < 0 || newX > CANVAS_WIDTH || newY < -OFFSCREEN_MARGIN || newY > CANVAS_HEIGHT + OFFSCREEN_MARGIN) {
     proj.active = false;
     return null;
   }

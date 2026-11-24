@@ -54,6 +54,12 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   lang bane rundt en stjerne ikke kan holde runden i gang. Målt over 27 300
   skudd lander 99 % innen 5 s og bare 0,1 % flyr lenger enn 10 s. AI-en
   simulerer med samme grense.
+- **Skudd kan fly 200 px over og under spillområdet** og komme tilbake.
+  Ut gjennom sidene stopper de som før. Mens skuddet er utenfor, viser en
+  pil på kanten hvor det er på x-aksen; pilen krymper og blekner jo lenger ut
+  det er. Målt over 160 felttogkart kom 9 % av skuddene tilbake, og
+  treffvinduene ble i snitt 25 % bredere (3,4° → 4,3°). Mer margin ga nesten
+  ikke mer (300 px: 10 %, 4,3°). Kartvurderingen og AI-en bruker samme regel.
 - **Kulisser:** planetene roterer som glober (overflaten rulles sidelengs og
   presses sammen mot kanten), lyses opp fra de sterkeste stjernene og har en
   tynn atmosfære. Stjernene har en flimrende korona, og to lag med små stjerner
