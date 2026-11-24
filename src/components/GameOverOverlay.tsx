@@ -7,6 +7,7 @@ type GameOverOverlayProps = {
   winner: Exclude<Winner, null>;
   winnerLives: number | null;
   onPlayAgain: () => void;
+  onMenu: () => void;
 };
 
 // A draw has no winning colour, so it uses a neutral violet
@@ -23,7 +24,7 @@ const victoryMessage = (lives: number | null) => {
   }
 };
 
-export const GameOverOverlay = ({ winner, winnerLives, onPlayAgain }: GameOverOverlayProps) => (
+export const GameOverOverlay = ({ winner, winnerLives, onPlayAgain, onMenu }: GameOverOverlayProps) => (
   <div
     style={winner === 'draw' ? DRAW_ACCENT : accentStyle(winner)}
     className="absolute inset-0 flex items-center justify-center bg-black/75 rounded-lg"
@@ -40,9 +41,12 @@ export const GameOverOverlay = ({ winner, winnerLives, onPlayAgain }: GameOverOv
           ? 'Planetary remnants scream silently through the uncaring void...'
           : victoryMessage(winnerLives)}
       </p>
-      <button onClick={onPlayAgain} className="btn btn-primary py-3 px-6 text-lg">
-        Play again<NextArrow />
-      </button>
+      <div className="flex justify-center gap-3">
+        <button onClick={onMenu} className="btn btn-step py-3 px-6 text-lg">Menu</button>
+        <button onClick={onPlayAgain} className="btn btn-primary py-3 px-6 text-lg">
+          Play again<NextArrow />
+        </button>
+      </div>
     </div>
   </div>
 );

@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { initialPlanets } from '../constants/game';
-import { createInitialModel, gameReducer, isMatchOver, PlayerNumber } from '../game/gameReducer';
-import { generateGravitationalBodies } from '../utils/generateGravitationalBodies';
-import { createRandom, randomSeed } from '../utils/random';
+import { createInitialModel, GameModel, gameReducer, isMatchOver, Lives, MapReward, matchWinner, PlayerNumber, Winner } from '../game/gameReducer';
+import { Ammo, ShotKind } from '../types/game';
+import { DEFAULT_MAP, MapOptions } from '../utils/generateGravitationalBodies';
+import { randomSeed } from '../utils/random';
+import { bodiesFor } from '../game/presetMaps';
+import { Planet } from '../types/game';
 import { SimulationSounds, useSimulation } from './useSimulation';
 import { useAiOpponent } from './useAiOpponent';
 import { Difficulty } from '../game/ai';
@@ -11,24 +14,41 @@ type UseGravityGameProps = {
   sounds?: SimulationSounds;
   // When set, the computer plays player 2
   aiDifficulty?: Difficulty | null;
+  // Multiplies the computer's aiming error (see aimWithError)
+  aiErrorScale?: number;
+  map?: MapOptions;
+  // A boss replaces player 2's planet
+  planets?: { player1: Planet; player2: Planet };
+  // Stops the computer from playing, e.g. while a menu is open
+  paused?: boolean;
+  // Called once per match, when the result is shown
+  onMatchEnd?: (winner: Exclude<Winner, null>, model: GameModel) => void;
 };
 
 const RESULT_DELAY_MS = 2000;
 
-export const useGravityGame = ({ sounds, aiDifficulty = null }: UseGravityGameProps = {}) => {
+export const useGravityGame = ({
+  sounds,
+  aiDifficulty = null,
+  aiErrorScale = 1,
+  map = DEFAULT_MAP,
+  planets = initialPlanets,
+  paused = false,
+  onMatchEnd
+}: UseGravityGameProps = {}) => {
   const [model, dispatch] = useReducer(gameReducer, undefined, () => createInitialModel());
-  const planets = initialPlanets;
-
-  // The star map is derived from a seed, so the same seed recreates the same map
+  // The star map is derived from a seed (or names a preset map), so the same seed recreates the same map
+  const { bodyCount, blackHoleChance } = map;
   const gravitationalBodies = useMemo(
-    () => generateGravitationalBodies(planets, createRandom(model.mapSeed)),
-    [planets, model.mapSeed]
+    () => bodiesFor(model.mapSeed, { bodyCount, blackHoleChance }, planets),
+    [planets, model.mapSeed, bodyCount, blackHoleChance]
   );
 
   const simulationRef = useSimulation({
     shotNumber: model.shotNumber,
     roundNumber: model.roundNumber,
     aims: { 1: model.players[1], 2: model.players[2] },
+    shots: model.firedShots,
     lives: { 1: model.players[1].lives, 2: model.players[2].lives },
     planets,
     gravitationalBodies,
@@ -37,19 +57,30 @@ export const useGravityGame = ({ sounds, aiDifficulty = null }: UseGravityGamePr
   });
 
   useAiOpponent({
-    enabled: aiDifficulty !== null,
+    enabled: aiDifficulty !== null && !paused,
     difficulty: aiDifficulty ?? 'normal',
+    errorScale: aiErrorScale,
     model,
     planets,
     gravitationalBodies,
     dispatch
   });
 
+  const latestRef = useRef({ model, onMatchEnd });
+  useEffect(() => {
+    latestRef.current = { model, onMatchEnd };
+  });
+
   // Show the match result a moment after the final hit
   const matchOver = model.phase === 'gameover' && isMatchOver(model);
   useEffect(() => {
     if (!matchOver) return;
-    const timeoutId = window.setTimeout(() => dispatch({ type: 'revealWinner' }), RESULT_DELAY_MS);
+    const timeoutId = window.setTimeout(() => {
+      const { model: latest, onMatchEnd: report } = latestRef.current;
+      const winner = matchWinner(latest);
+      if (winner !== null) report?.(winner, latest);
+      dispatch({ type: 'revealWinner' });
+    }, RESULT_DELAY_MS);
     return () => window.clearTimeout(timeoutId);
   }, [matchOver]);
 
@@ -57,7 +88,15 @@ export const useGravityGame = ({ sounds, aiDifficulty = null }: UseGravityGamePr
     dispatch({ type: 'adjustAngle', player, delta }), []);
   const toggleReady = useCallback((player: PlayerNumber) =>
     dispatch({ type: 'toggleReady', player, mapSeed: randomSeed() }), []);
-  const nextRound = useCallback(() => dispatch({ type: 'nextRound', mapSeed: randomSeed() }), []);
+  // Without a seed, the next map is random
+  const nextRound = useCallback((mapSeed = randomSeed()) => dispatch({ type: 'nextRound', mapSeed }), []);
+  const startMatch = useCallback((
+    lives: Lives,
+    mapSeed = randomSeed(),
+    ammo?: Partial<Record<PlayerNumber, Ammo>>,
+    mapReward?: Omit<MapReward, 'earned'>
+  ) => dispatch({ type: 'newMatch', mapSeed, lives, ammo, mapReward }), []);
+  const selectShot = useCallback((player: PlayerNumber, shot: ShotKind) => dispatch({ type: 'selectShot', player, shot }), []);
 
-  return { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound };
+  return { model, planets, gravitationalBodies, simulationRef, adjustAngle, toggleReady, nextRound, startMatch, selectShot };
 };

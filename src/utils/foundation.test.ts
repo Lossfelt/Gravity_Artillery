@@ -26,6 +26,15 @@ describe('generateGravitationalBodies', () => {
     expect(first.length).toBeGreaterThan(0);
   });
 
+  it('fits the most crowded campaign map and follows the black hole chance', () => {
+    const maps = Array.from({ length: 50 }, (_, seed) =>
+      generateGravitationalBodies(initialPlanets, createRandom(seed), { bodyCount: 7, blackHoleChance: 1 }));
+    // Bodies that do not fit are retried as red stars, so some maps hold fewer black holes
+    expect(maps.every(map => map.length === 7)).toBe(true);
+    const none = generateGravitationalBodies(initialPlanets, createRandom(1), { bodyCount: 7, blackHoleChance: 0 });
+    expect(none.some(b => b.type === 'blackhole')).toBe(false);
+  });
+
   it('places bodies mostly towards the middle, but inside the board', () => {
     const bodies = Array.from({ length: 100 }, (_, seed) =>
       generateGravitationalBodies(initialPlanets, createRandom(seed))).flat();

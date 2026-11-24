@@ -2,8 +2,9 @@
 
 *A conflict in the Dark Forest.* To spillere stiller inn vinkel og skyter samtidig mot hverandres
 planet, og stjerner og usynlige svarte hull bøyer banene. Hver planet har tre
-liv. Et skudd kan også slynges tilbake og ødelegge sin egen planet. Med
-«Play vs computer» spiller du alene mot en AI (Easy, Normal eller Hard).
+liv. Et skudd kan også slynges tilbake og ødelegge sin egen planet. Alene
+kan du spille et felttog gjennom åtte systemer eller en enkeltkamp mot en AI
+(Easy, Normal eller Hard).
 
 ## Kom i gang
 
@@ -24,6 +25,10 @@ npm run build    # typesjekk og produksjonsbygg til dist/
 | `src/game/gameReducer.ts` | Spillflyten som en ren tilstandsmaskin: oppsett, skyting, runde slutt, neste runde |
 | `src/game/aim.ts` | Sikting relativt til motstanderen (0 = rett frem, negativt = opp) |
 | `src/game/ai.ts` + `src/hooks/useAiOpponent.ts` | AI-motstander: simulerer skudd for å finne beste sikte, og legger på siktefeil etter vanskelighetsgrad |
+| `src/game/campaign.ts` + `src/hooks/useCampaign.ts` | Felttoget: hvor tøft hvert system er, liv som følger med, og lagring |
+| `src/game/mapScouting.ts` + `src/hooks/useMapScouting.ts` | Kartvalget i felttoget: hvor vanskelig et kart er å treffe, og to kart å velge mellom |
+| `src/game/presetMaps.ts` + `src/utils/bossPlanets.ts` | Sjefene (måne og romstasjon, tegnet i kode) og de ferdiglagde kartene til sjefskampene |
+| `src/game/stats.ts` + `src/hooks/useStats.ts` | Statistikk mot datamaskinen, per vanskelighetsgrad |
 | `src/hooks/useSimulation.ts` | Fysikkløkka. Prosjektiler, partikler og fragmenter ligger i en ref, ikke i React-state |
 | `src/hooks/useCanvasRenderer.ts` | Tegneløkka, som leser simuleringen direkte hver frame |
 | `src/utils/stepSimulation.ts` | Ett fysikksteg for prosjektiler, partikler og fragmenter |
@@ -49,6 +54,12 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   lang bane rundt en stjerne ikke kan holde runden i gang. Målt over 27 300
   skudd lander 99 % innen 5 s og bare 0,1 % flyr lenger enn 10 s. AI-en
   simulerer med samme grense.
+- **Skudd kan fly 200 px over og under spillområdet** og komme tilbake.
+  Ut gjennom sidene stopper de som før. Mens skuddet er utenfor, viser en
+  pil på kanten hvor det er på x-aksen; pilen krymper og blekner jo lenger ut
+  det er. Målt over 160 felttogkart kom 9 % av skuddene tilbake, og
+  treffvinduene ble i snitt 25 % bredere (3,4° → 4,3°). Mer margin ga nesten
+  ikke mer (300 px: 10 %, 4,3°). Kartvurderingen og AI-en bruker samme regel.
 - **Kulisser:** planetene roterer som glober (overflaten rulles sidelengs og
   presses sammen mot kanten), lyses opp fra de sterkeste stjernene og har en
   tynn atmosfære. Stjernene har en flimrende korona, og to lag med små stjerner
@@ -81,6 +92,63 @@ npm run build    # typesjekk og produksjonsbygg til dist/
   Siktefeilen krymper for hvert skudd på samme kart, omtrent som når et
   menneske justerer seg etter sporet. Målt over 60 kart treffer den i snitt
   etter ca. 8 skudd på Easy, 4 på Normal og 2-3 på Hard.
+
+- **Felttog over 8 systemer.** Livene dine følger med fra system til system
+  (maks 5), mens motstanderen starter hvert system med 1, 2 eller 3 liv.
+  Kartene får flere kropper (4 → 7) og større sjanse for svarte hull
+  (6 → 25 %). AI-en skjerpes innenfor valgt nivå med en skala på siktefeilen
+  (2,0 → 0,5) som virker både på startfeilen og på hvor sakte den krymper. Å
+  skalere bare startfeilen ga nesten ingen forskjell: målt over 40 kart per
+  system gikk Normal bare fra 4,4 til 3,5 skudd før treff. Med begge, målt på
+  de samme 40 kartene, går Normal fra 7,0 til 2,4 (Easy 11,6 → 4,4, Hard
+  3,8 → 1,6). Felttoget og statistikken lagres i
+  `localStorage`, og liv lagres så snart de mistes, så det hjelper ikke å
+  lukke siden midt i en kamp.
+- **Kartvalg i felttoget.** Hvert nytt kart velges blant to: ved systemstart og
+  etter hvert treff. Etter en seier har det vanskeligste kartet en dusør (+1 liv
+  eller et spesialskudd), som først betales når du ødelegger fiendens planet på
+  det kartet, også om du blir truffet samtidig. Treffer bare fienden, byttes
+  kartet og dusøren er tapt; bommer begge, står den fortsatt på spill. Den
+  lagres som ventende til den er avgjort, så den ikke kan hentes på nytt via
+  menyen. Samme
+  kart hele systemet ble forkastet, fordi den som treffer først da bare kan
+  gjenta vinkelen. Vanskeligheten måles for spiller 1 ved å fly skuddene: et
+  grovsøk i halve grader og forfining til tideler rundt treffene. Treffvinduene
+  er stort sett bare 1–2° brede, så hele grader var for grovt. Bredden alene
+  skilte lite (median 3–4°), mens hvor langt fra rett frem nærmeste treff
+  ligger varierte fra ca. 1° til 12°. Scoren er derfor avstand + 10 / bredde,
+  og grensene (6 og 11) deler 240 kart omtrent i tredjedeler. Av fire
+  kandidater vises det letteste og det vanskeligste, og bare kart der også
+  AI-en kan treffe på hele grader. Scoren er en modell og ikke testet på
+  spillere.
+- **Spesialskudd i felttoget.** Du starter uten, og det vanskeligste kartet
+  etter en seier gir +1 liv eller et skudd (alltid skudd
+  med fulle liv, maks 3 av hver). Målt over 180 felttogskart, med sikte i
+  femtedels grader:
+  - *Splitter* (tre skudd 3° fra hverandre): treffvindu ca. 14° mot 5° for et
+    vanlig skudd.
+  - *Fase* (bare svarte hull trekker): treffer rett frem på 78 % av kartene i
+    system 1, men bare 13 % i system 8, der det er flere svarte hull. Det
+    avslører også hvor de usynlige svarte hullene er.
+  - *Søkende* (svinger mot fiendeplaneten med fast kraft innenfor 250 px):
+    vindu ca. 8,6°. Det erstattet et planlagt tungt skudd med mindre
+    tyngdekraft, fordi selv 10 % tyngdekraft bare flyttet nærmeste treff fra
+    2,2° til ca. 1,3° og knapt gjorde vinduet bredere.
+- **Sjefer er mindre mål.** System 4 voktes av en månebase (radius 16) og
+  system 8 av en kampstasjon (radius 13), mot planetens 25. Målt over 60 kart
+  krymper treffvinduet fra 3,7° til 2,2° mot månen, og fra 2,9° til ca. 1,1°
+  mot stasjonen. Sjefene er tegnet i kode: månen som en kratertekstur som
+  roteres som en globus, og stasjonen som en ring sett ovenfra som snurrer.
+  Begge blir data-URL-er, så de lastes og sprenges som vanlige planetbilder.
+- **Ferdiglagde kart** til sjefskampene, tre per sjef, lagret som lister med
+  kropper. De bruker kartnumre fra 2^32 og oppover, så ett tall i spillmodellen
+  dekker både tilfeldige og ferdiglagde kart. Sjefskampen åpner med valg mellom
+  to tilfeldige av de tre. Senere runder bruker tilfeldige kart, siden et kart
+  man har truffet før kan treffes igjen med samme vinkel. En test sjekker at
+  alle kartene er rettferdige mot sin sjef.
+- **Ingenting går videre før resultatet vises.** Etter det avgjørende treffet
+  går det 2 sekunder før resultatet vises. «Next» er sperret så lenge, ellers
+  kunne en ny kamp starte med fulle liv uten at resultatet ble registrert.
 
 ## Kreditering
 

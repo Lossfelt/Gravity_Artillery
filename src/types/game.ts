@@ -6,6 +6,8 @@ export type Planet = {
   radius: number;
   color: string;
   sprite?: string;
+  // Bosses: a moon turns like a planet, a station spins as a whole
+  kind?: 'planet' | 'moon' | 'station';
 };
 
 export type GravityBody = {
@@ -23,6 +25,14 @@ export type TrailPoint = {
   y: number;
 };
 
+// Special shots are scarce campaign ammunition
+export type ShotKind = 'standard' | 'homing' | 'splitter' | 'phase';
+export type SpecialShot = Exclude<ShotKind, 'standard'>;
+export type Ammo = Record<SpecialShot, number>;
+
+// What the harder map pays in the campaign, once the player hits the enemy on it
+export type Reward = { kind: 'life' } | { kind: 'shot'; shot: SpecialShot };
+
 export type Projectile = {
   x: number;
   y: number;
@@ -31,6 +41,7 @@ export type Projectile = {
   trail: TrailPoint[];
   player: 1 | 2;
   active: boolean;
+  kind: ShotKind;
 };
 
 export type ExplosionParticle = {

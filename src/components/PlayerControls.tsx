@@ -1,8 +1,9 @@
 import { ReactNode, useState } from 'react';
-import { GameState } from '../types/game';
+import { Ammo, GameState, ShotKind } from '../types/game';
 import { PlayerNumber } from '../game/gameReducer';
 import { formatAim } from '../game/aim';
 import { accentStyle } from './theme';
+import { hasAmmo, nextShot, SHOT_INFO } from './shots';
 import { Check, ChevronDown, ChevronsDown, ChevronsUp, ChevronUp, Crosshair, NextArrow } from './icons';
 
 type PlayerControlsProps = {
@@ -15,6 +16,10 @@ type PlayerControlsProps = {
   compact?: boolean;
   // Extra content under the Fire button, e.g. the opponent switch
   footer?: ReactNode;
+  // Special shots (campaign only); the selector shows while there are any
+  ammo?: Ammo;
+  shot?: ShotKind;
+  selectShot?: (shot: ShotKind) => void;
 };
 
 // Fine aim swaps the step sizes, so the same four buttons cover both big
@@ -46,7 +51,10 @@ export const PlayerControls = ({
   toggleReady,
   gameState,
   compact = false,
-  footer
+  footer,
+  ammo,
+  shot = 'standard',
+  selectShot
 }: PlayerControlsProps) => {
   const locked = ready || gameState !== 'setup';
   const text = compact ? 'text-xs' : 'text-sm md:text-base';
@@ -87,6 +95,19 @@ export const PlayerControls = ({
           Fine 0.1°
         </button>
       </div>
+
+      {ammo && selectShot && (hasAmmo(ammo) || shot !== 'standard') && (
+        <button
+          onClick={() => selectShot(nextShot(shot, ammo))}
+          disabled={locked}
+          aria-pressed={shot !== 'standard'}
+          title={`${SHOT_INFO[shot].hint}. Tap to change.`}
+          className={`btn btn-step flex w-full justify-between ${compact ? 'mb-1.5 h-9 px-2 text-xs' : 'mb-2 py-1.5 px-3 text-xs md:text-sm'}`}
+        >
+          <span className="font-normal text-[var(--ink-dim)]">{compact ? '' : 'Shot'}</span>
+          <span>{SHOT_INFO[shot].label}{shot !== 'standard' && ` ×${ammo[shot]}`}</span>
+        </button>
+      )}
 
       <button
         onClick={toggleReady}

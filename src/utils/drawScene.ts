@@ -1,6 +1,6 @@
-import { ExplosionParticle, GravityBody, Planet, PlanetFragment } from '../types/game';
+import { ExplosionParticle, GravityBody, Planet, PlanetFragment, ShotKind } from '../types/game';
 import { Aim, PlayerNumber } from '../game/gameReducer';
-import { CANVAS_WIDTH } from '../constants/game';
+import { CANVAS_WIDTH, SPLIT_ANGLE } from '../constants/game';
 import { drawGlowingSprite } from './glowSprites';
 import { drawCoronas } from './drawCorona';
 import { drawGlobe, lightDirection } from './drawGlobe';
@@ -39,8 +39,30 @@ export const drawGravityBodies = (
 
 type SceneTime = { bodies: GravityBody[]; time: number };
 
+const STATION_SPIN_S = 40; // Seconds per turn
+
+/** A station spins as a whole, with a light blinking on its ring. */
+const drawStation = (ctx: CanvasRenderingContext2D, planet: Planet, sprite: HTMLImageElement, time: number) => {
+  const turn = (time / STATION_SPIN_S) * Math.PI * 2;
+  ctx.save();
+  ctx.translate(planet.x, planet.y);
+  ctx.rotate(turn);
+  ctx.drawImage(sprite, -planet.radius, -planet.radius, planet.radius * 2, planet.radius * 2);
+  if (Math.floor(time * 1.5) % 2 === 0) {
+    ctx.fillStyle = '#ff5c5c';
+    ctx.beginPath();
+    ctx.arc(planet.radius * 0.8, 0, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
 const drawPlanet = (ctx: CanvasRenderingContext2D, planet: Planet, sprites: SpriteCache, spin: number, scene: SceneTime) => {
   const sprite = planet.sprite ? sprites[planet.sprite] : null;
+  if (sprite && planet.kind === 'station') {
+    drawStation(ctx, planet, sprite, scene.time);
+    return;
+  }
   if (sprite) {
     drawGlobe(ctx, planet, sprite, lightDirection(planet, scene.bodies), scene.time, spin);
     return;
@@ -65,11 +87,16 @@ const heartPath = (x: number, y: number, s: number) => {
   return path;
 };
 
-const drawHearts = (ctx: CanvasRenderingContext2D, planetY: number, lives: number, isPlayer1: boolean) => {
+// Filled hearts for lives left, outlines for the rest of the slots
+export type Hearts = { lives: number; maxLives: number };
+
+const drawHearts = (ctx: CanvasRenderingContext2D, planetY: number, { lives, maxLives }: Hearts, isPlayer1: boolean) => {
   const x = isPlayer1 ? 15 : CANVAS_WIDTH - 15;
+  const slots = Math.max(lives, maxLives);
   ctx.save();
-  for (let i = 0; i < 3; i++) {
-    const y = planetY - HEART_SPACING + i * HEART_SPACING;
+  for (let i = 0; i < slots; i++) {
+    // Centred on the planet
+    const y = planetY + (i - (slots - 1) / 2) * HEART_SPACING;
     const heart = heartPath(x, y, HEART_SIZE);
     if (i < lives) {
       // A larger, faint heart behind gives a cheap glow (shadowBlur is slow on mobile)
@@ -92,33 +119,39 @@ export const drawPlanets = (
   planets: Planets,
   destroyed: PlayerNumber[],
   sprites: SpriteCache,
-  lives: Record<PlayerNumber, number>,
+  hearts: Record<PlayerNumber, Hearts>,
   scene: SceneTime
 ) => {
   // The planets turn in opposite directions, mirroring each other
   if (!destroyed.includes(1)) {
     drawPlanet(ctx, planets.player1, sprites, 1, scene);
-    drawHearts(ctx, planets.player1.y, lives[1], true);
+    drawHearts(ctx, planets.player1.y, hearts[1], true);
   }
   if (!destroyed.includes(2)) {
     drawPlanet(ctx, planets.player2, sprites, -1, scene);
-    drawHearts(ctx, planets.player2.y, lives[2], false);
+    drawHearts(ctx, planets.player2.y, hearts[2], false);
   }
 };
 
 const AIM_LINE_LENGTH = 40;
 
-const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle }: Aim) => {
-  const angleRad = (angle * Math.PI) / 180;
+// The aim as drawn: a splitter shows all three of its shots
+export type AimLine = Aim & { shot?: ShotKind };
+
+const drawAimLine = (ctx: CanvasRenderingContext2D, planet: Planet, { angle, shot }: AimLine) => {
+  const offsets = shot === 'splitter' ? [-SPLIT_ANGLE, 0, SPLIT_ANGLE] : [0];
   ctx.beginPath();
-  ctx.moveTo(planet.x, planet.y);
-  ctx.lineTo(planet.x + Math.cos(angleRad) * AIM_LINE_LENGTH, planet.y + Math.sin(angleRad) * AIM_LINE_LENGTH);
+  for (const offset of offsets) {
+    const angleRad = ((angle + offset) * Math.PI) / 180;
+    ctx.moveTo(planet.x, planet.y);
+    ctx.lineTo(planet.x + Math.cos(angleRad) * AIM_LINE_LENGTH, planet.y + Math.sin(angleRad) * AIM_LINE_LENGTH);
+  }
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 2;
   ctx.stroke();
 };
 
-export const drawAimLines = (ctx: CanvasRenderingContext2D, planets: Planets, aims: Record<PlayerNumber, Aim>) => {
+export const drawAimLines = (ctx: CanvasRenderingContext2D, planets: Planets, aims: Record<PlayerNumber, AimLine>) => {
   drawAimLine(ctx, planets.player1, aims[1]);
   drawAimLine(ctx, planets.player2, aims[2]);
 };

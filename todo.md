@@ -1,10 +1,40 @@
 # TODO - Gravity Artillery
 
+## Felttog (enspiller)
+En kjede av 8 systemer mot datamaskinen. Enkeltkamp blir igjen som eget valg i startmenyen.
+
+### Steg 1: grunnmur
+- [X] Startmeny med Enkeltkamp og Felttog, begge med valg av Easy/Normal/Hard
+- [X] 8 systemer. Motstanderen blir gradvis sterkere innenfor valgt nivå (siktefeilen krymper)
+- [X] Kartene blir gradvis tøffere: flere kropper og større sjanse for svarte hull
+- [X] Livene dine følger med fra system til system (maks 5). Motstanderen har 1 → 3 liv utover i felttoget
+- [X] Autolagring i localStorage, så felttoget kan fortsettes senere
+- [X] Statistikk per vanskelighetsgrad: felttog fullført, lengst kommet, treffprosent, antall skudd, seiersrekke
+
+### Steg 2: kartvalg
+- [X] Velg hvert nytt kart i felttoget blant to miniatyrer: ved systemstart og etter hvert treff
+- [X] Hvert kort viser vanskelighet (Open / Winding / Treacherous, ut fra treffvinduene for spiller 1)
+- [X] Ved systemstart etter en seier har det vanskeligste kartet en dusør, som først betales når du treffer fienden på det kartet
+
+### Steg 3: spesialprosjektiler (få av hver)
+- [X] Belønning ved systemstart blir +1 liv eller et spesialprosjektil (med fulle liv: prosjektil)
+- [X] Søkende skudd: svinger mot fiendeplaneten innenfor 250 px (erstattet «tungt skudd», som nesten ikke hjalp)
+- [X] Splitter: tre skudd med ±3° spredning
+- [X] Faseskudd: ikke påvirket av stjernenes tyngdekraft, bare svarte hull (skudd går allerede gjennom stjerner)
+
+### Steg 4: sjefer og ferdiglagde kart
+- [X] Sjefer i system 4 og 8 som er mindre mål: månebase (radius 16) og kampstasjon (radius 13), mot planetens 25
+- [X] Ferdiglagde kart lagret som data, tre per sjef. Sjefskampen åpner med valg mellom to av dem
+- [X] Visuell markering av spesialskudd: søkende er gyllent og låser seg på målet, fase er stiplet og flimrer, splitter har mindre hoder
+- [X] Ingen spesialskudd ved start, bare som belønning
+- [ ] Mulige ekstra sjefsregler: flere liv, to skudd per runde, planet i bane, eller at sjefen bruker spesialskudd
+
 ## Backlog: spillvarianter (når vi er fornøyd med spillet som det er)
 - [ ] Flere elementer: kraft tilbake, flere stjerner samtidig, nye romobjekter og flere typer prosjektiler, slik at man må variere både vinkel og kraft. Kraft ble fjernet fordi målinger viste at vinkelen alene løste nesten alle kart, så kartene må gjøre kraft nødvendig.
 - [ ] Solsystemer: hver spiller er et solsystem med tre bebodde planeter i bane rundt en stjerne. Planetene beveger seg og må tas med i beregningen, og hver planet er ett liv.
 
 ## Fullført
+- [X] Skudd kan fly litt over og under spillområdet, med en markør på kanten som viser hvor de er
 - [X] Rydd opp i prosjektet, unødvendige filer, funksjoner, etc
 - [X] Stjerner og svarte hull plasseres med myk vekting mot midten
 - [X] Flytte input-feltene til sidene av canvas

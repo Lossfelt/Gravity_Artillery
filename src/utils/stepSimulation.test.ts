@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ExplosionParticle, GravityBody, PlanetFragment, Projectile } from '../types/game';
-import { initialPlanets, MAX_FLIGHT_STEPS } from '../constants/game';
-import { burnOutProjectiles, createProjectile, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
+import { CANVAS_HEIGHT, initialPlanets, MAX_FLIGHT_STEPS, OFFSCREEN_MARGIN } from '../constants/game';
+import { burnOutProjectiles, createProjectile, createShot, stepFragments, stepImpacts, stepParticles, stepProjectile } from './stepSimulation';
 
 const projectile = (overrides: Partial<Projectile>): Projectile => ({
-  x: 500, y: 300, vx: 0, vy: 0, trail: [], player: 1, active: true, ...overrides
+  x: 500, y: 300, vx: 0, vy: 0, trail: [], player: 1, active: true, kind: 'standard', ...overrides
 });
 
 const noBodies: GravityBody[] = [];
@@ -26,10 +26,20 @@ describe('stepProjectile', () => {
     expect(proj.vy).toBe(0);
   });
 
-  it('deactivates when leaving the canvas', () => {
+  it('deactivates when leaving through a side', () => {
     const proj = projectile({ x: 998, vx: 5 });
     expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
     expect(proj.active).toBe(false);
+  });
+
+  it('keeps flying a little above or below the board, but not beyond the margin', () => {
+    const above = projectile({ y: 2, vy: -5 });
+    stepProjectile(above, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(above).toMatchObject({ y: -3, active: true });
+
+    const below = projectile({ y: CANVAS_HEIGHT + OFFSCREEN_MARGIN - 2, vy: 5 });
+    stepProjectile(below, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(below.active).toBe(false);
   });
 
   it('hits the enemy planet', () => {
@@ -91,6 +101,57 @@ describe('createProjectile', () => {
   it('does not hit its own planet on the first step', () => {
     const proj = createProjectile(initialPlanets.player1, 0, 1);
     expect(stepProjectile(proj, noBodies, initialPlanets, noneDestroyed, 1)).toBeNull();
+  });
+});
+
+describe('special shots', () => {
+  const star: GravityBody = { x: 520, y: 300, mass: 8000, radius: 18, color: '#fff', type: 'star' };
+  const hole: GravityBody = { ...star, radius: 12, type: 'blackhole', color: '#000' };
+  // Downward speed after one step next to a body straight below
+  const pull = (kind: 'standard' | 'phase', body: GravityBody) => {
+    const proj = projectile({ y: 280, vx: 0, kind });
+    stepProjectile(proj, [body], initialPlanets, noneDestroyed, 1);
+    return proj.vy;
+  };
+
+  it('steers a homing shot towards the enemy planet, but only within range', () => {
+    const { player2 } = initialPlanets;
+    const near = projectile({ x: player2.x - 100, y: player2.y - 60, vx: 5, vy: 0, kind: 'homing' });
+    stepProjectile(near, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(near.vy).toBeGreaterThan(0);
+    const far = projectile({ x: 300, y: 100, vx: 5, vy: 0, kind: 'homing' });
+    stepProjectile(far, noBodies, initialPlanets, noneDestroyed, 1);
+    expect(far.vy).toBe(0);
+    const targetGone = projectile({ x: player2.x - 100, y: player2.y - 60, vx: 5, vy: 0, kind: 'homing' });
+    stepProjectile(targetGone, noBodies, initialPlanets, new Set([2 as const]), 1);
+    expect(targetGone.vy).toBe(0);
+  });
+
+  it('ignores stars but not black holes in phase', () => {
+    expect(pull('phase', star)).toBe(0);
+    expect(pull('phase', hole)).toBeCloseTo(pull('standard', hole));
+  });
+
+  it('splits into three shots 3° apart', () => {
+    const shots = createShot(initialPlanets.player1, 10, 1, 'splitter');
+    const angles = shots.map(p => Math.round((Math.atan2(p.vy, p.vx) * 180) / Math.PI));
+    expect(angles).toEqual([7, 10, 13]);
+    expect(createShot(initialPlanets.player1, 10, 1, 'homing')).toHaveLength(1);
+  });
+});
+
+describe('target size', () => {
+  it('uses each planet\'s own radius, so a boss is a smaller target', () => {
+    const { player2 } = initialPlanets;
+    const passBy = () => projectile({ x: player2.x - 20, y: player2.y - 18, vx: 5, vy: 0 });
+    expect(stepProjectile(passBy(), noBodies, initialPlanets, noneDestroyed, 1)).toBe(2);
+    const moon = { ...initialPlanets, player2: { ...player2, radius: 16 } };
+    expect(stepProjectile(passBy(), noBodies, moon, noneDestroyed, 1)).toBeNull();
+  });
+
+  it('launches from the edge of a small planet too', () => {
+    const moon = { ...initialPlanets.player2, radius: 16 };
+    expect(createProjectile(moon, 180, 2).x).toBeCloseTo(moon.x - 16);
   });
 });
 

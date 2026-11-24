@@ -79,11 +79,22 @@ const AIM_ERROR: Record<Difficulty, { angle: number; shrink: number }> = {
 
 /**
  * Adds aiming error to the best aim. attempt is the number of earlier shots on
- * this map; the error shrinks with every attempt.
+ * this map; the error shrinks with every attempt. errorScale makes the
+ * opponent sloppier (above 1) or sharper (below 1) within one difficulty: it
+ * scales the starting error and how slowly the error shrinks. Scaling only the
+ * starting error barely changed how soon it hits, since the shrinking soon
+ * catches up.
  */
-export const aimWithError = (best: Aim, player: PlayerNumber, difficulty: Difficulty, attempt: number, random: Random): Aim => {
+export const aimWithError = (
+  best: Aim,
+  player: PlayerNumber,
+  difficulty: Difficulty,
+  attempt: number,
+  random: Random,
+  errorScale = 1
+): Aim => {
   const error = AIM_ERROR[difficulty];
-  const factor = Math.pow(error.shrink, attempt);
+  const factor = errorScale * Math.pow(error.shrink, attempt / errorScale);
   const jitter = (size: number) => Math.round((random() * 2 - 1) * size * factor);
   const relative = clamp(toRelativeAngle(player, best.angle) + jitter(error.angle), -AIM_LIMIT, AIM_LIMIT);
   return { angle: toWorldAngle(player, relative) };

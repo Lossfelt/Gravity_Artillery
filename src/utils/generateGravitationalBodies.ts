@@ -11,13 +11,18 @@ import {
 } from '../constants/game';
 
 type Planets = { player1: Planet; player2: Planet };
+
+// How crowded and dangerous a map is
+export type MapOptions = { bodyCount: number; blackHoleChance: number };
+export const DEFAULT_MAP: MapOptions = { bodyCount: GRAVITY_BODY_COUNT, blackHoleChance: BLACK_HOLE_CHANCE };
+
 type BodyType = (typeof BODY_TYPES)[keyof typeof BODY_TYPES];
 
 const STAR_TYPES = [BODY_TYPES.BLUE_STAR, BODY_TYPES.WHITE_STAR, BODY_TYPES.RED_STAR];
 
 /** Black holes are rare; otherwise one of the three star types. */
-const pickBodyType = (random: Random): BodyType =>
-  random() < BLACK_HOLE_CHANCE ? BODY_TYPES.BLACK_HOLE : STAR_TYPES[Math.floor(random() * STAR_TYPES.length)];
+const pickBodyType = (random: Random, blackHoleChance: number): BodyType =>
+  random() < blackHoleChance ? BODY_TYPES.BLACK_HOLE : STAR_TYPES[Math.floor(random() * STAR_TYPES.length)];
 
 /** Far enough from both players and from every body already placed. */
 const isFree = (x: number, y: number, radius: number, bodies: GravityBody[], planets: Planets) =>
@@ -47,11 +52,11 @@ const findPosition = (radius: number, bodies: GravityBody[], planets: Planets, r
  * to get the same map for the same seed. A body that does not fit is retried
  * as the smallest star, and left out if that does not fit either.
  */
-export const generateGravitationalBodies = (planets: Planets, random: Random): GravityBody[] => {
+export const generateGravitationalBodies = (planets: Planets, random: Random, options = DEFAULT_MAP): GravityBody[] => {
   const bodies: GravityBody[] = [];
 
-  for (let i = 0; i < GRAVITY_BODY_COUNT; i++) {
-    let type: BodyType = pickBodyType(random);
+  for (let i = 0; i < options.bodyCount; i++) {
+    let type: BodyType = pickBodyType(random, options.blackHoleChance);
     let position = findPosition(type.radius, bodies, planets, random, 100);
     if (!position) {
       type = BODY_TYPES.RED_STAR;
