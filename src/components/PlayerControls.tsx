@@ -14,6 +14,8 @@ type PlayerControlsProps = {
   toggleReady: () => void;
   gameState: GameState;
   compact?: boolean;
+  // Changes with every new map; fine aim switches off when it does
+  mapKey: number;
   // Extra content under the Fire button, e.g. the opponent switch
   footer?: ReactNode;
   // Special shots (campaign only); the selector shows while there are any
@@ -30,10 +32,10 @@ const STEP_SIZES = { normal: { big: 5, small: 1 }, fine: { big: 1, small: 0.1 } 
 const angleSteps = (fine: boolean) => {
   const { big, small } = STEP_SIZES[fine ? 'fine' : 'normal'];
   return [
-    { key: 'up-big', delta: -big, icon: <ChevronsUp />, label: `Aim up ${big}°` },
-    { key: 'up-small', delta: -small, icon: <ChevronUp />, label: `Aim up ${small}°` },
-    { key: 'down-small', delta: small, icon: <ChevronDown />, label: `Aim down ${small}°` },
-    { key: 'down-big', delta: big, icon: <ChevronsDown />, label: `Aim down ${big}°` }
+    { key: 'up-big', delta: -big, size: big, icon: <ChevronsUp />, label: `Aim up ${big}°` },
+    { key: 'up-small', delta: -small, size: small, icon: <ChevronUp />, label: `Aim up ${small}°` },
+    { key: 'down-small', delta: small, size: small, icon: <ChevronDown />, label: `Aim down ${small}°` },
+    { key: 'down-big', delta: big, size: big, icon: <ChevronsDown />, label: `Aim down ${big}°` }
   ];
 };
 
@@ -51,6 +53,7 @@ export const PlayerControls = ({
   toggleReady,
   gameState,
   compact = false,
+  mapKey,
   footer,
   ammo,
   shot = 'standard',
@@ -60,7 +63,9 @@ export const PlayerControls = ({
   const text = compact ? 'text-xs' : 'text-sm md:text-base';
   // Compact: two 44 px columns, the usual minimum for a finger on a phone
   const width = compact ? 'w-[5.75rem]' : 'w-20 md:w-24';
-  const [fine, setFine] = useState(false);
+  // The map fine aim was switched on for, so a new map starts without it
+  const [fineMap, setFineMap] = useState<number | null>(null);
+  const fine = fineMap === mapKey;
 
   return (
     <div style={accentStyle(player)} className={`panel w-full md:w-fit ${compact ? 'p-2' : 'p-4 md:p-5'}`}>
@@ -79,20 +84,22 @@ export const PlayerControls = ({
               onClick={() => adjustAngle(step.delta)}
               disabled={locked}
               aria-label={step.label}
-              className={`btn btn-step ${compact ? 'h-11 text-base' : `${width} py-1.5 md:py-2 text-base md:text-lg`}`}
+              className={`btn btn-step ${fine ? 'btn-step-fine' : ''} ${compact ? 'h-11 flex-col !gap-0 text-base leading-none' : `${width} py-1.5 md:py-2 text-base md:text-lg`}`}
             >
               {step.icon}
+              {/* The step size, so the mode shows on the buttons themselves */}
+              <span className="step-size">{step.size}°</span>
             </button>
           ))}
         </div>
         <button
-          onClick={() => setFine(!fine)}
+          onClick={() => setFineMap(fine ? null : mapKey)}
           disabled={locked}
           aria-pressed={fine}
-          title="Steps of 1° and 0.1° instead of 5° and 1°"
-          className={`btn btn-step block mx-auto ${width} ${compact ? 'mt-1.5 h-9 text-xs' : 'mt-1.5 md:mt-2 py-1 text-xs'}`}
+          title="Steps of 1° and 0.1° instead of 5° and 1°. Switches off on a new map."
+          className={`btn flex mx-auto ${width} ${fine ? 'btn-toggle-on' : 'btn-step'} ${compact ? 'mt-1.5 h-9 text-xs' : 'mt-1.5 md:mt-2 py-1 text-xs'}`}
         >
-          Fine 0.1°
+          {fine ? <><Check />Fine on</> : 'Fine 0.1°'}
         </button>
       </div>
 
