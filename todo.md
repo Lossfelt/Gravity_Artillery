@@ -34,6 +34,7 @@ En kjede av 8 systemer mot datamaskinen. Enkeltkamp blir igjen som eget valg i s
 - [ ] Solsystemer: hver spiller er et solsystem med tre bebodde planeter i bane rundt en stjerne. Planetene beveger seg og må tas med i beregningen, og hver planet er ett liv.
 
 ## Fullført
+- [X] Fine slås av på hvert nytt kart, og det vises tydelig når Fine er på
 - [X] Skudd kan fly litt over og under spillområdet, med en markør på kanten som viser hvor de er
 - [X] Rydd opp i prosjektet, unødvendige filer, funksjoner, etc
 - [X] Stjerner og svarte hull plasseres med myk vekting mot midten

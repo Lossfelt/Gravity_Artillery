@@ -30,6 +30,13 @@ describe('gameReducer', () => {
     expect(model.players[1].ready).toBe(false);
   });
 
+  it('counts maps with roundNumber: same after a miss, one more after a hit (the controls reset fine aim on it)', () => {
+    const missed = run(createInitialModel(1), ...fire, { type: 'roundEnded' });
+    expect(missed.roundNumber).toBe(0);
+    const hit = run(missed, ...fire, { type: 'planetDestroyed', player: 2, shooter: 1 }, { type: 'roundEnded' }, ...fire);
+    expect(hit.roundNumber).toBe(1);
+  });
+
   it('costs the owner exactly one life per destroyed planet', () => {
     const model = run(createInitialModel(1), ...fire,
       { type: 'planetDestroyed', player: 2, shooter: 1 },

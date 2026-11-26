@@ -224,6 +224,7 @@ const GravityArtilleryGame = () => {
       }}
       gameState={gameState}
       compact={compact}
+      mapKey={model.roundNumber}
       ammo={inCampaign ? players[player].ammo : undefined}
       shot={players[player].shot}
       selectShot={shot => selectShot(player, shot)}
